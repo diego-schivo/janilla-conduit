@@ -6,11 +6,11 @@
 
 # IDEs and editors
 /.idea
-.project
-.classpath
+#.project
+#.classpath
 .c9/
 *.launch
-.settings/
+#.settings/
 *.sublime-workspace
 
 # IDE - VSCode
