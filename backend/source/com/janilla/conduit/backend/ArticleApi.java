@@ -225,7 +225,7 @@ public class ArticleApi {
 				&& v.isSafe("description", article.description))
 			;
 		if (v.isNotBlank("body", article.body) && v.isNotTooLong("body", article.body, 2000)
-//				&& v.isSafe("body", article.body)
+				&& v.isSafe("body", article.body)
 				)
 			;
 		var t = article.tagList.stream().collect(Collectors.joining(" "));
