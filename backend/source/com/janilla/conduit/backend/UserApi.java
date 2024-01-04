@@ -108,7 +108,10 @@ public class UserApi {
 		Reflection.copy(u, w);
 		setHashAndSalt(w, u.password);
 		if (w.getImage() == null || w.getImage().isBlank())
-			w.setImage("https://api.realworld.io/images/smiley-cyrus.jpeg");
+//			w.setImage("https://api.realworld.io/images/smiley-cyrus.jpeg");
+			w.setImage(
+					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
+							+ new String(Character.toChars(0x1F600)) + "</text></svg>");
 		persistence.getCrud(User.class).create(w);
 		return get(w);
 	}
