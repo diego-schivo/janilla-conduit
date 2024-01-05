@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /dist
+/target
 
 # IDEs and editors
 /.idea
