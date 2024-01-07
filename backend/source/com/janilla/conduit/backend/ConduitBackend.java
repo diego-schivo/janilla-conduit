@@ -25,38 +25,23 @@ package com.janilla.conduit.backend;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-import com.janilla.database.BTree;
-import com.janilla.database.Database;
-import com.janilla.database.Index;
-import com.janilla.database.Memory;
-import com.janilla.database.Store;
 import com.janilla.http.ExchangeContext;
-import com.janilla.http.HttpServer;
-import com.janilla.io.ElementHelper;
-import com.janilla.io.ElementHelper.SortOrder;
-import com.janilla.io.ElementHelper.TypeAndOrder;
+import com.janilla.http.HttpHandler;
 import com.janilla.io.IO;
 import com.janilla.persistence.Persistence;
+import com.janilla.persistence.PersistenceBuilder;
 import com.janilla.util.Lazy;
 import com.janilla.util.Randomize;
 import com.janilla.util.Util;
-import com.janilla.web.DelegatingHandlerFactory;
-import com.janilla.web.HandlerFactory;
-import com.janilla.web.MethodHandlerFactory;
-import com.janilla.web.NotFoundException;
-import com.janilla.web.ToEndpointInvocation;
+import com.janilla.web.AnnotationDrivenToInvocation;
 
 public class ConduitBackend {
 
@@ -69,132 +54,78 @@ public class ConduitBackend {
 		var b = new ConduitBackend();
 		b.setConfiguration(c);
 		b.populate();
-		b.serve();
+
+		var s = new CustomHttpServer();
+		s.backend = b;
+		s.setExecutor(Runnable::run);
+		s.setPort(Integer.parseInt(c.getProperty("conduit.backend.http.port")));
+		s.serve(b.getHandler());
 	}
 
 	Properties configuration;
 
 	IO.Supplier<Persistence> persistence = IO.Lazy.of(() -> {
-		FileChannel c;
+		var b = new PersistenceBuilder();
 		{
-//			var f = Files.createDirectories(Path.of(System.getProperty("user.home")).resolve(".janilla/conduit"))
-//			.resolve("conduit.database");
 			var p = configuration.getProperty("conduit.backend.database.path");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
-			var q = Path.of(p);
-			var f = Files.createDirectories(q.getParent()).resolve(q.getFileName());
-//			System.out.println("f=" + f);
-			c = FileChannel.open(f, StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
-//				StandardOpenOption.READ);
+			b.setFile(Path.of(p));
 		}
-		var o = Integer.parseInt(configuration.getProperty("conduit.backend.btree.order"));
-
-		var m = new Memory();
-		var t = m.getFreeBTree();
-		t.setChannel(c);
-		t.setOrder(o);
-		t.setRoot(BTree.readReference(c, 0));
-		m.setAppendPosition(Math.max(3 * (8 + 4), c.size()));
-
-		var d = new Database();
-		d.setBTreeOrder(o);
-		d.setChannel(c);
-		d.setMemoryManager(m);
-		d.setStoresRoot(8 + 4);
-		d.setIndexesRoot(2 * (8 + 4));
-
-		var p = new CustomPersistence();
-		p.setDatabase(d);
-		var l = Thread.currentThread().getContextClassLoader();
-		var b = Stream.<Class<?>>builder();
-		IO.packageFiles(ConduitBackend.class.getPackageName(), l, f -> {
-			var z = Util.getClass(f);
-			if (z != null)
-				b.add(z);
-		});
-		p.setTypes(b.build().toArray(Class[]::new));
-
-		d.setInitializeStore((n, s) -> {
-			@SuppressWarnings("unchecked")
-			var u = (Store<String>) s;
-			u.setElementHelper(ElementHelper.STRING);
-		});
-		d.setInitializeIndex((n, i) -> {
-			if (p.initialize(n, i))
-				return;
-			switch (n) {
-			case "Article.favoriteList", "User.followList": {
-				@SuppressWarnings("unchecked")
-				var j = (Index<Long, Long>) i;
-				j.setKeyHelper(ElementHelper.LONG);
-				j.setValueHelper(ElementHelper.LONG);
-			}
-				break;
-			case "Tag.count": {
-				@SuppressWarnings("unchecked")
-				var j = (Index<Object[], String>) i;
-				j.setKeyHelper(ElementHelper.of(new TypeAndOrder(Long.class, SortOrder.DESCENDING)));
-				j.setValueHelper(ElementHelper.STRING);
-			}
-				break;
-			case "User.favoriteList": {
-				@SuppressWarnings("unchecked")
-				var j = (Index<Long, Object[]>) i;
-				j.setKeyHelper(ElementHelper.LONG);
-				j.setValueHelper(ElementHelper.of(Article.class, "-createdAt", "id"));
-			}
-				break;
-			}
-		});
-		return p;
+		b.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.backend"));
+		b.setPersistence(CustomPersistence::new);
+		return b.build();
 	});
 
-	Supplier<HttpServer> httpServer = Lazy.of(() -> {
-		var s = new CustomHttpServer();
-		s.backend = this;
-		s.setExecutor(Runnable::run);
-		s.setPort(Integer.parseInt(configuration.getProperty("conduit.backend.http.port")));
-		return s;
-	});
+//	Supplier<HttpServer> httpServer = Lazy.of(() -> {
+//		var s = new CustomHttpServer();
+//		s.backend = this;
+//		s.setExecutor(Runnable::run);
+//		s.setPort(Integer.parseInt(configuration.getProperty("conduit.backend.http.port")));
+//		return s;
+//	});
 
-	ToEndpointInvocation toEndpointInvocation;
+	AnnotationDrivenToInvocation toEndpointInvocation;
 
-	Supplier<HandlerFactory> handlerFactory = Lazy.of(() -> {
-		var l = Thread.currentThread().getContextClassLoader();
-		var b = Stream.<Class<?>>builder();
-		IO.packageFiles(ConduitBackend.class.getPackageName(), l, f -> {
-			var z = Util.getClass(f);
-			if (z != null)
-				b.add(z);
-		});
-		var i = new CustomToEndpointInvocation();
-		i.setClasses(b.build().toArray(Class[]::new));
-		i.backend = this;
-		toEndpointInvocation = i;
-		var r = new CustomMethodArgumentsResolver();
-		r.backend = this;
-		var f1 = new MethodHandlerFactory();
-		f1.setToInvocation(toEndpointInvocation);
-		f1.setArgumentsResolver(r);
-		var f2 = new CustomJsonHandlerFactory();
-		f2.backend = this;
-		var f3 = new CustomExceptionHandlerFactory();
-		var f = new DelegatingHandlerFactory();
-		{
-			var a = new HandlerFactory[] { f1, f2, f3 };
-			f.setToHandler(o -> {
-				if (a != null)
-					for (var g : a) {
-						var h = g.createHandler(o);
-						if (h != null)
-							return h;
-					}
-				return null;
-			});
-		}
-		f1.setRenderFactory(f);
-		return f;
+//	Supplier<HandlerFactory> handlerFactory = Lazy.of(() -> {
+//		var f1 = new MethodHandlerFactory();
+//		{
+//			var i = new CustomAnnotationDrivenToInvocation();
+//			i.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.backend"));
+//			i.backend = this;
+//			f1.setToInvocation(i);
+//			toEndpointInvocation = i;
+//		}
+//		{
+//			var r = new CustomMethodArgumentsResolver();
+//			r.backend = this;
+//			f1.setArgumentsResolver(r);
+//		}
+//
+//		var f2 = new CustomJsonHandlerFactory();
+//		f2.backend = this;
+//
+//		var f3 = new CustomExceptionHandlerFactory();
+//
+//		var f = new DelegatingHandlerFactory();
+//		{
+//			var a = new HandlerFactory[] { f1, f2, f3 };
+//			f.setToHandler(o -> {
+//				for (var g : a) {
+//					var h = g.createHandler(o);
+//					if (h != null)
+//						return h;
+//				}
+//				return null;
+//			});
+//		}
+//		f1.setRenderFactory(f);
+//		return f;
+//	});
+	Supplier<HttpHandler> handler = Lazy.of(() -> {
+		var b = new CustomApplicationHandlerBuilder();
+		b.setApplication(ConduitBackend.this);
+		return b.build();
 	});
 
 	public Properties getConfiguration() {
@@ -213,16 +144,20 @@ public class ConduitBackend {
 		}
 	}
 
-	public HttpServer getHttpServer() {
-		return httpServer.get();
-	}
+//	public HttpServer getHttpServer() {
+//		return httpServer.get();
+//	}
 
-	public ToEndpointInvocation getToEndpointInvocation() {
+	public AnnotationDrivenToInvocation getToEndpointInvocation() {
 		return toEndpointInvocation;
 	}
 
-	public HandlerFactory getHandlerFactory() {
-		return handlerFactory.get();
+//	public HandlerFactory getHandlerFactory() {
+//		return handlerFactory.get();
+//	}
+
+	public HttpHandler getHandler() {
+		return handler.get();
 	}
 
 	public ExchangeContext newExchangeContext() {
@@ -266,13 +201,13 @@ public class ConduitBackend {
 		}
 	}
 
-	public void serve() throws IOException {
-		httpServer.get().serve(c -> {
-			var o = c.getException() != null ? c.getException() : c.getRequest();
-			var h = handlerFactory.get().createHandler(o);
-			if (h == null)
-				throw new NotFoundException();
-			h.handle(c);
-		});
-	}
+//	public void serve() throws IOException {
+//		httpServer.get().serve(c -> {
+//			var o = c.getException() != null ? c.getException() : c.getRequest();
+//			var h = handlerFactory.get().createHandler(o);
+//			if (h == null)
+//				throw new NotFoundException();
+//			h.handle(c);
+//		});
+//	}
 }

@@ -24,27 +24,15 @@
 package com.janilla.conduit.frontend;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
+import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
-import com.janilla.io.IO;
 import com.janilla.util.Lazy;
-import com.janilla.util.Util;
-import com.janilla.web.DelegatingHandlerFactory;
-import com.janilla.web.Handler;
-import com.janilla.web.HandlerFactory;
-import com.janilla.web.MethodArgumentsResolver;
-import com.janilla.web.MethodHandlerFactory;
-import com.janilla.web.NotFoundException;
+import com.janilla.web.ApplicationHandlerBuilder;
+import com.janilla.web.Handle;
 import com.janilla.web.Render;
-import com.janilla.web.ResourceHandlerFactory;
-import com.janilla.web.TemplateHandlerFactory;
-import com.janilla.web.ToEndpointInvocation;
-import com.janilla.web.ToResourceStream;
-import com.janilla.web.ToTemplateReader;
 
 public class ConduitFrontend {
 
@@ -56,79 +44,72 @@ public class ConduitFrontend {
 
 		var f = new ConduitFrontend();
 		f.setConfiguration(c);
-		f.serve();
+//		f.serve();
+
+		var s = new HttpServer();
+		s.setExecutor(Runnable::run);
+		s.setPort(Integer.parseInt(c.getProperty("conduit.frontend.http.port")));
+		s.serve(f.getHandler());
 	}
 
 	Properties configuration;
 
-	Supplier<HttpServer> httpServer = Lazy.of(() -> {
-		var s = new HttpServer();
-		s.setExecutor(Runnable::run);
-		s.setPort(Integer.parseInt(configuration.getProperty("conduit.frontend.http.port")));
-		return s;
-	});
+//	Supplier<HttpServer> httpServer = Lazy.of(() -> {
+//		var s = new HttpServer();
+//		s.setExecutor(Runnable::run);
+//		s.setPort(Integer.parseInt(configuration.getProperty("conduit.frontend.http.port")));
+//		return s;
+//	});
 
-	Supplier<HandlerFactory> handlerFactory = Lazy.of(() -> {
-		var l = Thread.currentThread().getContextClassLoader();
-		var x = Stream.<Path>builder();
-		var y = Stream.<Class<?>>builder();
-		IO.packageFiles("com.janilla.frontend", l, f -> {
-			x.add(f);
-			var z = Util.getClass(f);
-			if (z != null)
-				y.add(z);
-		});
-		IO.packageFiles(ConduitFrontend.class.getPackageName(), l, f -> {
-			x.add(f);
-			var z = Util.getClass(f);
-			if (z != null)
-				y.add(z);
-		});
-		var p = x.build().toArray(Path[]::new);
-		var c = y.build().toArray(Class[]::new);
-
-		var i = new ToEndpointInvocation() {
-
-			@Override
-			protected Object getInstance(Class<?> c) {
-				if (c == ConduitFrontend.class)
-					return ConduitFrontend.this;
-				return super.getInstance(c);
-			}
-		};
-		i.setClasses(c);
-		var f1 = new MethodHandlerFactory();
-		f1.setToInvocation(i);
-		f1.setArgumentsResolver(new MethodArgumentsResolver());
-		var f2 = new TemplateHandlerFactory();
-		{
-			var s = new ToTemplateReader.Simple();
-			s.setClass1(ConduitFrontend.class);
-			s.setClasses(c);
-			f2.setToReader(s);
-		}
-		var f3 = new ResourceHandlerFactory();
-		{
-			var s = new ToResourceStream.Simple();
-			s.setPaths(p);
-			f3.setToInputStream(s);
-		}
-		var f = new DelegatingHandlerFactory();
-		{
-			var a = new HandlerFactory[] { f1, f2, f3 };
-			f.setToHandler(o -> {
-				if (a != null)
-					for (var g : a) {
-						var h = g.createHandler(o);
-						if (h != null)
-							return h;
-					}
-				return null;
-			});
-		}
-		f1.setRenderFactory(f);
-		f2.setIncludeFactory(f);
-		return f;
+//	Supplier<HandlerFactory> handlerFactory = Lazy.of(() -> {
+//		var i = new AnnotationDrivenToInvocation() {
+//
+//			@Override
+//			protected Object getInstance(Class<?> c) {
+//				if (c == ConduitFrontend.class)
+//					return ConduitFrontend.this;
+//				return super.getInstance(c);
+//			}
+//		};
+//		i.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.frontend"));
+//		var f1 = new MethodHandlerFactory();
+//		f1.setToInvocation(i);
+//		f1.setArgumentsResolver(new MethodArgumentsResolver());
+//		var f2 = new TemplateHandlerFactory();
+//		{
+//			var s = new ToTemplateReader.Simple();
+//			s.setResourceClass(ConduitFrontend.class);
+//			s.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.frontend"));
+//			f2.setToReader(s);
+//		}
+//		var f3 = new ResourceHandlerFactory();
+//		{
+//			var s = new ToResourceStream.Simple();
+//			s.setPaths(() -> Stream.concat(IO.getPackageFiles("com.janilla.frontend"),
+//					IO.getPackageFiles("com.janilla.conduit.frontend")));
+//			f3.setToInputStream(s);
+//		}
+//		var f = new DelegatingHandlerFactory();
+//		{
+//			var a = new HandlerFactory[] { f1, f2, f3 };
+//			f.setToHandler(o -> {
+//				if (a != null)
+//					for (var g : a) {
+//						var h = g.createHandler(o);
+//						if (h != null)
+//							return h;
+//					}
+//				return null;
+//			});
+//		}
+//		f1.setRenderFactory(f);
+//		f2.setIncludeFactory(f);
+//		return f;
+//	});
+	Supplier<HttpHandler> handler = Lazy.of(() -> {
+		var b = new ApplicationHandlerBuilder();
+		b.setApplication(ConduitFrontend.this);
+		return b.build();
 	});
 
 	public Properties getConfiguration() {
@@ -139,36 +120,40 @@ public class ConduitFrontend {
 		this.configuration = configuration;
 	}
 
-	public HttpServer getHttpServer() {
-		return httpServer.get();
+//	public HttpServer getHttpServer() {
+//		return httpServer.get();
+//	}
+
+//	public HandlerFactory getHandlerFactory() {
+//		return handlerFactory.get();
+//	}
+
+	public HttpHandler getHandler() {
+		return handler.get();
 	}
 
-	public HandlerFactory getHandlerFactory() {
-		return handlerFactory.get();
-	}
-
-	@Handler(value = "/", method = "GET")
+	@Handle(method = "GET", uri = "/")
 	public Document getDocument() {
 		return new Document();
 	}
 
-	@Handler(value = "/main.js", method = "GET")
+	@Handle(method = "GET", uri = "/main.js")
 	public Script getScript() {
 		var u = configuration.getProperty("conduit.frontend.backendUrl");
 		return new Script(u);
 	}
 
-	public void serve() throws IOException {
-		httpServer.get().serve(c -> {
-			var o = c.getException() != null ? c.getException() : c.getRequest();
-			var h = handlerFactory.get().createHandler(o);
-			if (h == null)
-				throw new NotFoundException();
-			h.handle(c);
-		});
-	}
+//	public void serve() throws IOException {
+//		httpServer.get().serve(c -> {
+//			var o = c.getException() != null ? c.getException() : c.getRequest();
+//			var h = handlerFactory.get().createHandler(o);
+//			if (h == null)
+//				throw new NotFoundException();
+//			h.handle(c);
+//		});
+//	}
 
-	@Render("document.html")
+	@Render(template = "document.html")
 	public record Document() {
 
 		public Head head() {
@@ -176,11 +161,11 @@ public class ConduitFrontend {
 		}
 	}
 
-	@Render("head.html")
+	@Render(template = "head.html")
 	public record Head() {
 	}
 
-	@Render("script.js")
+	@Render(template = "script.js")
 	public record Script(String backendUrl) {
 	}
 }

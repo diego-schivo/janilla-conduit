@@ -29,14 +29,14 @@ import java.util.stream.Collectors;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.http.HttpResponse.Status;
-import com.janilla.web.Handler;
-import com.janilla.web.ToEndpointInvocation;
+import com.janilla.web.Handle;
+import com.janilla.web.AnnotationDrivenToInvocation;
 
 public class AccessControl {
 
 	Properties configuration;
 
-	ToEndpointInvocation toEndpointInvocation;
+	AnnotationDrivenToInvocation toEndpointInvocation;
 
 	public Properties getConfiguration() {
 		return configuration;
@@ -46,19 +46,19 @@ public class AccessControl {
 		this.configuration = configuration;
 	}
 
-	public ToEndpointInvocation getToEndpointInvocation() {
+	public AnnotationDrivenToInvocation getToEndpointInvocation() {
 		return toEndpointInvocation;
 	}
 
-	public void setToEndpointInvocation(ToEndpointInvocation toEndpointInvocation) {
+	public void setToEndpointInvocation(AnnotationDrivenToInvocation toEndpointInvocation) {
 		this.toEndpointInvocation = toEndpointInvocation;
 	}
 
-	@Handler(value = "/api/(.*)", method = "OPTIONS")
+	@Handle(method = "OPTIONS", uri = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
 		var o = configuration.getProperty("conduit.backend.cors.origin");
 		var s = toEndpointInvocation.getValueAndGroupsStream(request).flatMap(w -> w.value().methods().stream())
-				.map(m -> m.getAnnotation(Handler.class).method()).collect(Collectors.toSet());
+				.map(m -> m.getAnnotation(Handle.class).method()).collect(Collectors.toSet());
 		var m = s.contains(null) ? "*" : s.stream().collect(Collectors.joining(", "));
 		var h = configuration.getProperty("conduit.backend.cors.headers");
 

@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 import com.janilla.database.Index;
 import com.janilla.persistence.Persistence;
-import com.janilla.web.Handler;
+import com.janilla.web.Handle;
 
 public class TagApi {
 
@@ -42,7 +42,7 @@ public class TagApi {
 		this.persistence = persistence;
 	}
 
-	@Handler(value = "/api/tags", method = "GET")
+	@Handle(method = "GET", uri = "/api/tags")
 	public Tags tags() throws IOException {
 //		var c = persistence.getCrud(Article.class);
 //		return new Tags(c.<String>getIndexValues("tag").limit(10));

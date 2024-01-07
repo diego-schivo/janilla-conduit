@@ -23,10 +23,44 @@
  */
 package com.janilla.conduit.backend;
 
+import com.janilla.database.Index;
+import com.janilla.io.ElementHelper;
+import com.janilla.io.ElementHelper.SortOrder;
+import com.janilla.io.ElementHelper.TypeAndOrder;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
 
 class CustomPersistence extends Persistence {
+
+	@Override
+	public <K, V> boolean initialize(String name, Index<K, V> index) {
+		if (super.initialize(name, index))
+			return true;
+		return switch (name) {
+		case "Article.favoriteList", "User.followList" -> {
+			@SuppressWarnings("unchecked")
+			var i = (Index<Long, Long>) index;
+			i.setKeyHelper(ElementHelper.LONG);
+			i.setValueHelper(ElementHelper.LONG);
+			yield true;
+		}
+		case "Tag.count" -> {
+			@SuppressWarnings("unchecked")
+			var i = (Index<Object[], String>) index;
+			i.setKeyHelper(ElementHelper.of(new TypeAndOrder(Long.class, SortOrder.DESCENDING)));
+			i.setValueHelper(ElementHelper.STRING);
+			yield true;
+		}
+		case "User.favoriteList" -> {
+			@SuppressWarnings("unchecked")
+			var i = (Index<Long, Object[]>) index;
+			i.setKeyHelper(ElementHelper.LONG);
+			i.setValueHelper(ElementHelper.of(Article.class, "-createdAt", "id"));
+			yield true;
+		}
+		default -> false;
+		};
+	}
 
 	@Override
 	protected <E> Crud<E> newCrud(Class<E> type) {

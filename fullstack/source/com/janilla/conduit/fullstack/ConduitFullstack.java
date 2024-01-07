@@ -29,12 +29,9 @@ import java.util.function.Supplier;
 
 import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.conduit.frontend.ConduitFrontend;
+import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpServer;
 import com.janilla.util.Lazy;
-import com.janilla.web.DelegatingHandlerFactory;
-import com.janilla.web.HandlerFactory;
-import com.janilla.web.NotFoundException;
 
 public class ConduitFullstack {
 
@@ -47,7 +44,13 @@ public class ConduitFullstack {
 		var f = new ConduitFullstack();
 		f.setConfiguration(c);
 		f.backend.get().populate();
-		f.serve();
+//		f.serve();
+
+		var s = new CustomHttpServer();
+		s.fullstack = f;
+		s.setExecutor(Runnable::run);
+		s.setPort(Integer.parseInt(c.getProperty("conduit.fullstack.http.port")));
+		s.serve(f.getHandler());
 	}
 
 	Properties configuration;
@@ -64,28 +67,42 @@ public class ConduitFullstack {
 		return f;
 	});
 
-	Supplier<HttpServer> httpServer = Lazy.of(() -> {
-		var s = new CustomHttpServer();
-		s.fullstack = this;
-		s.setExecutor(Runnable::run);
-		s.setPort(Integer.parseInt(configuration.getProperty("conduit.fullstack.http.port")));
-		return s;
-	});
+//	Supplier<HttpServer> httpServer = Lazy.of(() -> {
+//		var s = new CustomHttpServer();
+//		s.fullstack = this;
+//		s.setExecutor(Runnable::run);
+//		s.setPort(Integer.parseInt(configuration.getProperty("conduit.fullstack.http.port")));
+//		return s;
+//	});
 
-	Supplier<HandlerFactory> handlerFactory = Lazy.of(() -> {
-		var f = new DelegatingHandlerFactory();
-		f.setToHandler(o -> {
-			return switch (o) {
+//	Supplier<HandlerFactory> handlerFactory = Lazy.of(() -> {
+//		var f = new DelegatingHandlerFactory();
+//		f.setToHandler(o -> {
+//			return switch (o) {
+//			case HttpRequest q -> {
+//				var p = q.getURI().getPath();
+//				var g = p.startsWith("/api/") ? backend.get().getHandlerFactory() : frontend.get().getHandlerFactory();
+//				yield g.createHandler(o);
+//			}
+//			case Exception e -> backend.get().getHandlerFactory().createHandler(o);
+//			default -> null;
+//			};
+//		});
+//		return f;
+//	});
+	Supplier<HttpHandler> handler = Lazy.of(() -> {
+		return c -> {
+			var o = c.getException() != null ? c.getException() : c.getRequest();
+			var h = switch (o) {
 			case HttpRequest q -> {
 				var p = q.getURI().getPath();
-				var g = p.startsWith("/api/") ? backend.get().getHandlerFactory() : frontend.get().getHandlerFactory();
-				yield g.createHandler(o);
+				yield p.startsWith("/api/") ? backend.get().getHandler() : frontend.get().getHandler();
 			}
-			case Exception e -> backend.get().getHandlerFactory().createHandler(o);
+			case Exception e -> backend.get().getHandler();
 			default -> null;
 			};
-		});
-		return f;
+			h.handle(c);
+		};
 	});
 
 	public Properties getConfiguration() {
@@ -104,14 +121,18 @@ public class ConduitFullstack {
 		return frontend.get();
 	}
 
-	public void serve() throws IOException {
-		httpServer.get().serve(c -> {
-			var e = c.getException();
-			var o = e != null ? e : c.getRequest();
-			var h = handlerFactory.get().createHandler(o);
-			if (h == null)
-				throw new NotFoundException();
-			h.handle(c);
-		});
+	public HttpHandler getHandler() {
+		return handler.get();
 	}
+
+//	public void serve() throws IOException {
+//		httpServer.get().serve(c -> {
+//			var e = c.getException();
+//			var o = e != null ? e : c.getRequest();
+//			var h = handlerFactory.get().createHandler(o);
+//			if (h == null)
+//				throw new NotFoundException();
+//			h.handle(c);
+//		});
+//	}
 }

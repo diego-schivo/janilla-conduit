@@ -39,7 +39,7 @@ import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Parameter;
 import com.janilla.reflect.Reflection;
-import com.janilla.web.Handler;
+import com.janilla.web.Handle;
 
 public class UserApi {
 
@@ -63,7 +63,7 @@ public class UserApi {
 		this.configuration = configuration;
 	}
 
-	@Handler(value = "/api/users/login", method = "POST")
+	@Handle(method = "POST", uri = "/api/users/login")
 	public Object authenticate(Authenticate authenticate) throws IOException {
 		var v = new Validation();
 		v.isNotBlank("email", authenticate.user.email);
@@ -82,7 +82,7 @@ public class UserApi {
 		return get(u);
 	}
 
-	@Handler(value = "/api/user", method = "GET")
+	@Handle(method = "GET", uri = "/api/user")
 	public Object get(User user) {
 		var h = Map.of("alg", "HS256", "typ", "JWT");
 		var p = user != null ? Map.of("loggedInAs", user.getEmail()) : null;
@@ -92,7 +92,7 @@ public class UserApi {
 						: null);
 	}
 
-	@Handler(value = "/api/users", method = "POST")
+	@Handle(method = "POST", uri = "/api/users")
 	public Object register(Register register) throws IOException {
 		var u = register.user;
 		var v = new Validation();
@@ -116,7 +116,7 @@ public class UserApi {
 		return get(w);
 	}
 
-	@Handler(value = "/api/user", method = "PUT")
+	@Handle(method = "PUT", uri = "/api/user")
 	public Object update(Update update, User user) throws IOException {
 		var u = update.user;
 		var v = new Validation();

@@ -37,7 +37,7 @@ import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Parameter;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.ForbiddenException;
-import com.janilla.web.Handler;
+import com.janilla.web.Handle;
 
 public class ArticleApi {
 
@@ -57,7 +57,7 @@ public class ArticleApi {
 		this.persistence = persistence;
 	}
 
-	@Handler(value = "/api/articles", method = "POST")
+	@Handle(method = "POST", uri = "/api/articles")
 	public Object create(Form form, User user) throws IOException {
 		var s = toSlug(form.article.title);
 		validate(null, s, form.article);
@@ -70,7 +70,7 @@ public class ArticleApi {
 		return Map.of("article", a);
 	}
 
-	@Handler(value = "/api/articles/([^/]*)", method = "PUT")
+	@Handle(method = "PUT", uri = "/api/articles/([^/]*)")
 	public Object update(String slug, Form form, User user) throws IOException {
 		var s = toSlug(form.article.title);
 		validate(slug, s, form.article);
@@ -83,20 +83,20 @@ public class ArticleApi {
 		return Map.of("article", a);
 	}
 
-	@Handler(value = "/api/articles/([^/]*)", method = "DELETE")
+	@Handle(method = "DELETE", uri = "/api/articles/([^/]*)")
 	public void delete(String slug) throws IOException {
 		var c = persistence.getCrud(Article.class);
 		c.indexApply("slug", slug, i -> c.delete(i)).findFirst().orElse(null);
 	}
 
-	@Handler(value = "/api/articles/([^/]*)", method = "GET")
+	@Handle(method = "GET", uri = "/api/articles/([^/]*)")
 	public Object get(String slug) throws IOException {
 		var c = persistence.getCrud(Article.class);
 		var a = c.indexApply("slug", slug, c::read).findFirst().orElseThrow();
 		return Collections.singletonMap("article", a);
 	}
 
-	@Handler(value = "/api/articles", method = "GET")
+	@Handle(method = "GET", uri = "/api/articles")
 	public Object list(@Parameter("tag") String tag, @Parameter("author") String author,
 			@Parameter("favorited") String favorited, @Parameter("skip") long skip, @Parameter("limit") long limit)
 			throws IOException {
@@ -138,7 +138,7 @@ public class ArticleApi {
 		}).skip(skip).limit(limit), "articlesCount", a.c);
 	}
 
-	@Handler(value = "/api/articles/([^/]*)/comments", method = "POST")
+	@Handle(method = "POST", uri = "/api/articles/([^/]*)/comments")
 	public Object createComment(String slug, CommentForm form, User user) throws IOException {
 		var v = new Validation();
 		if (v.isNotBlank("body", form.comment.body))
@@ -155,7 +155,7 @@ public class ArticleApi {
 		return Map.of("comment", c);
 	}
 
-	@Handler(value = "/api/articles/([^/]*)/comments/([^/]*)", method = "DELETE")
+	@Handle(method = "DELETE", uri = "/api/articles/([^/]*)/comments/([^/]*)")
 	public void deleteComment(String slug, Long id, User user) throws IOException {
 		var c = persistence.getCrud(Comment.class);
 		var d = c.read(id);
@@ -165,7 +165,7 @@ public class ArticleApi {
 			throw new ForbiddenException();
 	}
 
-	@Handler(value = "/api/articles/([^/]*)/comments", method = "GET")
+	@Handle(method = "GET", uri = "/api/articles/([^/]*)/comments")
 	public Object listComments(String slug) throws IOException {
 		var c = persistence.getCrud(Comment.class);
 		var d = persistence.getCrud(Article.class).indexApply("slug", slug, i -> i).findFirst().map(i -> {
@@ -178,7 +178,7 @@ public class ArticleApi {
 		return Map.of("comments", d);
 	}
 
-	@Handler(value = "/api/articles/([^/]*)/favorite", method = "POST")
+	@Handle(method = "POST", uri = "/api/articles/([^/]*)/favorite")
 	public Object favorite(String slug, User user) throws IOException {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
@@ -196,7 +196,7 @@ public class ArticleApi {
 		return Map.of("article", a);
 	}
 
-	@Handler(value = "/api/articles/([^/]*)/favorite", method = "DELETE")
+	@Handle(method = "DELETE", uri = "/api/articles/([^/]*)/favorite")
 	public Object unfavorite(String slug, User user) throws IOException {
 		if (user == null)
 			throw new NullPointerException("user=" + user);

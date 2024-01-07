@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.janilla.persistence.Persistence;
-import com.janilla.web.Handler;
+import com.janilla.web.Handle;
 
 public class ProfileApi {
 
@@ -42,14 +42,14 @@ public class ProfileApi {
 		this.persistence = persistence;
 	}
 
-	@Handler(value = "/api/profiles/([^/]*)", method = "GET")
+	@Handle(method = "GET", uri = "/api/profiles/([^/]*)")
 	public Object get(String username) throws IOException {
 		var c = persistence.getCrud(User.class);
 		var p = c.indexApply("username", username, c::read).findFirst().orElse(null);
 		return Collections.singletonMap("profile", p);
 	}
 
-	@Handler(value = "/api/profiles/([^/]*)/follow", method = "POST")
+	@Handle(method = "POST", uri = "/api/profiles/([^/]*)/follow")
 	public Object follow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
 		var p = c.indexApply("username", username, c::read).findFirst().orElse(null);
@@ -58,7 +58,7 @@ public class ProfileApi {
 		return Map.of("profile", p.getId());
 	}
 
-	@Handler(value = "/api/profiles/([^/]*)/follow", method = "DELETE")
+	@Handle(method = "DELETE", uri = "/api/profiles/([^/]*)/follow")
 	public Object unfollow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
 		var p = c.indexApply("username", username, c::read).findFirst().orElse(null);

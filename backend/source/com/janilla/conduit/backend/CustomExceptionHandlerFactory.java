@@ -36,6 +36,7 @@ class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 		super.handle(error, context);
 
 		if (context instanceof CustomExchangeContext c && c.getException() instanceof ValidationException e)
-			c.backend.getHandlerFactory().createHandler(e.getErrors()).handle(c);
+//			c.backend.getHandlerFactory().createHandler(e.getErrors()).handle(c);
+			throw new RuntimeException();
 	}
 }

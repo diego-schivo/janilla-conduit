@@ -39,14 +39,14 @@ import com.janilla.io.IO;
 import com.janilla.util.Evaluator;
 import com.janilla.util.Interpolator;
 import com.janilla.util.Lazy;
-import com.janilla.web.Handler;
+import com.janilla.web.Handle;
 import com.janilla.web.Render;
 
 public class Templates {
 
 	Supplier<Template[]> templates = Lazy.of(() -> {
 		var b = Stream.<Template>builder();
-		IO.packageFiles(ConduitFrontend.class.getPackageName(), Thread.currentThread().getContextClassLoader(), f -> {
+		IO.acceptPackageFiles("com.janilla.conduit.frontend", f -> {
 			var n = f.getFileName().toString();
 			if (!n.endsWith(".html"))
 				return;
@@ -83,16 +83,16 @@ public class Templates {
 		return b.build().toArray(Template[]::new);
 	});
 
-	@Handler(value = "/templates.js", method = "GET")
+	@Handle(method = "GET", uri = "/templates.js")
 	public Script getScript() {
 		return new Script(Arrays.stream(templates.get()));
 	}
 
-	@Render("templates.js")
+	@Render(template = "templates.js")
 	public record Script(Stream<Template> entries) {
 	}
 
-	@Render("templates-entry.js")
+	@Render(template = "templates-entry.js")
 	public record Template(String name, String html) {
 	}
 }
