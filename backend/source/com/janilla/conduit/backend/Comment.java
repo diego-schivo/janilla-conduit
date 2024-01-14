@@ -41,7 +41,7 @@ public class Comment {
 
 	private Long author;
 
-	@Index
+	@Index(sort = "-createdAt")
 	private Long article;
 
 	public Long getId() {

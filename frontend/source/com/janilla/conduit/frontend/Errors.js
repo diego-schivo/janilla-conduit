@@ -23,30 +23,31 @@
  */
 class Errors {
 
-	conduit;
+	#messages;
 
-	errorMessages;
-
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
-
-		if (key === undefined) {
-			this.renderStack = [...r.stack];
-			return await r.render(this, t['Errors']);
-		}
-
-		if (r.stack.at(-2).key === 'errorMessages') {
-			let m = r.stack.at(-1).object[key];
-			return await r.render(m, t['Errors-item']);
-		}
+	rendering;
+	
+	get messages() {
+		return this.#messages;
+	}
+	
+	set messages(x) {
+		this.#messages = x ? Object.entries(x).flatMap(([k, v]) => v.map(w => `${k} ${w}`)) : null;
 	}
 
-	refresh = async messages => {
-		this.errorMessages = Object.entries(messages).flatMap(([k, v]) => v.map(w => `${k} ${w}`));
-		const r = this.conduit.rendering;
-		const h = await r.render(this, null, this.renderStack);
-		document.querySelector('.error-messages').outerHTML = h;
+	render = async (key, rendering) => {
+		if (key === undefined) {
+			this.rendering = rendering.clone();
+			return await rendering.render(this, 'Errors');
+		}
+
+		if (rendering.stack.at(-2).key === 'messages')
+			return await rendering.render(this.messages[key], 'Errors-message');
+	}
+
+	refresh = async () => {
+		const h = await this.rendering.render(this);
+		this.selector().outerHTML = h;
 	}
 }
 

@@ -22,52 +22,38 @@
  * SOFTWARE.
  */
 class CommentCard {
-	
+
+	selector;
+
 	article;
-	
+
 	comment;
 
 	conduit;
 
-	get modOptionsClass() {
-		return this.conduit.user?.username === this.comment.author.username ? null : 'hidden';
-	}
+	render = async (key, rendering) => {
+		switch (key) {
+			case undefined:
+				this.conduit = rendering.stack[0].object;
+				return await rendering.render(this, 'CommentCard');
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
-
-		if (key === undefined)
-			return await r.render(this, t['CommentCard']);
-
-		if (typeof key === 'string' && Object.hasOwn(this.comment, key)) {
-			let v = this.comment[key];
-			/*
-			if (key === 'createdAt')
-				v = new Date(v).toLocaleDateString('en-US', {
-					year: 'numeric',
-					month: 'long',
-					day: 'numeric'
-				});
-			*/
-			return v;
+			case 'modOptions':
+				return this.conduit.user?.username === this.comment.author.username ? await rendering.render(this, 'CommentCard-modOptions') : '';
 		}
 	}
 
 	listen = () => {
-		document.querySelector(`#comment-${this.comment.id} .ion-trash-a`).addEventListener('click', this.handleTrashClick);
+		this.selector().querySelector('.ion-trash-a')?.addEventListener('click', this.handleDeleteClick);
 	}
 
-	handleTrashClick = async e => {
-		const c = e.target.closest('.card');
-		if (!c)
-			return;
+	handleDeleteClick = async e => {
 		e.preventDefault();
 		const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.article.slug}/comments/${this.comment.id}`, {
 			method: 'DELETE',
 			headers: this.conduit.backendHeaders
 		});
 		if (s.ok) {
+			const c = this.selector();
 			c.dispatchEvent(new CustomEvent('commentremove', {
 				bubbles: true,
 				detail: { comment: this.comment }

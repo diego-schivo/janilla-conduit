@@ -23,23 +23,24 @@
  */
 class TagsInput {
 
-	conduit;
+	selector;
+	
+	rendering;
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
+	render = async (key, rendering) => {
+		if (key === undefined) {
+			this.rendering = rendering.clone();
+			return await rendering.render(this, 'TagsInput');
+		}
 
-		if (key === undefined)
-			return await r.render(this, t['TagsInput']);
-
-		if (r.stack.at(-2).key === 'tagList')
-			return await r.render(r.object[key], t['TagsInput-item']);
+		if (rendering.stack.at(-2).key === 'tagList')
+			return await rendering.render(rendering.object[key], 'TagsInput-tag');
 	}
 
 	listen = () => {
-		const d = document.querySelector('.tag-list');
-		d.previousElementSibling.addEventListener('keydown', this.handleInputKeyDown);
-		d.addEventListener('click', this.handleCloseClick);
+		const i = this.selector().firstElementChild;
+		i.addEventListener('keydown', this.handleInputKeyDown);
+		i.nextElementSibling.addEventListener('click', this.handleCloseClick);
 	}
 
 	handleCloseClick = e => {
@@ -47,7 +48,7 @@ class TagsInput {
 		if (!i)
 			return;
 		e.preventDefault();
-		i.parentElement.remove();
+		i.closest('.tag-default').remove();
 	}
 
 	handleInputKeyDown = async e => {
@@ -57,7 +58,7 @@ class TagsInput {
 		const i = e.currentTarget;
 		const d = i.nextElementSibling;
 		if (!d.querySelector(`[value="${i.value}"]`)) {
-			const h = await this.conduit.rendering.render(i.value, this.conduit.templates['TagsInput-item']);
+			const h = await this.rendering.render(i.value, 'TagsInput-tag');
 			d.insertAdjacentHTML('beforeend', h);
 		}
 		i.value = '';

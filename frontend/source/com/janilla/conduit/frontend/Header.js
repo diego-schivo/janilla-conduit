@@ -23,14 +23,14 @@
  */
 class Header {
 
-	conduit;
+	user;
 
 	get navItems() {
 		const h = {
 			hash: '#/',
 			text: 'Home'
 		};
-		if (this.conduit.user)
+		if (this.user)
 			return [
 				h, {
 					hash: '#/editor',
@@ -39,8 +39,8 @@ class Header {
 					hash: '#/settings',
 					text: '<i class="ion-gear-a"></i>&nbsp;Settings'
 				}, {
-					hash: `#/@${this.conduit.user.username}`,
-					text: `<img src="${this.conduit.user.image}" class="user-pic" /> ${this.conduit.user.username}`
+					hash: `#/@${this.user.username}`,
+					text: `<img src="${this.user.image}" class="user-pic" /> ${this.user.username}`
 				}];
 		else
 			return [
@@ -53,18 +53,17 @@ class Header {
 				}];
 	}
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
+	render = async (key, rendering) => {
+		if (key === undefined) {
+			this.user = rendering.stack[0].object.user;
+			return await rendering.render(this, 'Header');
+		}
 
-		if (key === undefined)
-			return await r.render(this, t['Header']);
-
-		if (r.stack.at(-2).key === 'navItems') {
-			let i = r.object[key];
+		if (rendering.stack.at(-2).key === 'navItems') {
+			let i = rendering.object[key];
 			if (i.hash === location.hash)
 				i.active = 'active';
-			return await r.render(i, t['Header-navitem']);
+			return await rendering.render(i, 'Header-navitem');
 		}
 	}
 }

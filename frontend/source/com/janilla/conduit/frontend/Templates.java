@@ -88,11 +88,17 @@ public class Templates {
 		return new Script(Arrays.stream(templates.get()));
 	}
 
-	@Render(template = "templates.js")
+	@Render(template = """
+			export default {
+			  ${entries}
+			};""")
 	public record Script(Stream<Template> entries) {
 	}
 
-	@Render(template = "templates-entry.js")
+	@Render(template = """
+			  '${name}': async r => `
+			#{html}
+			  `,""")
 	public record Template(String name, String html) {
 	}
 }

@@ -23,6 +23,8 @@
  */
 package com.janilla.conduit.fullstack;
 
+import java.net.URI;
+
 import com.janilla.http.ExchangeContext;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
@@ -33,7 +35,13 @@ class CustomHttpServer extends HttpServer {
 
 	@Override
 	protected ExchangeContext newExchangeContext(HttpRequest request) {
-		var p = request.getURI().getPath();
-		return p.startsWith("/api/") ? fullstack.getBackend().newExchangeContext() : super.newExchangeContext(request);
+		URI u;
+		try {
+			u = request.getURI();
+		} catch (NullPointerException e) {
+			u = null;
+		}
+		return u != null && u.getPath().startsWith("/api/") ? fullstack.getBackend().newExchangeContext()
+				: super.newExchangeContext(request);
 	}
 }

@@ -26,10 +26,7 @@ import Conduit from './Conduit.js';
 const l = () => {
 	const c = new Conduit();
 	c.backendUrl = '${backendUrl}';
-	c.run();
+	c.start();
 }
 
-if (document.readyState === 'loading')
-	document.addEventListener('DOMContentLoaded', l);
-else
-	l();
+document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', l) : l();

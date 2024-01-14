@@ -30,41 +30,34 @@ import Login from './Login.js';
 import Profile from './Profile.js';
 import Register from './Register.js';
 import Settings from './Settings.js';
-import templates from './templates.js';
 
 class Conduit {
 
 	backendUrl;
 
-	layout = new Layout();
+	layout;
+	
+	page;
 
 	pages = {
-		'': new Home(),
-		'article': new Article(),
-		'editor': new Editor(),
-		'login': new Login(),
-		'profile': new Profile(),
-		'register': new Register(),
-		'settings': new Settings()
+		'': () => new Home(),
+		'article': () => new Article(),
+		'editor': () => new Editor(),
+		'login': () => new Login(),
+		'profile': () => new Profile(),
+		'register': () => new Register(),
+		'settings': () => new Settings()
 	};
-
-	rendering = new ConduitRendering();
-
-	templates = templates;
 
 	token = localStorage.getItem('jwtToken');
 
 	user;
 
-	constructor() {
-		[this.layout, ...Object.values(this.pages), this.rendering].forEach(o => o.conduit = this);
-	}
-
 	get backendHeaders() {
 		return this.user ? { 'Authorization': `Token ${this.user.token}` } : {};
 	}
 
-	run = async () => {
+	start = async () => {
 		if (this.token) {
 			const s = await fetch(`${this.backendUrl}/api/user`, {
 				headers: { 'Authorization': `Token ${this.token}` }
@@ -73,28 +66,33 @@ class Conduit {
 				this.user = (await s.json()).user;
 		}
 		this.listen();
-		if (location.hash) this.handleHashChange();
+		if (location.hash) await this.handleHashChange();
 		else location.hash = '#/';
 	}
 
 	render = async key => {
-		if (key === undefined)
+		if (key === undefined) {
+			this.layout = new Layout();
+			this.layout.selector = () => document.body.firstElementChild;
+			this.layout.page = this.page;
 			return this.layout;
+		}
 	}
 
 	listen = () => {
-		window.addEventListener('hashchange', this.handleHashChange);
-		window.addEventListener('userchange', this.handleUserChange);
-		this.layout.listen();
+		addEventListener('hashchange', this.handleHashChange);
+		addEventListener('userchange', this.handleUserChange);
+		this.layout?.listen();
 	}
 
 	handleHashChange = async () => {
 		const h = location.hash;
-		const p = this.pages[h.startsWith('#/@') ? 'profile' : h.split('/')[1]];
-		document.title = p.title + ' \u2014 Conduit';
-		this.layout.page = p;
-		const r = this.rendering.renderer(this);
-		document.querySelector('body > div').innerHTML = await r();
+		this.page = this.pages[h.startsWith('#/@') ? 'profile' : h.split('/')[1]]();
+		this.page.selector = () => this.layout.selector().children[1];
+		document.title = this.page.title + ' \u2014 Conduit';
+		const r = new ConduitRendering();
+		const i = await r.renderer(this)();
+		this.layout.selector().innerHTML = i;
 		this.listen();
 	}
 

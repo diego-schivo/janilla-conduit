@@ -1,18 +1,14 @@
-<div id="comment-${id}" class="card">
+<div class="card">
 	<div class="card-block">
-		<p class="card-text">
-			${body}
-		</p>
+		<p class="card-text">${comment.body}</p>
 	</div>
 	<div class="card-footer">
-		<a href="#/@${author.username}" class="comment-author">
-			<img src="${author.image}" class="comment-author-img" />
+		<a href="#/@${comment.author.username}" class="comment-author">
+			<img src="${comment.author.image}" class="comment-author-img" />
 		</a>
 		&nbsp;
-		<a href="#/@${author.username}" class="comment-author">${author.username}</a>
-		<span class="date-posted">${createdAt}</span>
-		<span class="mod-options" ${modOptionsClass}>
-			<i class="ion-trash-a"></i>
-		</span>
+		<a href="#/@${comment.author.username}" class="comment-author">${comment.author.username}</a>
+		<span class="date-posted">${comment.createdAt}</span>
+		#{modOptions}
 	</div>
 </div>

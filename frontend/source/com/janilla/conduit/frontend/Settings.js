@@ -25,38 +25,33 @@ import Errors from './Errors.js';
 
 class Settings {
 
+	selector;
+
+	title = 'Settings';
+	
 	conduit;
 
 	errors;
 
-	title = 'Settings';
-
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
-
+	render = async (key, rendering) => {
 		switch (key) {
 			case undefined:
-				return await r.render(this, t['Settings']);
+				this.conduit = rendering.stack[0].object;
+				return await rendering.render(this, 'Settings');
 
 			case 'errors':
 				this.errors = new Errors();
-				this.errors.conduit = this.conduit;
+				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
 				return this.errors;
 		}
-
-		/*
-		if (typeof key === 'string' && Object.hasOwn(this.conduit.user, key))
-			return this.conduit.user[key];
-		*/
 	}
 
 	listen = () => {
-		document.querySelector('form').addEventListener('submit', this.handleFormSubmit);
-		document.querySelector('button[name="logout"]').addEventListener('click', this.handleLogoutClick);
+		this.selector().querySelector('form').addEventListener('submit', this.handleSubmit);
+		this.selector().querySelector('form ~ button').addEventListener('click', this.handleLogoutClick);
 	}
 
-	handleFormSubmit = async e => {
+	handleSubmit = async e => {
 		e.preventDefault();
 		const s = await fetch(`${this.conduit.backendUrl}/api/user`, {
 			method: 'PUT',
@@ -64,16 +59,17 @@ class Settings {
 			body: JSON.stringify({ user: Object.fromEntries(new FormData(e.currentTarget)) })
 		});
 		const j = await s.json();
+		this.errors.messages = s.ok ? null : j;
+		await this.errors.refresh();
 		if (s.ok) {
 			this.conduit.user = j.user;
 			location.hash = `#/@${this.conduit.user.username}`;
-		} else
-			await this.errors.refresh(j);
+		}
 	}
 
 	handleLogoutClick = async e => {
 		e.preventDefault();
-		window.dispatchEvent(new CustomEvent('userchange', {
+		dispatchEvent(new CustomEvent('userchange', {
 			detail: { user: null }
 		}));
 		location.hash = '#/';

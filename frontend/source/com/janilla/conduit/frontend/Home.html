@@ -1,22 +1,15 @@
 <div class="home-page">
-	<div class="banner">
-		<div class="container">
-			<h1 class="logo-font">conduit</h1>
-			<p>A place to share your knowledge.</p>
-		</div>
-	</div>
+	#{banner}
 	<div class="container page">
 		<div class="row">
 			<div class="col-md-9">
-				#{feeds}
+				<div class="feed-toggle">
+					#{tabs}
+				</div>
+				#{articleList}
 			</div>
 			<div class="col-md-3">
-				<div class="sidebar">
-					<p>Popular Tags</p>
-					<div class="tag-list">
-						#{tags}
-					</div>
-				</div>
+				<div class="sidebar">#{popularTags}</div>
 			</div>
 		</div>
 	</div>

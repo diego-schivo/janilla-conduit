@@ -80,53 +80,58 @@ class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					default -> object;
 					};
 				}
-				if (object instanceof Article a) {
-					var m = Reflection.properties(Article.class).filter(p -> switch (p) {
-					case "id" -> false;
-					default -> true;
-					}).map(k -> {
-						var g = Reflection.getter(Article.class, k);
-						Object v;
+				if (object != null)
+					object = switch (object) {
+					case Article a -> {
+						var m = Reflection.properties(Article.class).filter(p -> switch (p) {
+						case "id" -> false;
+						default -> true;
+						}).map(k -> {
+							var g = Reflection.getter(Article.class, k);
+							Object v;
+							try {
+								v = g.invoke(a);
+							} catch (ReflectiveOperationException f) {
+								throw new RuntimeException(f);
+							}
+							return new SimpleEntry<>(k, v);
+						}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
+						var u = ((CustomExchangeContext) context).user.get();
 						try {
-							v = g.invoke(a);
-						} catch (ReflectiveOperationException f) {
-							throw new RuntimeException(f);
+							m.put("favorited", u != null && backend.getPersistence().getCrud(User.class)
+									.indexApply("favoriteList", u.getId(), i -> i).anyMatch(i -> i.equals(a.getId())));
+							m.put("favoritesCount", backend.getPersistence().getCrud(Article.class)
+									.indexCount("favoriteList", a.getId()));
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
 						}
-						return new SimpleEntry<>(k, v);
-					}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
-					var u = ((CustomExchangeContext) context).user.get();
-					try {
-						m.put("favorited", u != null && backend.getPersistence().getCrud(User.class)
-								.indexApply("favoriteList", u.getId(), i -> i).anyMatch(i -> i.equals(a.getId())));
-						m.put("favoritesCount",
-								backend.getPersistence().getCrud(Article.class).indexCount("favoriteList", a.getId()));
-					} catch (IOException e) {
-						throw new UncheckedIOException(e);
+						yield m;
 					}
-					object = m;
-				} else if (object instanceof User u) {
-					var m = Reflection.properties(User.class).filter(p -> switch (p) {
-					case "hash", "id", "salt" -> false;
-					default -> true;
-					}).map(k -> {
-						var g = Reflection.getter(User.class, k);
-						Object w;
+					case User u -> {
+						var m = Reflection.properties(User.class).filter(p -> switch (p) {
+						case "hash", "id", "salt" -> false;
+						default -> true;
+						}).map(k -> {
+							var g = Reflection.getter(User.class, k);
+							Object w;
+							try {
+								w = g.invoke(u);
+							} catch (ReflectiveOperationException h) {
+								throw new RuntimeException(h);
+							}
+							return new SimpleEntry<>(k, w);
+						}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
+						var v = ((CustomExchangeContext) context).user.get();
 						try {
-							w = g.invoke(u);
-						} catch (ReflectiveOperationException h) {
-							throw new RuntimeException(h);
+							m.put("following", v != null && backend.getPersistence().getCrud(User.class)
+									.indexApply("followList", v.getId(), i -> i).anyMatch(i -> i.equals(u.getId())));
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
 						}
-						return new SimpleEntry<>(k, w);
-					}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
-					var v = ((CustomExchangeContext) context).user.get();
-					try {
-						m.put("following", v != null && backend.getPersistence().getCrud(User.class)
-								.indexApply("followList", v.getId(), i -> i).anyMatch(i -> i.equals(u.getId())));
-					} catch (IOException e) {
-						throw new UncheckedIOException(e);
+						yield m;
 					}
-					object = m;
-				}
+					default -> object;
+					};
 				return super.newValueIterator(object);
 			}
 		};

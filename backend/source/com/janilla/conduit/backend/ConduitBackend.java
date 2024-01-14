@@ -34,14 +34,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 import com.janilla.http.ExchangeContext;
-import com.janilla.http.HttpHandler;
 import com.janilla.io.IO;
 import com.janilla.persistence.Persistence;
 import com.janilla.persistence.PersistenceBuilder;
 import com.janilla.util.Lazy;
 import com.janilla.util.Randomize;
 import com.janilla.util.Util;
-import com.janilla.web.AnnotationDrivenToInvocation;
+import com.janilla.web.AnnotationDrivenToMethodInvocation;
 
 public class ConduitBackend {
 
@@ -59,7 +58,8 @@ public class ConduitBackend {
 		s.backend = b;
 		s.setExecutor(Runnable::run);
 		s.setPort(Integer.parseInt(c.getProperty("conduit.backend.http.port")));
-		s.serve(b.getHandler());
+		s.setHandler(b.getHandler());
+		s.serve();
 	}
 
 	Properties configuration;
@@ -72,57 +72,14 @@ public class ConduitBackend {
 				p = System.getProperty("user.home") + p.substring(1);
 			b.setFile(Path.of(p));
 		}
-		b.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.backend"));
+		b.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.backend").iterator());
 		b.setPersistence(CustomPersistence::new);
 		return b.build();
 	});
 
-//	Supplier<HttpServer> httpServer = Lazy.of(() -> {
-//		var s = new CustomHttpServer();
-//		s.backend = this;
-//		s.setExecutor(Runnable::run);
-//		s.setPort(Integer.parseInt(configuration.getProperty("conduit.backend.http.port")));
-//		return s;
-//	});
+	AnnotationDrivenToMethodInvocation toInvocation;
 
-	AnnotationDrivenToInvocation toEndpointInvocation;
-
-//	Supplier<HandlerFactory> handlerFactory = Lazy.of(() -> {
-//		var f1 = new MethodHandlerFactory();
-//		{
-//			var i = new CustomAnnotationDrivenToInvocation();
-//			i.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.backend"));
-//			i.backend = this;
-//			f1.setToInvocation(i);
-//			toEndpointInvocation = i;
-//		}
-//		{
-//			var r = new CustomMethodArgumentsResolver();
-//			r.backend = this;
-//			f1.setArgumentsResolver(r);
-//		}
-//
-//		var f2 = new CustomJsonHandlerFactory();
-//		f2.backend = this;
-//
-//		var f3 = new CustomExceptionHandlerFactory();
-//
-//		var f = new DelegatingHandlerFactory();
-//		{
-//			var a = new HandlerFactory[] { f1, f2, f3 };
-//			f.setToHandler(o -> {
-//				for (var g : a) {
-//					var h = g.createHandler(o);
-//					if (h != null)
-//						return h;
-//				}
-//				return null;
-//			});
-//		}
-//		f1.setRenderFactory(f);
-//		return f;
-//	});
-	Supplier<HttpHandler> handler = Lazy.of(() -> {
+	Supplier<IO.Consumer<ExchangeContext>> handler = Lazy.of(() -> {
 		var b = new CustomApplicationHandlerBuilder();
 		b.setApplication(ConduitBackend.this);
 		return b.build();
@@ -144,19 +101,11 @@ public class ConduitBackend {
 		}
 	}
 
-//	public HttpServer getHttpServer() {
-//		return httpServer.get();
-//	}
-
-	public AnnotationDrivenToInvocation getToEndpointInvocation() {
-		return toEndpointInvocation;
+	public AnnotationDrivenToMethodInvocation getToInvocation() {
+		return toInvocation;
 	}
 
-//	public HandlerFactory getHandlerFactory() {
-//		return handlerFactory.get();
-//	}
-
-	public HttpHandler getHandler() {
+	public IO.Consumer<ExchangeContext> getHandler() {
 		return handler.get();
 	}
 
@@ -169,7 +118,6 @@ public class ConduitBackend {
 	public void populate() throws IOException {
 		var p = persistence.get();
 		var e = p.getCrud(Article.class);
-//		System.out.println("e=" + e);
 		if (e.count() > 0)
 			return;
 		var f = p.getCrud(User.class);
@@ -178,10 +126,10 @@ public class ConduitBackend {
 		var tags = Randomize.elements(5, 15, w).distinct().toList();
 		for (var j = r.nextInt(10, 16); j > 0; j--) {
 			var u = new User();
-			u.setUsername(Randomize.sentence(2, 2, () -> Randomize.element(w)));
-			u.setEmail(u.getUsername().replace(' ', '.') + "@example.com");
-			UserApi.setHashAndSalt(u, "123456");
-//			u.setImage("https://api.realworld.io/images/smiley-cyrus.jpeg");
+			var n = Randomize.sentence(2, 2, () -> Randomize.element(w));
+			u.setUsername(n);
+			u.setEmail(n.replace(' ', '@'));
+			UserApi.setHashAndSalt(u, n.substring(0, n.indexOf(' ')));
 			u.setImage(
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600 + r.nextInt(0x50))) + "</text></svg>");
@@ -200,14 +148,4 @@ public class ConduitBackend {
 			}
 		}
 	}
-
-//	public void serve() throws IOException {
-//		httpServer.get().serve(c -> {
-//			var o = c.getException() != null ? c.getException() : c.getRequest();
-//			var h = handlerFactory.get().createHandler(o);
-//			if (h == null)
-//				throw new NotFoundException();
-//			h.handle(c);
-//		});
-//	}
 }

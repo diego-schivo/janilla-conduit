@@ -21,78 +21,111 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import Feeds from './Feeds.js';
+import ArticleList from './ArticleList.js';
+import PopularTags from './PopularTags.js';
+import Tabs from './Tabs.js';
 
 class Home {
-
-	tag;
+	
+	selector;
 
 	title = 'Home';
 
-	get navItems() {
-		const i = [
-			{ text: 'Global Feed' }
-		];
-		if (this.tag)
-			i.push({ text: `<i class="ion-pound"></i>${this.tag}` });
-		i.at(-1).active = 'active';
+	tabs;
+
+	articleList;
+
+	popularTags;
+
+	tab;
+
+	tag;
+	
+	user;
+
+	get tabItems() {
+		const i = [];
+		if (this.user)
+			i.push({
+				name: 'feed',
+				text: 'Your Feed'
+			});
+		i.push({
+			name: 'all',
+			text: 'Global Feed'
+		});
+		if (this.tab === 'tag')
+			i.push({
+				name: 'tag',
+				text: `<i class="ion-pound"></i>${this.tag}`
+			});
+		i.find(j => j.name === this.tab).active = 'active';
 		return i;
 	}
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
-
+	render = async (key, rendering) => {
 		switch (key) {
 			case undefined:
-				const s = await fetch(`${this.conduit.backendUrl}/api/tags`, {
-					headers: this.conduit.backendHeaders
-				});
-				if (s.ok)
-					this.tags = (await s.json()).tags;
-				return await r.render(this, t['Home']);
+				this.user = rendering.stack[0].object.user;
+				this.tab = this.user ? 'feed' : 'all';
+				return await rendering.render(this, 'Home');
 
-			case 'feeds':
-				this.feedsRenderStack = [...r.stack];
-				this.feeds = new Feeds();
-				this.feeds.conduit = this.conduit;
-				this.feeds.modifyParameters = p => {
-					if (this.tag)
-						p.set('tag', this.tag);
-				};
-				this.feeds.toggleClass = 'feed-toggle';
-				return this.feeds;
+			case 'banner':
+				return this.user ? null : await rendering.render(this, 'Home-banner');
+
+			case 'tabs':
+				this.tabs = new Tabs();
+				this.tabs.selector = () => this.selector().querySelector('.feed-toggle').firstElementChild;
+				this.tabs.items = this.tabItems;
+				return this.tabs;
+
+			case 'articleList':
+				this.articleList = new ArticleList();
+				this.articleList.selector = () => this.selector().querySelector('.feed-toggle').nextElementSibling;
+				return this.articleList;
+
+			case 'popularTags':
+				this.popularTags = new PopularTags();
+				this.popularTags.selector = () => this.selector().querySelector('.sidebar').firstElementChild;
+				return this.popularTags;
 		}
-
-		const u = {
-			'navItems': 'Home-navitem',
-			'pageItems': 'Home-pageitem',
-			'tagList': 'Article-tag',
-			'tags': 'Home-tag'
-		}[r.stack.at(-2).key];
-		if (u)
-			return await r.render(r.object[key], t[u]);
 	}
 
 	listen = () => {
-		document.querySelector('.home-page').addEventListener('feedselect', this.handleFeedSelect);
-		document.querySelector('.sidebar .tag-list').addEventListener('click', this.handleTagClick);
-		this.feeds.listen();
+		const e = this.selector();
+		e.addEventListener('tabselect', this.handleTabSelect);
+		e.addEventListener('articlesfetch', this.handleArticlesFetch);
+		e.addEventListener('tagselect', this.handleTagSelect);
+		this.tabs.listen();
+		this.articleList.listen();
+		this.popularTags.listen();
 	}
 
-	handleFeedSelect = async e => {
-		if (e.detail.navLink.parentElement.matches('.nav-item:first-child'))
+	handleTabSelect = async e => {
+		this.tab = e.detail.tab;
+		if (this.tab !== 'tag' && this.tag) {
+			e.preventDefault();
 			delete this.tag;
+			this.tabs.items = this.tabItems;
+			await this.tabs.refresh();
+		}
+		await this.articleList.refresh();
 	}
 
-	handleTagClick = async e => {
-		e.preventDefault();
-		const a = e.target.closest('.tag-pill');
-		if (!a)
-			return;
-		this.tag = a.textContent;
-		this.feeds.pageNumber = 1;
-		this.feeds.refresh();
+	handleArticlesFetch = async e => {
+		const u = e.detail.url;
+		if (this.tab === 'feed')
+			u.pathname += '/feed';
+		if (this.tag)
+			u.searchParams.set('tag', this.tag);
+	}
+
+	handleTagSelect = async e => {
+		this.tab = 'tag';
+		this.tag = e.detail.tag;
+		this.tabs.items = this.tabItems;
+		await this.tabs.refresh();
+		await this.articleList.refresh();
 	}
 }
 

@@ -26,52 +26,56 @@ import TagsInput from './TagsInput.js';
 
 class Editor {
 
+	selector;
+
+	title = 'Editor';
+
 	article;
+
+	conduit;
 
 	errors;
 
-	tagsControl;
-
-	title = 'Editor';
+	tags;
 
 	get slug() {
 		return location.hash.split('/')[2];
 	}
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
-
+	render = async (key, rendering) => {
 		switch (key) {
 			case undefined:
+				this.conduit = rendering.stack[0].object;
 				if (this.slug) {
 					const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.slug}`, {
 						headers: this.conduit.backendHeaders
 					});
-					if (s.ok)
-						this.article = (await s.json()).article;
+					this.article = s.ok ? (await s.json()).article : null;
 				} else
-					delete this.article;
-				return await r.render(this, t['Editor']);
+					this.article = null;
+				return await rendering.render(this, 'Editor');
 
 			case 'errors':
 				this.errors = new Errors();
-				this.errors.conduit = this.conduit;
+				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
 				return this.errors;
 
 			case 'tags':
-				this.tagsControl = new TagsInput();
-				this.tagsControl.conduit = this.conduit;
-				return this.tagsControl;
+				this.tags = new TagsInput();
+				this.tags.selector = () => this.selector().querySelector('button').previousElementSibling;
+				return this.tags;
+
+			case 'tagList':
+				return this.article?.tagList;
 		}
 	}
 
 	listen = () => {
-		document.querySelector('form').addEventListener('submit', this.handleFormSubmit);
-		this.tagsControl.listen();
+		this.selector().querySelector('form').addEventListener('submit', this.handleSubmit);
+		this.tags.listen();
 	}
 
-	handleFormSubmit = async e => {
+	handleSubmit = async e => {
 		e.preventDefault();
 		const a = {};
 		new FormData(e.currentTarget).forEach((v, k) => {
@@ -91,10 +95,10 @@ class Editor {
 			body: JSON.stringify({ article: a })
 		});
 		const j = await s.json();
+		this.errors.messages = s.ok ? null : j;
+		await this.errors.refresh();
 		if (s.ok)
 			location.hash = `#/article/${j.article.slug}`;
-		else
-			await this.errors.refresh(j);
 	}
 }
 

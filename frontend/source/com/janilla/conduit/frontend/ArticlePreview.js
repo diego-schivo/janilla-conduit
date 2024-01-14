@@ -21,75 +21,57 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import ArticleMeta from './ArticleMeta.js';
+import FavoriteButton from './FavoriteButton.js';
+
 class ArticlePreview {
+
+	selector;
 
 	article;
 
-	conduit;
+	meta;
 
-	get favoriteName() {
-		return this.article.favorited ? 'unfavorite' : 'favorite';
-	}
+	favoriteButton;
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
+	render = async (key, rendering) => {
+		switch (key) {
+			case undefined:
+				return await rendering.render(this, 'ArticlePreview');
 
-		if (key === undefined) {
-			this.renderStack = [...r.stack];
-			return await r.render(this, t['ArticlePreview']);
+			case 'meta':
+				if (rendering.object === this) {
+					this.meta = new ArticleMeta();
+					this.meta.selector = () => this.selector().firstElementChild;
+					return this.meta;
+				}
+				break;
+
+			case 'content':
+				switch (rendering.object) {
+					case this.meta:
+						this.favoriteButton = new FavoriteButton();
+						this.favoriteButton.article = this.article;
+						this.meta.content = this.favoriteButton;
+						return this.favoriteButton;
+
+					case this.favoriteButton:
+						return this.article.favoritesCount;
+				}
+				break;
+
+			case 'className':
+				if (rendering.object === this.favoriteButton)
+					return `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
+				break;
 		}
 
-		if (typeof key === 'string' && Object.hasOwn(this.article, key)) {
-			let v = this.article[key];
-			switch (key) {
-				/*
-				case 'createdAt':
-					return new Date(v).toLocaleDateString('en-US', {
-						year: 'numeric',
-						month: 'long',
-						day: 'numeric'
-					});
-				*/
-
-				case 'favorited':
-					return v ? 'btn-primary' : 'btn-outline-primary';
-
-				default:
-					return v;
-			}
-		}
-
-		if (r.stack.length >= 2 && r.stack.at(-2).key === 'tagList')
-			return await r.render(r.stack.at(-1).object[key], t['Article-tag']);
+		if (rendering.stack.at(-2)?.key === 'tagList')
+			return await rendering.render(rendering.object[key], 'ArticlePreview-tag');
 	}
 
 	listen = () => {
-		document.getElementById(`article-${this.article.slug}`).addEventListener('click', this.handleClick);
-	}
-
-	handleClick = async e => {
-		const b = e.target.closest('button');
-		if (!b)
-			return;
-		e.preventDefault();
-
-		switch (b.name) {
-			case 'favorite':
-			case 'unfavorite':
-				const a = b.closest('.article-preview');
-				const h = a.querySelector('.preview-link').getAttribute('href');
-				const s = await fetch(`${this.conduit.backendUrl}/api/articles/${h.split('/')[2]}/favorite`, {
-					method: b.name === 'favorite' ? 'POST' : 'DELETE',
-					headers: this.conduit.backendHeaders
-				});
-				if (s.ok)
-					this.article = (await s.json()).article;
-				const r = this.conduit.rendering;
-				a.outerHTML = await r.render(this, null, this.renderStack);
-				this.listen();
-				break;
-		}
+		this.meta.listen();
 	}
 }
 

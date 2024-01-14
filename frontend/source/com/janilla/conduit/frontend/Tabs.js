@@ -21,6 +21,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-export default {
-  ${entries}
-};
+class Tabs {
+	
+	selector;
+
+	rendering;
+	
+	items;
+
+	render = async (key, rendering) => {
+		switch (key) {
+			case undefined:
+				this.rendering = rendering.clone();
+				return await rendering.render(this, 'Tabs');
+		}
+
+		const n = {
+			'items': 'Tabs-item'
+		}[rendering.stack.at(-2).key];
+		if (n)
+			return await rendering.render(rendering.object[key], n);
+	}
+
+	refresh = async () => {
+		const h = await this.rendering.render(this);
+		this.selector().outerHTML = h;
+		this.listen();
+	}
+
+	listen = () => {
+		this.selector().addEventListener('click', this.handleClick);
+	}
+
+	handleClick = async e => {
+		e.preventDefault();
+		const l = e.target.closest('.nav-link');
+		if (!l || l.classList.contains('active'))
+			return;
+		const n = l.closest('.nav');
+		n.querySelectorAll('.nav-link').forEach(m => m.classList[m === l ? 'add' : 'remove']('active'));
+		n.dispatchEvent(new CustomEvent('tabselect', {
+			bubbles: true,
+			detail: { tab: l.getAttribute('href').substring(1) }
+		}));
+	}
+}
+
+export default Tabs;

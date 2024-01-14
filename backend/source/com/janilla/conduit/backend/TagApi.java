@@ -44,13 +44,6 @@ public class TagApi {
 
 	@Handle(method = "GET", uri = "/api/tags")
 	public Tags tags() throws IOException {
-//		var c = persistence.getCrud(Article.class);
-//		return new Tags(c.<String>getIndexValues("tag").limit(10));
-//		return new Tags(persistence.getDatabase().indexApply("Tag.count", i -> {
-//			@SuppressWarnings("unchecked")
-//			var j = (Index<Object[], String>) i;
-//			return j.values();
-//		}));
 		var t = persistence.getDatabase().<Object[], String, Stream<String>>indexApply("Tag.count", Index::values)
 				.limit(10);
 		return new Tags(t);

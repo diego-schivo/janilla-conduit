@@ -26,13 +26,17 @@ package com.janilla.conduit.backend;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.janilla.io.IO;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Parameter;
 import com.janilla.reflect.Reflection;
@@ -136,6 +140,46 @@ public class ArticleApi {
 				throw new UncheckedIOException(e);
 			}
 		}).skip(skip).limit(limit), "articlesCount", a.c);
+	}
+
+	@Handle(method = "GET", uri = "/api/articles/feed")
+	public Object listFeed(@Parameter("skip") long skip, @Parameter("limit") long limit, User user) throws IOException {
+		class A {
+
+			Iterator<Object> l;
+
+			Object o;
+
+			long c;
+		}
+		var l = new ArrayList<A>();
+		persistence.getCrud(User.class).indexAccept("followList", user.getId(),
+				f -> persistence.getDatabase().indexAccept("Article.author", i -> {
+					var a = new A();
+					a.l = i.list(f).iterator();
+					a.o = a.l.hasNext() ? a.l.next() : null;
+					a.c = i.count(f);
+					l.add(a);
+				}));
+		IO.Supplier<Article> s = () -> {
+			var a = l.stream().max((a1, a2) -> {
+				var i1 = a1.o != null ? (Instant) ((Object[]) a1.o)[0] : null;
+				var i2 = a2.o != null ? (Instant) ((Object[]) a2.o)[0] : null;
+				return i1 != null ? (i2 != null ? i1.compareTo(i2) : 1) : (i2 != null ? -1 : 0);
+			}).orElse(null);
+			if (a == null || a.o == null)
+				return null;
+			var b = persistence.getCrud(Article.class).read((Long) ((Object[]) a.o)[1]);
+			a.o = a.l.hasNext() ? a.l.next() : null;
+			return b;
+		};
+		return Map.of("articles", Stream.iterate(s.get(), x -> {
+			try {
+				return s.get();
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}).skip(skip).limit(limit).filter(Objects::nonNull), "articlesCount", l.stream().mapToLong(a -> a.c).sum());
 	}
 
 	@Handle(method = "POST", uri = "/api/articles/([^/]*)/comments")

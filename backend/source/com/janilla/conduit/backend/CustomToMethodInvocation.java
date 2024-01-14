@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
 
 import com.janilla.reflect.Reflection;
 import com.janilla.util.Lazy;
-import com.janilla.web.AnnotationDrivenToInvocation;
+import com.janilla.web.AnnotationDrivenToMethodInvocation;
 
-class CustomAnnotationDrivenToInvocation extends AnnotationDrivenToInvocation {
+class CustomToMethodInvocation extends AnnotationDrivenToMethodInvocation {
 
 	ConduitBackend backend;
 

@@ -21,131 +21,91 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import Feeds from './Feeds.js';
+import ArticleList from './ArticleList.js';
+import FollowButton from './FollowButton.js';
+import Tabs from './Tabs.js';
 
 class Profile {
 
-	conduit;
+	selector;
 
-	filter = 'author';
+	title = 'Profile';
+
+	conduit;
 
 	profile;
 
-	renderStack;
+	followButton;
 
-	title = 'Profile';
+	tab = 'author';
 
 	get username() {
 		return location.hash.substring(3);
 	}
 
-	get buttons() {
-		if (this.profile.username === this.conduit.user?.username)
-			return [{
-				class: 'btn-outline-secondary',
-				name: 'edit',
-				icon: 'ion-gear-a',
-				text: 'Edit Profile Settings'
-			}];
-		else {
-			const f = this.profile.following;
-			return [{
-				class: f ? 'btn-secondary' : 'btn-outline-secondary',
-				name: f ? 'unfollow' : 'follow',
-				icon: 'ion-plus-round',
-				text: `${f ? 'Unfollow' : 'Follow'} ${this.profile.username}`
-			}];
-		}
-	}
-
-	get navItems() {
-		const a = [{
+	get tabItems() {
+		const i = [{
 			name: 'author',
 			text: 'My Articles'
 		}, {
 			name: 'favorited',
 			text: 'Favorited Articles'
 		}];
-		a.find(e => e.name === this.filter).active = 'active';
-		return a;
+		i.find(j => j.name === this.tab).active = 'active';
+		return i;
 	}
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
-
+	render = async (key, rendering) => {
 		let s, j;
 		switch (key) {
 			case undefined:
-				this.renderStack = [...r.stack];
+				this.conduit = rendering.stack[0].object;
+				this.rendering = rendering.clone();
 				s = await fetch(`${this.conduit.backendUrl}/api/profiles/${this.username}`, {
 					headers: this.conduit.backendHeaders
 				});
 				if (s.ok)
 					this.profile = (await s.json()).profile;
-				return await r.render(this, t['Profile']);
+				return await rendering.render(this, 'Profile');
 
-			case 'info':
-				return await r.render(null, t['Profile-info']);
+			case 'action':
+				if (this.profile.username === this.conduit.user?.username)
+					return await rendering.render(null, 'Profile-edit');
+				this.followButton = new FollowButton();
+				this.followButton.user = this.profile;
+				this.followButton.selector = () => this.selector().querySelector('p').nextElementSibling;
+				return this.followButton;
 
-			case 'feeds':
-				this.feedsRenderStack = [...r.stack];
-				this.feeds = new Feeds();
-				this.feeds.conduit = this.conduit;
-				this.feeds.modifyParameters = p =>
-					p.set(this.filter, this.profile.username);
-				this.feeds.toggleClass = 'articles-toggle';
-				return this.feeds;
+			case 'tabs':
+				this.tabs = new Tabs();
+				this.tabs.selector = () => this.selector().querySelector('.feed-toggle').firstElementChild;
+				this.tabs.items = this.tabItems;
+				return this.tabs;
+
+			case 'articleList':
+				this.articleList = new ArticleList();
+				this.articleList.selector = () => this.selector().querySelector('.feed-toggle').nextElementSibling;
+				return this.articleList;
 		}
-
-		if (typeof key === 'string' && Object.hasOwn(this.profile, key))
-			return this.profile[key];
-
-		const u = r.stack.length >= 2 && {
-			'buttons': 'Profile-button'
-		}[r.stack.at(-2).key];
-		if (u)
-			return await r.render(r.stack.at(-1).object[key], t[u]);
 	}
 
 	listen = () => {
-		document.querySelector('.profile-page').addEventListener('feedselect', this.handleFeedSelect);
-		document.querySelector('.user-info').addEventListener('click', this.handleUserInfoClick);
-		this.feeds.listen();
+		const e = this.selector();
+		e.addEventListener('tabselect', this.handleTabSelect);
+		e.addEventListener('articlesfetch', this.handleArticlesFetch);
+		this.followButton?.listen();
+		this.tabs.listen();
+		this.articleList.listen();
 	}
 
-	handleFeedSelect = async e => {
-		this.filter = e.detail.navLink.getAttribute('href').substring(1);
+	handleTabSelect = async e => {
+		this.tab = e.detail.tab;
+		await this.articleList.refresh();
 	}
 
-	handleUserInfoClick = async e => {
-		const b = e.target.closest('button');
-		if (!b)
-			return;
-		e.preventDefault();
-
-		switch (b.name) {
-			case 'edit':
-				location.hash = '#/settings';
-				break;
-
-			case 'follow':
-			case 'unfollow':
-				if (this.conduit.user) {
-					const s = await fetch(`${this.conduit.backendUrl}/api/profiles/${this.profile.username}/follow`, {
-						method: b.name === 'follow' ? 'POST' : 'DELETE',
-						headers: this.conduit.backendHeaders
-					});
-					if (s.ok)
-						this.profile = (await s.json()).profile;
-					const r = this.conduit.rendering;
-					const t = this.conduit.templates;
-					const h = await r.render(this, t['Profile-info'], this.renderStack);
-					document.querySelector('.user-info').outerHTML = h;
-					this.listen();
-				} else location.hash = '#/register';
-				break;
-		}
+	handleArticlesFetch = async e => {
+		const u = e.detail.url;
+		u.searchParams.set(this.tab, this.profile.username);
 	}
 }
 

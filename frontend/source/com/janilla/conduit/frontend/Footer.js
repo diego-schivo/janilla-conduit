@@ -21,6 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-  '${name}': async r => `
-${html}
-  `,
+class Footer {
+
+	render = async (key, rendering) => {
+		if (key === undefined)
+			return await rendering.render(this, 'Footer');
+	}
+}
+
+export default Footer;

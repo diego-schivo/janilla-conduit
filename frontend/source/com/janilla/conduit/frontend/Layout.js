@@ -21,28 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import Footer from './Footer.js';
 import Header from './Header.js';
 
 class Layout {
 
-	conduit;
+	selector;
 
-	header = new Header();
+	header;
 
 	page;
 
-	render = async key => {
-		const r = this.conduit.rendering;
-		const t = this.conduit.templates;
+	footer;
 
+	render = async (key, rendering) => {
 		switch (key) {
 			case undefined:
-				if (!this.header.conduit)
-					this.header.conduit = this.conduit;
-				return await r.render(this, t['Layout']);
+				return await rendering.render(this, 'Layout');
+
+			case 'header':
+				this.header = new Header();
+				return this.header;
 
 			case 'footer':
-				return await r.render(null, t['footer']);
+				this.footer = new Footer();
+				return this.footer;
 		}
 	}
 

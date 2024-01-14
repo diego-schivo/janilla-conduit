@@ -28,15 +28,21 @@ import java.io.IOException;
 import com.janilla.http.ExchangeContext;
 import com.janilla.web.Error;
 import com.janilla.web.ExceptionHandlerFactory;
+import com.janilla.web.HandlerFactory;
 
 class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
+
+	protected HandlerFactory renderFactory;
+
+	public void setRenderFactory(HandlerFactory renderFactory) {
+		this.renderFactory = renderFactory;
+	}
 
 	@Override
 	protected void handle(Error error, ExchangeContext context) throws IOException {
 		super.handle(error, context);
 
-		if (context instanceof CustomExchangeContext c && c.getException() instanceof ValidationException e)
-//			c.backend.getHandlerFactory().createHandler(e.getErrors()).handle(c);
-			throw new RuntimeException();
+		if (context.getException() instanceof ValidationException e)
+			renderFactory.createHandler(e.getErrors()).accept(context);
 	}
 }

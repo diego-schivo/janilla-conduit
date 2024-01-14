@@ -25,29 +25,32 @@ import Errors from './Errors.js';
 
 class CommentForm {
 
+	selector;
+
 	article;
 
 	conduit;
 
-	render = async key => {
+	errors;
+
+	render = async (key, rendering) => {
 		switch (key) {
 			case undefined:
-				const r = this.conduit.rendering;
-				const t = this.conduit.templates;
-				return await r.render(this, t[this.conduit.user ? 'CommentForm' : 'CommentForm-login']);
+				this.conduit = rendering.stack[0].object;
+				return await rendering.render(this, `CommentForm-${this.conduit.user ? 'authenticated' : 'unauthenticated'}`);
 
 			case 'errors':
 				this.errors = new Errors();
-				this.errors.conduit = this.conduit;
+				this.errors.selector = () => this.selector().firstElementChild;
 				return this.errors;
 		}
 	}
 
 	listen = () => {
-		document.querySelector('.comment-form')?.addEventListener('submit', this.handleFormSubmit);
+		this.selector().querySelector('.comment-form')?.addEventListener('submit', this.handleSubmit);
 	}
 
-	handleFormSubmit = async e => {
+	handleSubmit = async e => {
 		e.preventDefault();
 		const f = e.currentTarget;
 		const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.article.slug}/comments`, {
@@ -56,14 +59,15 @@ class CommentForm {
 			body: JSON.stringify({ comment: Object.fromEntries(new FormData(f)) })
 		});
 		const j = await s.json();
+		this.errors.messages = s.ok ? null : j;
+		await this.errors.refresh();
 		if (s.ok) {
-			f.dispatchEvent(new CustomEvent('commentadd', {
+			f.elements['body'].value = '';
+			this.selector().dispatchEvent(new CustomEvent('commentadd', {
 				bubbles: true,
 				detail: { comment: j.comment }
 			}));
-			f.elements['body'].value = '';
-		} else
-			await this.errors.refresh(j);
+		}
 	}
 }
 
