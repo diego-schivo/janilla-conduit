@@ -59,7 +59,7 @@ public class ConduitBackend {
 		s.setExecutor(Runnable::run);
 		s.setPort(Integer.parseInt(c.getProperty("conduit.backend.http.port")));
 		s.setHandler(b.getHandler());
-		s.serve();
+		s.run();
 	}
 
 	Properties configuration;
@@ -133,7 +133,7 @@ public class ConduitBackend {
 			u.setImage(
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600 + r.nextInt(0x50))) + "</text></svg>");
-			f.create(u);
+			p.getDatabase().performTransaction(() -> f.create(u));
 			for (var k = r.nextInt(1, 21); k > 0; k--) {
 				var a = new Article();
 				a.setAuthor(u.getId());
@@ -144,7 +144,7 @@ public class ConduitBackend {
 				a.setTagList(Randomize.elements(1, 5, tags).distinct().toList());
 				a.setCreatedAt(Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
 						OffsetDateTime.now(ZoneOffset.UTC).toInstant()));
-				p.getCrud(Article.class).create(a);
+				p.getDatabase().performTransaction(() -> e.create(a));
 			}
 		}
 	}

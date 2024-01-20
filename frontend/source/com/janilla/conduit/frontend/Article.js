@@ -23,7 +23,7 @@
  */
 import ArticleActions from './ArticleActions.js';
 import Comments from './Comments.js';
-import convertMarkdownIntoHTML from './markdown.js';
+import { parseMarkdown, formatMarkdownAsHTML } from './markdown.js';
 
 class Article {
 
@@ -68,7 +68,7 @@ class Article {
 
 			case 'body':
 				if (rendering.object === this.article)
-					return convertMarkdownIntoHTML(this.article.body);
+					return formatMarkdownAsHTML(parseMarkdown(this.article.body));
 				break;
 
 			case 'actions2':

@@ -38,12 +38,16 @@ class CustomExchangeContext extends ExchangeContext {
 	Supplier<User> user = Lazy.of(() -> {
 		var a = getRequest().getHeaders().get("Authorization");
 		var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
-		var p = t != null ? Jwt.verifyToken(t, backend.getConfiguration().getProperty("conduit.backend.jwt.key")) : null;
+		var p = t != null ? Jwt.verifyToken(t, backend.getConfiguration().getProperty("conduit.backend.jwt.key"))
+				: null;
 		var e = p != null ? (String) p.get("loggedInAs") : null;
 		User u;
 		try {
 			var c = backend.getPersistence().getCrud(User.class);
-			u = e != null ? c.indexApply("email", e, c::read).findFirst().orElse(null) : null;
+			var i = new long[] { -1 };
+			if (e != null)
+				c.indexAccept("email", e, x -> x.findFirst().ifPresent(y -> i[0] = y));
+			u = i[0] != -1 ? c.read(i[0]) : null;
 		} catch (IOException f) {
 			throw new UncheckedIOException(f);
 		}

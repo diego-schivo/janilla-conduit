@@ -37,7 +37,7 @@ class ArticleCrud extends Crud<Article> {
 		
 		if (name != null && name.equals("tagList")) {
 			var m = new LinkedHashMap<String, long[]>();
-			database.indexAccept("Article.tagList", i -> {
+			database.performOnIndex("Article.tagList", i -> {
 				if (remove != null)
 					for (var t : remove.keySet()) {
 						var c = i.count(t);
@@ -50,7 +50,7 @@ class ArticleCrud extends Crud<Article> {
 					}
 			});
 			if (!m.isEmpty())
-				database.indexAccept("Tag.count", i -> {
+				database.performOnIndex("Tag.count", i -> {
 					for (var e : m.entrySet()) {
 						var t = e.getKey();
 						var c = e.getValue();

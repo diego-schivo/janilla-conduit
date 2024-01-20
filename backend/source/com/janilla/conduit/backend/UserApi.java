@@ -70,7 +70,9 @@ public class UserApi {
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
 		var c = persistence.getCrud(User.class);
-		var u = c.indexApply("email", authenticate.user.email, c::read).findFirst().orElse(null);
+		var i = new long[1];
+		c.indexAccept("email", authenticate.user.email, x -> i[0] = x.findFirst().getAsLong());
+		var u = c.read(i[0]);
 		{
 			var f = HexFormat.of();
 			var p = authenticate.user.password.toCharArray();
@@ -97,10 +99,18 @@ public class UserApi {
 		var u = register.user;
 		var v = new Validation();
 		var c = persistence.getCrud(User.class);
-		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username))
-			v.hasNotBeenTaken("username", c.indexApply("username", u.username, c::read).findFirst().orElse(null));
-		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email))
-			v.hasNotBeenTaken("email", c.indexApply("email", u.email, c::read).findFirst().orElse(null));
+		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
+			var i = new long[] { -1 };
+			c.indexAccept("username", u.username, x -> x.findFirst().ifPresent(y -> i[0] = y));
+			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			v.hasNotBeenTaken("username", w);
+		}
+		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email)) {
+			var i = new long[] { -1 };
+			c.indexAccept("email", u.email, x -> x.findFirst().ifPresent(y -> i[0] = y));
+			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			v.hasNotBeenTaken("email", w);
+		}
 		if (v.isNotBlank("password", u.password))
 			v.isSafe("password", u.password);
 		v.orThrow();
@@ -108,11 +118,10 @@ public class UserApi {
 		Reflection.copy(u, w);
 		setHashAndSalt(w, u.password);
 		if (w.getImage() == null || w.getImage().isBlank())
-//			w.setImage("https://api.realworld.io/images/smiley-cyrus.jpeg");
 			w.setImage(
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600)) + "</text></svg>");
-		persistence.getCrud(User.class).create(w);
+		persistence.getDatabase().performTransaction(() -> persistence.getCrud(User.class).create(w));
 		return get(w);
 	}
 
@@ -122,20 +131,29 @@ public class UserApi {
 		var v = new Validation();
 		var c = persistence.getCrud(User.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
-				&& !u.username.equals(user.getUsername()))
-			v.hasNotBeenTaken("username", c.indexApply("username", u.username, c::read).findFirst().orElse(null));
-		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email) && !u.email.equals(user.getEmail()))
-			v.hasNotBeenTaken("email", c.indexApply("email", u.email, c::read).findFirst().orElse(null));
+				&& !u.username.equals(user.getUsername())) {
+			var i = new long[] { -1 };
+			c.indexAccept("username", u.username, x -> x.findFirst().ifPresent(y -> i[0] = y));
+			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			v.hasNotBeenTaken("username", w);
+		}
+		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email) && !u.email.equals(user.getEmail())) {
+			var i = new long[] { -1 };
+			c.indexAccept("email", u.email, x -> x.findFirst().ifPresent(y -> i[0] = y));
+			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			v.hasNotBeenTaken("email", w);
+		}
 		v.isEmoji("image", u.image);
 		v.isSafe("bio", u.bio);
 		v.isSafe("password", u.password);
 		v.orThrow();
-		var w = c.update(user.getId(), x -> {
+		var w = new User[1];
+		persistence.getDatabase().performTransaction(() -> w[0] = c.update(user.getId(), x -> {
 			Reflection.copy(u, x, n -> !n.equals("id"));
 			if (u.password != null && !u.password.isBlank())
 				setHashAndSalt(x, u.password);
-		});
-		return get(w);
+		}));
+		return get(w[0]);
 	}
 
 	static Random random = new SecureRandom();

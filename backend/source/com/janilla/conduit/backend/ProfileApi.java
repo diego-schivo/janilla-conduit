@@ -45,25 +45,37 @@ public class ProfileApi {
 	@Handle(method = "GET", uri = "/api/profiles/([^/]*)")
 	public Object get(String username) throws IOException {
 		var c = persistence.getCrud(User.class);
-		var p = c.indexApply("username", username, c::read).findFirst().orElse(null);
-		return Collections.singletonMap("profile", p);
+		var i = new long[1];
+		c.indexAccept("username", username, x -> i[0] = x.findFirst().getAsLong());
+		var u = c.read(i[0]);
+		return Collections.singletonMap("profile", u);
 	}
 
 	@Handle(method = "POST", uri = "/api/profiles/([^/]*)/follow")
 	public Object follow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
-		var p = c.indexApply("username", username, c::read).findFirst().orElse(null);
-		if (!persistence.getDatabase().indexApply("User.followList", i -> i.add(user.getId(), p.getId())))
-			throw new RuntimeException();
-		return Map.of("profile", p.getId());
+		var i = new long[1];
+		c.indexAccept("username", username, x -> i[0] = x.findFirst().getAsLong());
+		var u = c.read(i[0]);
+		var d = persistence.getDatabase();
+		d.performTransaction(() -> d.performOnIndex("User.followList", x -> {
+			if (!x.add(user.getId(), u.getId()))
+				throw new RuntimeException();
+		}));
+		return Map.of("profile", u.getId());
 	}
 
 	@Handle(method = "DELETE", uri = "/api/profiles/([^/]*)/follow")
 	public Object unfollow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
-		var p = c.indexApply("username", username, c::read).findFirst().orElse(null);
-		if (!persistence.getDatabase().indexApply("User.followList", i -> i.remove(user.getId(), p.getId())))
-			throw new RuntimeException();
-		return Map.of("profile", p.getId());
+		var i = new long[1];
+		c.indexAccept("username", username, x -> i[0] = x.findFirst().getAsLong());
+		var u = c.read(i[0]);
+		var d = persistence.getDatabase();
+		d.performTransaction(() -> d.performOnIndex("User.followList", x -> {
+			if (!x.remove(user.getId(), u.getId()))
+				throw new RuntimeException();
+		}));
+		return Map.of("profile", u.getId());
 	}
 }

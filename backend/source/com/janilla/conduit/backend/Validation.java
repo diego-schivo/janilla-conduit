@@ -67,7 +67,7 @@ public class Validation {
 
 	boolean isSafe(String name, String value) {
 		if (value == null || value.isEmpty()
-				|| nonWord.splitAsStream(value).allMatch(w -> safeWords.contains(w.toLowerCase())))
+				|| nonWord.splitAsStream(value).allMatch(w -> w.isEmpty() || safeWords.contains(w.toLowerCase())))
 			return true;
 		errors.computeIfAbsent(name, x -> new LinkedHashSet<>())
 				.add("can only contain \"Lorem ipsum\" words: " + safeWords);

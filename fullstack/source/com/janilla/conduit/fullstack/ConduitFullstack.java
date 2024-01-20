@@ -52,7 +52,7 @@ public class ConduitFullstack {
 		s.setExecutor(Runnable::run);
 		s.setPort(Integer.parseInt(c.getProperty("conduit.fullstack.http.port")));
 		s.setHandler(f.getHandler());
-		s.serve();
+		s.run();
 	}
 
 	Properties configuration;

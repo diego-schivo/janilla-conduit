@@ -23,6 +23,8 @@
  */
 package com.janilla.conduit.backend;
 
+import java.io.IOException;
+
 import com.janilla.database.Index;
 import com.janilla.io.ElementHelper;
 import com.janilla.io.ElementHelper.SortOrder;
@@ -33,8 +35,8 @@ import com.janilla.persistence.Persistence;
 class CustomPersistence extends Persistence {
 
 	@Override
-	public <K, V> boolean initialize(String name, Index<K, V> index) {
-		if (super.initialize(name, index))
+	public <K, V> boolean initializeIndex(String name, Index<K, V> index) {
+		if (super.initializeIndex(name, index))
 			return true;
 		return switch (name) {
 		case "Article.favoriteList", "User.followList" -> {
@@ -60,6 +62,13 @@ class CustomPersistence extends Persistence {
 		}
 		default -> false;
 		};
+	}
+
+	@Override
+	protected void createStoresAndIndexes() throws IOException {
+		super.createStoresAndIndexes();
+		for (var n : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
+			database.performTransaction(() -> database.createIndex(n));
 	}
 
 	@Override

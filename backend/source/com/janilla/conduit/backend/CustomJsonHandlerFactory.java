@@ -98,8 +98,14 @@ class CustomJsonHandlerFactory extends JsonHandlerFactory {
 						}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
 						var u = ((CustomExchangeContext) context).user.get();
 						try {
-							m.put("favorited", u != null && backend.getPersistence().getCrud(User.class)
-									.indexApply("favoriteList", u.getId(), i -> i).anyMatch(i -> i.equals(a.getId())));
+							if (u != null)
+								backend.getPersistence().getCrud(User.class).indexAccept("favoriteList", u.getId(),
+										x -> {
+											if (x.anyMatch(y -> y == a.getId()))
+												m.put("favorited", true);
+										});
+							if (!m.containsKey("favorited"))
+								m.put("favorited", false);
 							m.put("favoritesCount", backend.getPersistence().getCrud(Article.class)
 									.indexCount("favoriteList", a.getId()));
 						} catch (IOException e) {
@@ -123,8 +129,13 @@ class CustomJsonHandlerFactory extends JsonHandlerFactory {
 						}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
 						var v = ((CustomExchangeContext) context).user.get();
 						try {
-							m.put("following", v != null && backend.getPersistence().getCrud(User.class)
-									.indexApply("followList", v.getId(), i -> i).anyMatch(i -> i.equals(u.getId())));
+							if (v != null)
+								backend.getPersistence().getCrud(User.class).indexAccept("followList", v.getId(), x -> {
+									if (x.anyMatch(y -> y == u.getId()))
+										m.put("following", true);
+								});
+							if (!m.containsKey("following"))
+								m.put("following", false);
 						} catch (IOException e) {
 							throw new UncheckedIOException(e);
 						}

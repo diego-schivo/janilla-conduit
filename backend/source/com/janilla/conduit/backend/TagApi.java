@@ -24,9 +24,8 @@
 package com.janilla.conduit.backend;
 
 import java.io.IOException;
-import java.util.stream.Stream;
+import java.util.ArrayList;
 
-import com.janilla.database.Index;
 import com.janilla.persistence.Persistence;
 import com.janilla.web.Handle;
 
@@ -44,11 +43,14 @@ public class TagApi {
 
 	@Handle(method = "GET", uri = "/api/tags")
 	public Tags tags() throws IOException {
-		var t = persistence.getDatabase().<Object[], String, Stream<String>>indexApply("Tag.count", Index::values)
-				.limit(10);
-		return new Tags(t);
+//		var t = persistence.getDatabase().<Object[], String, Stream<String>>indexApply("Tag.count", Index::values)
+//				.limit(10);
+//		return new Tags(t);
+		var l = new ArrayList<String>();
+		persistence.getDatabase().performOnIndex("Tag.count", i -> i.values().limit(10).forEach(v -> l.add((String) v)));
+		return new Tags(l);
 	}
 
-	public record Tags(Stream<String> tags) {
+	public record Tags(Iterable<String> tags) {
 	}
 }

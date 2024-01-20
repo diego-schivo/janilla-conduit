@@ -50,7 +50,7 @@ public class ConduitFrontend {
 		s.setExecutor(Runnable::run);
 		s.setPort(Integer.parseInt(c.getProperty("conduit.frontend.http.port")));
 		s.setHandler(f.getHandler());
-		s.serve();
+		s.run();
 	}
 
 	Properties configuration;
