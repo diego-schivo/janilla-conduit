@@ -41,16 +41,13 @@ class CustomExchangeContext extends ExchangeContext {
 		var p = t != null ? Jwt.verifyToken(t, backend.getConfiguration().getProperty("conduit.backend.jwt.key"))
 				: null;
 		var e = p != null ? (String) p.get("loggedInAs") : null;
-		User u;
 		try {
 			var c = backend.getPersistence().getCrud(User.class);
-			var i = new long[] { -1 };
-			if (e != null)
-				c.indexAccept("email", e, x -> x.findFirst().ifPresent(y -> i[0] = y));
-			u = i[0] != -1 ? c.read(i[0]) : null;
+			var i = e != null ? c.find("email", e) : -1;
+			var u = i >= 0 ? c.read(i) : null;
+			return u;
 		} catch (IOException f) {
 			throw new UncheckedIOException(f);
 		}
-		return u;
 	});
 }

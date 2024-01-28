@@ -43,11 +43,10 @@ public class TagApi {
 
 	@Handle(method = "GET", uri = "/api/tags")
 	public Tags tags() throws IOException {
-//		var t = persistence.getDatabase().<Object[], String, Stream<String>>indexApply("Tag.count", Index::values)
-//				.limit(10);
-//		return new Tags(t);
 		var l = new ArrayList<String>();
-		persistence.getDatabase().performOnIndex("Tag.count", i -> i.values().limit(10).forEach(v -> l.add((String) v)));
+		persistence.getDatabase().performOnIndex("Tag.count", x -> {
+			x.values().limit(10).forEach(y -> l.add((String) y));
+		});
 		return new Tags(l);
 	}
 

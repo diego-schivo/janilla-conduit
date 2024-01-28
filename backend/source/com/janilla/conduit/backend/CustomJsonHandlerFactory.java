@@ -30,20 +30,32 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import com.janilla.http.ExchangeContext;
 import com.janilla.json.JsonToken;
 import com.janilla.json.ReflectionJsonIterator;
+import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.JsonHandlerFactory;
 
-class CustomJsonHandlerFactory extends JsonHandlerFactory {
+public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 
-	ConduitBackend backend;
+	Properties configuration;
+
+	Persistence persistence;
+
+	public void setConfiguration(Properties configuration) {
+		this.configuration = configuration;
+	}
+
+	public void setPersistence(Persistence persistence) {
+		this.persistence = persistence;
+	}
 
 	@Override
 	protected void render(Object object, ExchangeContext context) throws IOException {
-		var o = backend.getConfiguration().getProperty("conduit.backend.cors.origin");
+		var o = configuration.getProperty("conduit.backend.cors.origin");
 		context.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
 
 		super.render(object, context);
@@ -62,7 +74,7 @@ class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					case "article" -> {
 						if (object instanceof Long i)
 							try {
-								object = backend.getPersistence().getCrud(Article.class).read(i);
+								object = persistence.getCrud(Article.class).read(i);
 							} catch (IOException f) {
 								throw new UncheckedIOException(f);
 							}
@@ -71,7 +83,7 @@ class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					case "author", "profile" -> {
 						if (object instanceof Long i)
 							try {
-								object = backend.getPersistence().getCrud(User.class).read(i);
+								object = persistence.getCrud(User.class).read(i);
 							} catch (IOException f) {
 								throw new UncheckedIOException(f);
 							}
@@ -99,15 +111,14 @@ class CustomJsonHandlerFactory extends JsonHandlerFactory {
 						var u = ((CustomExchangeContext) context).user.get();
 						try {
 							if (u != null)
-								backend.getPersistence().getCrud(User.class).indexAccept("favoriteList", u.getId(),
-										x -> {
-											if (x.anyMatch(y -> y == a.getId()))
-												m.put("favorited", true);
-										});
+								persistence.getCrud(User.class).performOnIndex("favoriteList", u.getId(), x -> {
+									if (x.anyMatch(y -> y == a.getId()))
+										m.put("favorited", true);
+								});
 							if (!m.containsKey("favorited"))
 								m.put("favorited", false);
-							m.put("favoritesCount", backend.getPersistence().getCrud(Article.class)
-									.indexCount("favoriteList", a.getId()));
+							m.put("favoritesCount",
+									persistence.getCrud(Article.class).count("favoriteList", a.getId()));
 						} catch (IOException e) {
 							throw new UncheckedIOException(e);
 						}
@@ -130,7 +141,7 @@ class CustomJsonHandlerFactory extends JsonHandlerFactory {
 						var v = ((CustomExchangeContext) context).user.get();
 						try {
 							if (v != null)
-								backend.getPersistence().getCrud(User.class).indexAccept("followList", v.getId(), x -> {
+								persistence.getCrud(User.class).performOnIndex("followList", v.getId(), x -> {
 									if (x.anyMatch(y -> y == u.getId()))
 										m.put("following", true);
 								});

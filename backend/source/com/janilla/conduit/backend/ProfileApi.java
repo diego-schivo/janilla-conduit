@@ -45,18 +45,16 @@ public class ProfileApi {
 	@Handle(method = "GET", uri = "/api/profiles/([^/]*)")
 	public Object get(String username) throws IOException {
 		var c = persistence.getCrud(User.class);
-		var i = new long[1];
-		c.indexAccept("username", username, x -> i[0] = x.findFirst().getAsLong());
-		var u = c.read(i[0]);
+		var i = c.find("username", username);
+		var u = i >= 0 ? c.read(i) : null;
 		return Collections.singletonMap("profile", u);
 	}
 
 	@Handle(method = "POST", uri = "/api/profiles/([^/]*)/follow")
 	public Object follow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
-		var i = new long[1];
-		c.indexAccept("username", username, x -> i[0] = x.findFirst().getAsLong());
-		var u = c.read(i[0]);
+		var i = c.find("username", username);
+		var u = i >= 0 ? c.read(i) : null;
 		var d = persistence.getDatabase();
 		d.performTransaction(() -> d.performOnIndex("User.followList", x -> {
 			if (!x.add(user.getId(), u.getId()))
@@ -68,9 +66,8 @@ public class ProfileApi {
 	@Handle(method = "DELETE", uri = "/api/profiles/([^/]*)/follow")
 	public Object unfollow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
-		var i = new long[1];
-		c.indexAccept("username", username, x -> i[0] = x.findFirst().getAsLong());
-		var u = c.read(i[0]);
+		var i = c.find("username", username);
+		var u = i >= 0 ? c.read(i) : null;
 		var d = persistence.getDatabase();
 		d.performTransaction(() -> d.performOnIndex("User.followList", x -> {
 			if (!x.remove(user.getId(), u.getId()))

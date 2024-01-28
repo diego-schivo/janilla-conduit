@@ -70,7 +70,7 @@ public class Templates {
 				})));
 				try (var r = new BufferedReader(new InputStreamReader(t))) {
 					for (var j = r.lines().iterator(); j.hasNext();)
-						i.println(j.next(), w);
+						i.print(j.next(), w);
 				}
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);

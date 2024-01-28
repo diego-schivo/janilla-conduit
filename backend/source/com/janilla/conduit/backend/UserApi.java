@@ -70,9 +70,8 @@ public class UserApi {
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
 		var c = persistence.getCrud(User.class);
-		var i = new long[1];
-		c.indexAccept("email", authenticate.user.email, x -> i[0] = x.findFirst().getAsLong());
-		var u = c.read(i[0]);
+		var i = c.find("email", authenticate.user.email);
+		var u = i >= 0 ? c.read(i) : null;
 		{
 			var f = HexFormat.of();
 			var p = authenticate.user.password.toCharArray();
@@ -100,15 +99,13 @@ public class UserApi {
 		var v = new Validation();
 		var c = persistence.getCrud(User.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
-			var i = new long[] { -1 };
-			c.indexAccept("username", u.username, x -> x.findFirst().ifPresent(y -> i[0] = y));
-			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			var i = c.find("username", u.username);
+			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("username", w);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email)) {
-			var i = new long[] { -1 };
-			c.indexAccept("email", u.email, x -> x.findFirst().ifPresent(y -> i[0] = y));
-			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			var i = c.find("email", u.email);
+			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("email", w);
 		}
 		if (v.isNotBlank("password", u.password))
@@ -132,15 +129,13 @@ public class UserApi {
 		var c = persistence.getCrud(User.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 				&& !u.username.equals(user.getUsername())) {
-			var i = new long[] { -1 };
-			c.indexAccept("username", u.username, x -> x.findFirst().ifPresent(y -> i[0] = y));
-			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			var i = c.find("username", u.username);
+			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("username", w);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email) && !u.email.equals(user.getEmail())) {
-			var i = new long[] { -1 };
-			c.indexAccept("email", u.email, x -> x.findFirst().ifPresent(y -> i[0] = y));
-			var w = i[0] >= 0 ? c.read(i[0]) : null;
+			var i = c.find("email", u.email);
+			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("email", w);
 		}
 		v.isEmoji("image", u.image);

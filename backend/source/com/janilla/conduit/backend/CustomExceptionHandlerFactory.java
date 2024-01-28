@@ -30,7 +30,7 @@ import com.janilla.web.Error;
 import com.janilla.web.ExceptionHandlerFactory;
 import com.janilla.web.HandlerFactory;
 
-class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
+public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 
 	protected HandlerFactory renderFactory;
 
@@ -43,6 +43,6 @@ class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 		super.handle(error, context);
 
 		if (context.getException() instanceof ValidationException e)
-			renderFactory.createHandler(e.getErrors()).accept(context);
+			renderFactory.createHandler(e.getErrors(), context).accept(context);
 	}
 }

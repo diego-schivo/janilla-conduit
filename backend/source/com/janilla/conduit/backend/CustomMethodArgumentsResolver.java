@@ -31,9 +31,7 @@ import com.janilla.reflect.Parameter;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodArgumentsResolver;
 
-class CustomMethodArgumentsResolver extends MethodArgumentsResolver {
-
-	ConduitBackend backend;
+public class CustomMethodArgumentsResolver extends MethodArgumentsResolver {
 
 	@Override
 	protected Object resolveArgument(Type type, Parameter parameter, ExchangeContext context, Supplier<String[]> values,

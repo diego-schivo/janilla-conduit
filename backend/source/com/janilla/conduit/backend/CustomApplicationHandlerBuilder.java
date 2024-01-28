@@ -23,58 +23,19 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.util.Util;
+import com.janilla.web.AnnotationDrivenToMethodInvocation;
 import com.janilla.web.ApplicationHandlerBuilder;
-import com.janilla.web.ExceptionHandlerFactory;
-import com.janilla.web.HandlerFactory;
-import com.janilla.web.JsonHandlerFactory;
 import com.janilla.web.MethodHandlerFactory;
 
 public class CustomApplicationHandlerBuilder extends ApplicationHandlerBuilder {
 
 	@Override
 	protected MethodHandlerFactory buildMethodHandlerFactory() {
-		var f = new MethodHandlerFactory();
+		var f = super.buildMethodHandlerFactory();
+		f.setArgumentsResolver(new CustomMethodArgumentsResolver());
 
-		var i = new CustomToMethodInvocation() {
-
-			@Override
-			protected Object getInstance(Class<?> c) {
-				if (c == application.getClass())
-					return application;
-				return super.getInstance(c);
-			}
-		};
-		i.setTypes(() -> Util.getPackageClasses(application.getClass().getPackageName()).iterator());
-		var b = (ConduitBackend) application;
-		i.backend = b;
-		f.setToInvocation(i);
-		b.toInvocation = i;
-
-		var r = new CustomMethodArgumentsResolver();
-		r.backend = (ConduitBackend) application;
-		f.setArgumentsResolver(r);
+		((ConduitBackend) application).toInvocation = (AnnotationDrivenToMethodInvocation) f.getToInvocation();
 
 		return f;
-	}
-
-	@Override
-	protected JsonHandlerFactory buildJsonHandlerFactory() {
-		var f = new CustomJsonHandlerFactory();
-		f.backend = (ConduitBackend) application;
-		return f;
-	}
-
-	@Override
-	protected ExceptionHandlerFactory buildExceptionHandlerFactory() {
-		return new CustomExceptionHandlerFactory();
-	}
-
-	@Override
-	protected void completeBuild(HandlerFactory factory, HandlerFactory mainFactory) {
-		super.completeBuild(factory, mainFactory);
-
-		if (factory instanceof CustomExceptionHandlerFactory e)
-			e.setRenderFactory(mainFactory);
 	}
 }
