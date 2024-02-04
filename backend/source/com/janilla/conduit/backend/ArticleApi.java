@@ -108,8 +108,8 @@ public class ArticleApi {
 	}
 
 	@Handle(method = "GET", uri = "/api/articles")
-	public Object list(@Parameter("tag") String tag, @Parameter("author") String author,
-			@Parameter("favorited") String favorited, @Parameter("skip") long skip, @Parameter("limit") long limit)
+	public Object list(@Parameter(name = "tag") String tag, @Parameter(name = "author") String author,
+			@Parameter(name = "favorited") String favorited, @Parameter(name = "skip") long skip, @Parameter(name = "limit") long limit)
 			throws IOException {
 		class A {
 
@@ -155,7 +155,7 @@ public class ArticleApi {
 	}
 
 	@Handle(method = "GET", uri = "/api/articles/feed")
-	public Object listFeed(@Parameter("skip") long skip, @Parameter("limit") long limit, User user) throws IOException {
+	public Object listFeed(@Parameter(name = "skip") long skip, @Parameter(name = "limit") long limit, User user) throws IOException {
 		var u = persistence.getCrud(User.class).performOnIndex("followList", user.getId(), LongStream::toArray);
 		var c = persistence.getCrud(Article.class);
 		var i = u.length > 0 ? Arrays.stream(u).boxed().toArray() : null;
@@ -273,16 +273,16 @@ public class ArticleApi {
 		v.orThrow();
 	}
 
-	public record Form(@Parameter("article") Article article) {
+	public record Form(@Parameter(name = "article") Article article) {
 
-		public record Article(@Parameter("title") String title, @Parameter("description") String description,
-				@Parameter("body") String body, @Parameter("tagList") Collection<String> tagList) {
+		public record Article(@Parameter(name = "title") String title, @Parameter(name = "description") String description,
+				@Parameter(name = "body") String body, @Parameter(name = "tagList") Collection<String> tagList) {
 		}
 	}
 
-	public record CommentForm(@Parameter("comment") Comment comment) {
+	public record CommentForm(@Parameter(name = "comment") Comment comment) {
 
-		public record Comment(@Parameter("body") String body) {
+		public record Comment(@Parameter(name = "body") String body) {
 		}
 	}
 }

@@ -31,7 +31,7 @@ class Article {
 
 	conduit;
 
-	rendering;
+	// rendering;
 
 	title = 'Article';
 
@@ -52,7 +52,7 @@ class Article {
 		switch (key) {
 			case undefined:
 				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
+				// this.rendering = rendering.clone();
 				s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.slug}`, {
 					headers: this.conduit.backendHeaders
 				});

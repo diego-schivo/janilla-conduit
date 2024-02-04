@@ -35,11 +35,10 @@ import java.util.function.Supplier;
 
 import com.janilla.http.ExchangeContext;
 import com.janilla.io.IO;
+import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
-import com.janilla.persistence.PersistenceBuilder;
 import com.janilla.util.Lazy;
 import com.janilla.util.Randomize;
-import com.janilla.util.Util;
 import com.janilla.web.AnnotationDrivenToMethodInvocation;
 
 public class ConduitBackend {
@@ -65,15 +64,14 @@ public class ConduitBackend {
 	Properties configuration;
 
 	IO.Supplier<Persistence> persistence = IO.Lazy.of(() -> {
-		var b = new PersistenceBuilder();
+		var b = new ApplicationPersistenceBuilder();
 		{
 			var p = configuration.getProperty("conduit.backend.database.path");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
 			b.setFile(Path.of(p));
 		}
-		b.setTypes(() -> Util.getPackageClasses("com.janilla.conduit.backend").iterator());
-		b.setPersistence(CustomPersistence::new);
+		b.setApplication(ConduitBackend.this);
 		return b.build();
 	});
 

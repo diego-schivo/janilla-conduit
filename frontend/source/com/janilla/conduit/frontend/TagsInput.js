@@ -52,7 +52,7 @@ class TagsInput {
 	}
 
 	handleInputKeyDown = async e => {
-		if (e.code !== 'Enter')
+		if (e.key !== 'Enter')
 			return;
 		e.preventDefault();
 		const i = e.currentTarget;

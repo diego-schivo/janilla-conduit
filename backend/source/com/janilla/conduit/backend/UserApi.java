@@ -173,27 +173,27 @@ public class UserApi {
 		}
 	}
 
-	public record Authenticate(@Parameter("user") User user) {
+	public record Authenticate(@Parameter(name = "user") User user) {
 
-		public record User(@Parameter("email") String email, @Parameter("password") String password) {
+		public record User(@Parameter(name = "email") String email, @Parameter(name = "password") String password) {
 		}
 	}
 
-	public record Register(@Parameter("user") User user) {
+	public record Register(@Parameter(name = "user") User user) {
 
-		public record User(@Parameter("username") String username, @Parameter("email") String email,
-				@Parameter("password") String password) {
+		public record User(@Parameter(name = "username") String username, @Parameter(name = "email") String email,
+				@Parameter(name = "password") String password) {
 		}
 	}
 
 	public record CurrentUser(String email, String token, String username, String bio, String image) {
 	}
 
-	public record Update(@Parameter("user") User user) {
+	public record Update(@Parameter(name = "user") User user) {
 
-		public record User(@Parameter("image") String image, @Parameter("username") String username,
-				@Parameter("bio") String bio, @Parameter("email") String email,
-				@Parameter("password") String password) {
+		public record User(@Parameter(name = "image") String image, @Parameter(name = "username") String username,
+				@Parameter(name = "bio") String bio, @Parameter(name = "email") String email,
+				@Parameter(name = "password") String password) {
 		}
 	}
 }

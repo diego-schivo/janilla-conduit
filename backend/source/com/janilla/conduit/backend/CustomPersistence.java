@@ -32,7 +32,7 @@ import com.janilla.io.ElementHelper.TypeAndOrder;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
 
-class CustomPersistence extends Persistence {
+public class CustomPersistence extends Persistence {
 
 	@Override
 	public <K, V> boolean initializeIndex(String name, Index<K, V> index) {

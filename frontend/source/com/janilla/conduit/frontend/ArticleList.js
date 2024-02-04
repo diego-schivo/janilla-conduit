@@ -37,11 +37,10 @@ class ArticleList {
 	pagination;
 
 	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
-				return await rendering.render(this, 'ArticleList');
+		if (key === undefined) {
+			this.conduit = rendering.stack[0].object;
+			this.rendering = rendering.clone();
+			return await rendering.render(this, 'ArticleList');
 		}
 	}
 

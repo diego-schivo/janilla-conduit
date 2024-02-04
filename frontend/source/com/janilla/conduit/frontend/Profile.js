@@ -60,7 +60,7 @@ class Profile {
 		switch (key) {
 			case undefined:
 				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
+				// this.rendering = rendering.clone();
 				s = await fetch(`${this.conduit.backendUrl}/api/profiles/${this.username}`, {
 					headers: this.conduit.backendHeaders
 				});

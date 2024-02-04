@@ -22,22 +22,8 @@
  * SOFTWARE.
  */
 import Rendering from './Rendering.js';
-import templates from './templates.js';
 
 class ConduitRendering extends Rendering {
-
-	templates = templates;
-
-	clone() {
-		const r = new ConduitRendering();
-		r.stack = [...this.stack];
-		return r;
-	}
-
-	async render(object, template, stack) {
-		if (typeof template === 'string') template = this.templates[template];
-		return await super.render(object, template, stack);
-	}
 
 	async evaluate(loop) {
 		const k = this.key;
@@ -53,6 +39,12 @@ class ConduitRendering extends Rendering {
 			default:
 				return v;
 		}
+	}
+
+	clone() {
+		const r = new ConduitRendering();
+		r.stack = [...this.stack];
+		return r;
 	}
 }
 

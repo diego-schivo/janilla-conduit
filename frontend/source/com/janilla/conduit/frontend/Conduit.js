@@ -57,7 +57,7 @@ class Conduit {
 		return this.user ? { 'Authorization': `Token ${this.user.token}` } : {};
 	}
 
-	start = async () => {
+	run = async () => {
 		if (this.token) {
 			const s = await fetch(`${this.backendUrl}/api/user`, {
 				headers: { 'Authorization': `Token ${this.token}` }
