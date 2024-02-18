@@ -33,7 +33,7 @@ import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
-import com.janilla.http.ExchangeContext;
+import com.janilla.http.HttpExchange;
 import com.janilla.io.IO;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
@@ -77,7 +77,7 @@ public class ConduitBackend {
 
 	AnnotationDrivenToMethodInvocation toInvocation;
 
-	Supplier<IO.Consumer<ExchangeContext>> handler = Lazy.of(() -> {
+	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
 		var b = new CustomApplicationHandlerBuilder();
 		b.setApplication(ConduitBackend.this);
 		return b.build();
@@ -103,12 +103,12 @@ public class ConduitBackend {
 		return toInvocation;
 	}
 
-	public IO.Consumer<ExchangeContext> getHandler() {
+	public IO.Consumer<HttpExchange> getHandler() {
 		return handler.get();
 	}
 
-	public ExchangeContext newExchangeContext() {
-		var c = new CustomExchangeContext();
+	public HttpExchange newExchange() {
+		var c = new CustomHttpExchange();
 		c.backend = this;
 		return c;
 	}
@@ -131,7 +131,7 @@ public class ConduitBackend {
 			u.setImage(
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600 + r.nextInt(0x50))) + "</text></svg>");
-			p.getDatabase().performTransaction(() -> f.create(u));
+			f.create(u);
 			for (var k = r.nextInt(1, 21); k > 0; k--) {
 				var a = new Article();
 				a.setAuthor(u.getId());
@@ -142,7 +142,7 @@ public class ConduitBackend {
 				a.setTagList(Randomize.elements(1, 5, tags).distinct().toList());
 				a.setCreatedAt(Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
 						OffsetDateTime.now(ZoneOffset.UTC).toInstant()));
-				p.getDatabase().performTransaction(() -> e.create(a));
+				e.create(a);
 			}
 		}
 	}

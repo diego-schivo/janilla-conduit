@@ -23,7 +23,7 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.http.ExchangeContext;
+import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
 
@@ -32,7 +32,7 @@ class CustomHttpServer extends HttpServer {
 	ConduitBackend backend;
 
 	@Override
-	protected ExchangeContext newExchangeContext(HttpRequest request) {
-		return backend.newExchangeContext();
+	protected HttpExchange newExchange(HttpRequest request) {
+		return backend.newExchange();
 	}
 }

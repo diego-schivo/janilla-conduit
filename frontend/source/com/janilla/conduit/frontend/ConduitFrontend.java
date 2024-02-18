@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import com.janilla.http.ExchangeContext;
+import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpServer;
 import com.janilla.io.IO;
 import com.janilla.util.Lazy;
@@ -55,7 +55,7 @@ public class ConduitFrontend {
 
 	Properties configuration;
 
-	Supplier<IO.Consumer<ExchangeContext>> handler = Lazy.of(() -> {
+	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
 		var b = new ApplicationHandlerBuilder();
 		b.setApplication(ConduitFrontend.this);
 		return b.build();
@@ -69,7 +69,7 @@ public class ConduitFrontend {
 		this.configuration = configuration;
 	}
 
-	public IO.Consumer<ExchangeContext> getHandler() {
+	public IO.Consumer<HttpExchange> getHandler() {
 		return handler.get();
 	}
 

@@ -33,33 +33,38 @@ class ArticleCrud extends Crud<Article> {
 
 	@Override
 	protected void updateIndex(String name, Map<Object, Object> remove, Map<Object, Object> add) throws IOException {
-		super.updateIndex(name, remove, add);
-		
-		if (name != null && name.equals("tagList")) {
-			var m = new LinkedHashMap<String, long[]>();
-			database.performOnIndex("Article.tagList", i -> {
-				if (remove != null)
-					for (var t : remove.keySet()) {
-						var c = i.count(t);
-						m.put((String) t, new long[] { c + 1, c });
-					}
-				if (add != null)
-					for (var t : add.keySet()) {
-						var c = i.count(t);
-						m.put((String) t, new long[] { c - 1, c });
-					}
-			});
-			if (!m.isEmpty())
-				database.performOnIndex("Tag.count", i -> {
-					for (var e : m.entrySet()) {
-						var t = e.getKey();
-						var c = e.getValue();
-						if (c[0] > 0)
-							i.remove(new Object[] { c[0] }, t);
-						if (c[1] > 0)
-							i.add(new Object[] { c[1] }, t);
-					}
+		database.perform((ss, ii) -> {
+			super.updateIndex(name, remove, add);
+
+			if (name != null && name.equals("tagList")) {
+				var m = new LinkedHashMap<String, long[]>();
+				ii.perform("Article.tagList", i -> {
+					if (remove != null)
+						for (var t : remove.keySet()) {
+							var c = i.count(t);
+							m.put((String) t, new long[] { c + 1, c });
+						}
+					if (add != null)
+						for (var t : add.keySet()) {
+							var c = i.count(t);
+							m.put((String) t, new long[] { c - 1, c });
+						}
+					return null;
 				});
-		}
+				if (!m.isEmpty())
+					ii.perform("Tag.count", i -> {
+						for (var e : m.entrySet()) {
+							var t = e.getKey();
+							var c = e.getValue();
+							if (c[0] > 0)
+								i.remove(new Object[] { c[0] }, t);
+							if (c[1] > 0)
+								i.add(new Object[] { c[1] }, t);
+						}
+						return null;
+					});
+			}
+			return null;
+		}, true);
 	}
 }

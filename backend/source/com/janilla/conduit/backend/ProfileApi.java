@@ -56,10 +56,11 @@ public class ProfileApi {
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
 		var d = persistence.getDatabase();
-		d.performTransaction(() -> d.performOnIndex("User.followList", x -> {
+		d.perform((ss, ii) -> ii.perform("User.followList", x -> {
 			if (!x.add(user.getId(), u.getId()))
 				throw new RuntimeException();
-		}));
+			return null;
+		}), true);
 		return Map.of("profile", u.getId());
 	}
 
@@ -69,10 +70,11 @@ public class ProfileApi {
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
 		var d = persistence.getDatabase();
-		d.performTransaction(() -> d.performOnIndex("User.followList", x -> {
+		d.perform((ss, ii) -> ii.perform("User.followList", x -> {
 			if (!x.remove(user.getId(), u.getId()))
 				throw new RuntimeException();
-		}));
+			return null;
+		}), true);
 		return Map.of("profile", u.getId());
 	}
 }

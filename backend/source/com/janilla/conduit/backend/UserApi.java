@@ -118,7 +118,7 @@ public class UserApi {
 			w.setImage(
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600)) + "</text></svg>");
-		persistence.getDatabase().performTransaction(() -> persistence.getCrud(User.class).create(w));
+		persistence.getCrud(User.class).create(w);
 		return get(w);
 	}
 
@@ -142,13 +142,12 @@ public class UserApi {
 		v.isSafe("bio", u.bio);
 		v.isSafe("password", u.password);
 		v.orThrow();
-		var w = new User[1];
-		persistence.getDatabase().performTransaction(() -> w[0] = c.update(user.getId(), x -> {
+		var w = c.update(user.getId(), x -> {
 			Reflection.copy(u, x, n -> !n.equals("id"));
 			if (u.password != null && !u.password.isBlank())
 				setHashAndSalt(x, u.password);
-		}));
-		return get(w[0]);
+		});
+		return get(w);
 	}
 
 	static Random random = new SecureRandom();

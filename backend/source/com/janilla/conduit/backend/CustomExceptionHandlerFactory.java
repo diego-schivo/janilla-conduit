@@ -25,7 +25,7 @@ package com.janilla.conduit.backend;
 
 import java.io.IOException;
 
-import com.janilla.http.ExchangeContext;
+import com.janilla.http.HttpExchange;
 import com.janilla.web.Error;
 import com.janilla.web.ExceptionHandlerFactory;
 import com.janilla.web.HandlerFactory;
@@ -39,7 +39,7 @@ public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 	}
 
 	@Override
-	protected void handle(Error error, ExchangeContext context) throws IOException {
+	protected void handle(Error error, HttpExchange context) throws IOException {
 		super.handle(error, context);
 
 		if (context.getException() instanceof ValidationException e)

@@ -27,11 +27,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Supplier;
 
-import com.janilla.http.ExchangeContext;
+import com.janilla.http.HttpExchange;
 import com.janilla.json.Jwt;
 import com.janilla.util.Lazy;
 
-class CustomExchangeContext extends ExchangeContext {
+class CustomHttpExchange extends HttpExchange {
 
 	ConduitBackend backend;
 

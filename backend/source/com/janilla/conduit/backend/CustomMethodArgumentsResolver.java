@@ -26,19 +26,18 @@ package com.janilla.conduit.backend;
 import java.lang.reflect.Type;
 import java.util.function.Supplier;
 
-import com.janilla.http.ExchangeContext;
-import com.janilla.reflect.Parameter;
+import com.janilla.http.HttpExchange;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodArgumentsResolver;
 
 public class CustomMethodArgumentsResolver extends MethodArgumentsResolver {
 
 	@Override
-	protected Object resolveArgument(Type type, Parameter parameter, ExchangeContext context, Supplier<String[]> values,
+	protected Object resolveArgument(Type type, HttpExchange context, Supplier<String[]> values,
 			EntryList<String, String> entries, String body) {
 		if (type == User.class)
-			return ((CustomExchangeContext) context).user.get();
-		return super.resolveArgument(type, parameter, context, values, entries, body);
+			return ((CustomHttpExchange) context).user.get();
+		return super.resolveArgument(type, context, values, entries, body);
 	}
 
 }

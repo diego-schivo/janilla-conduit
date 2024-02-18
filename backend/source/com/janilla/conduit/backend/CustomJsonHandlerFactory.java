@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import com.janilla.http.ExchangeContext;
+import com.janilla.http.HttpExchange;
 import com.janilla.json.JsonToken;
 import com.janilla.json.ReflectionJsonIterator;
 import com.janilla.persistence.Persistence;
@@ -54,7 +54,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 	}
 
 	@Override
-	protected void render(Object object, ExchangeContext context) throws IOException {
+	protected void render(Object object, HttpExchange context) throws IOException {
 		var o = configuration.getProperty("conduit.backend.cors.origin");
 		context.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
 
@@ -62,7 +62,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 	}
 
 	@Override
-	protected Iterator<JsonToken<?>> newJsonIterator(Object object, ExchangeContext context) {
+	protected Iterator<JsonToken<?>> newJsonIterator(Object object, HttpExchange context) {
 		return new ReflectionJsonIterator(object) {
 
 			@Override
@@ -99,6 +99,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 						case "id" -> false;
 						default -> true;
 						}).map(k -> {
+//							System.out.println("k=" + k);
 							var g = Reflection.getter(Article.class, k);
 							Object v;
 							try {
@@ -108,12 +109,13 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 							}
 							return new SimpleEntry<>(k, v);
 						}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
-						var u = ((CustomExchangeContext) context).user.get();
+						var u = ((CustomHttpExchange) context).user.get();
 						try {
 							if (u != null)
 								persistence.getCrud(User.class).performOnIndex("favoriteList", u.getId(), x -> {
 									if (x.anyMatch(y -> y == a.getId()))
 										m.put("favorited", true);
+									return null;
 								});
 							if (!m.containsKey("favorited"))
 								m.put("favorited", false);
@@ -138,12 +140,13 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 							}
 							return new SimpleEntry<>(k, w);
 						}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
-						var v = ((CustomExchangeContext) context).user.get();
+						var v = ((CustomHttpExchange) context).user.get();
 						try {
 							if (v != null)
 								persistence.getCrud(User.class).performOnIndex("followList", v.getId(), x -> {
 									if (x.anyMatch(y -> y == u.getId()))
 										m.put("following", true);
+									return null;
 								});
 							if (!m.containsKey("following"))
 								m.put("following", false);

@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.conduit.frontend.ConduitFrontend;
-import com.janilla.http.ExchangeContext;
+import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpRequest;
 import com.janilla.io.IO;
 import com.janilla.util.Lazy;
@@ -69,7 +69,7 @@ public class ConduitFullstack {
 		return f;
 	});
 
-	Supplier<IO.Consumer<ExchangeContext>> handler = Lazy.of(() -> {
+	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
 		return c -> {
 			var o = c.getException() != null ? c.getException() : c.getRequest();
 			var h = switch (o) {
@@ -106,7 +106,7 @@ public class ConduitFullstack {
 		return frontend.get();
 	}
 
-	public IO.Consumer<ExchangeContext> getHandler() {
+	public IO.Consumer<HttpExchange> getHandler() {
 		return handler.get();
 	}
 }

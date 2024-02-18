@@ -68,9 +68,7 @@ public class ArticleApi {
 		a.setSlug(s);
 		a.setCreatedAt(Instant.now());
 		a.setAuthor(user.getId());
-
-		var c = persistence.getCrud(Article.class);
-		persistence.getDatabase().performTransaction(() -> c.create(a));
+		persistence.getCrud(Article.class).create(a);
 
 		return Map.of("article", a);
 	}
@@ -82,11 +80,11 @@ public class ArticleApi {
 
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
-		var a = i >= 0 ? persistence.getDatabase().performTransaction(() -> c.update(i, x -> {
+		var a = i >= 0 ? c.update(i, x -> {
 			Reflection.copy(form.article, x);
 			x.setSlug(s);
 			x.setUpdatedAt(Instant.now());
-		})) : null;
+		}) : null;
 
 		return Collections.singletonMap("article", a);
 	}
@@ -96,7 +94,7 @@ public class ArticleApi {
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
 		if (i >= 0)
-			persistence.getDatabase().performTransaction(() -> c.delete(i));
+			c.delete(i);
 	}
 
 	@Handle(method = "GET", uri = "/api/articles/([^/]*)")
@@ -109,8 +107,8 @@ public class ArticleApi {
 
 	@Handle(method = "GET", uri = "/api/articles")
 	public Object list(@Parameter(name = "tag") String tag, @Parameter(name = "author") String author,
-			@Parameter(name = "favorited") String favorited, @Parameter(name = "skip") long skip, @Parameter(name = "limit") long limit)
-			throws IOException {
+			@Parameter(name = "favorited") String favorited, @Parameter(name = "skip") long skip,
+			@Parameter(name = "limit") long limit) throws IOException {
 		class A {
 
 			Object[] o;
@@ -122,29 +120,33 @@ public class ArticleApi {
 			var c = persistence.getCrud(User.class);
 			var d = persistence.getDatabase();
 			if (tag != null && !tag.isBlank())
-				d.performOnIndex("Article.tagList", x -> {
+				d.perform((ss, ii) -> ii.perform("Article.tagList", x -> {
 					a.o = x.list(tag).skip(skip).limit(limit).toArray();
 					a.c = x.count(tag);
-				});
+					return null;
+				}), false);
 			else if (author != null && !author.isBlank()) {
 				var u = c.find("username", author);
 				if (u >= 0)
-					d.performOnIndex("Article.author", x -> {
+					d.perform((ss, ii) -> ii.perform("Article.author", x -> {
 						a.o = x.list(u).skip(skip).limit(limit).toArray();
 						a.c = x.count(u);
-					});
+						return null;
+					}), false);
 			} else if (favorited != null && !favorited.isBlank()) {
 				var u = c.find("username", favorited);
 				if (u >= 0)
-					d.performOnIndex("User.favoriteList", x -> {
+					d.perform((ss, ii) -> ii.perform("User.favoriteList", x -> {
 						a.o = x.list(u).skip(skip).limit(limit).toArray();
 						a.c = x.count(u);
-					});
+						return null;
+					}), false);
 			} else
-				d.performOnIndex("Article", x -> {
+				d.perform((ss, ii) -> ii.perform("Article", x -> {
 					a.o = x.list(null).skip(skip).limit(limit).toArray();
 					a.c = x.count(null);
-				});
+					return null;
+				}), false);
 		}
 
 		var c = persistence.getCrud(Article.class);
@@ -155,7 +157,8 @@ public class ArticleApi {
 	}
 
 	@Handle(method = "GET", uri = "/api/articles/feed")
-	public Object listFeed(@Parameter(name = "skip") long skip, @Parameter(name = "limit") long limit, User user) throws IOException {
+	public Object listFeed(@Parameter(name = "skip") long skip, @Parameter(name = "limit") long limit, User user)
+			throws IOException {
 		var u = persistence.getCrud(User.class).performOnIndex("followList", user.getId(), LongStream::toArray);
 		var c = persistence.getCrud(Article.class);
 		var i = u.length > 0 ? Arrays.stream(u).boxed().toArray() : null;
@@ -179,9 +182,7 @@ public class ArticleApi {
 		c.setCreatedAt(Instant.now());
 		c.setAuthor(user.getId());
 		c.setArticle(a);
-
-		var d = persistence.getCrud(Comment.class);
-		persistence.getDatabase().performTransaction(() -> d.create(c));
+		persistence.getCrud(Comment.class).create(c);
 
 		return Map.of("comment", c);
 	}
@@ -191,7 +192,7 @@ public class ArticleApi {
 		var c = persistence.getCrud(Comment.class);
 		var d = c.read(id);
 		if (d.getAuthor().equals(user.getId()))
-			persistence.getDatabase().performTransaction(() -> c.delete(id));
+			c.delete(id);
 		else
 			throw new ForbiddenException();
 	}
@@ -215,15 +216,18 @@ public class ArticleApi {
 		var a = c.read(i);
 
 		var d = persistence.getDatabase();
-		d.performTransaction(() -> {
-			d.performOnIndex("Article.favoriteList", x -> {
+		d.perform((ss, ii) -> {
+			ii.perform("Article.favoriteList", x -> {
 				if (!x.add(i, user.getId()))
 					throw new RuntimeException();
+				return null;
 			});
-			d.performOnIndex("User.favoriteList", x -> {
+			ii.perform("User.favoriteList", x -> {
 				x.add(user.getId(), new Object[] { a.getCreatedAt(), i });
+				return null;
 			});
-		});
+			return null;
+		}, true);
 
 		return Map.of("article", i);
 	}
@@ -239,15 +243,18 @@ public class ArticleApi {
 		var a = c.read(i);
 
 		var d = persistence.getDatabase();
-		d.performTransaction(() -> {
-			d.performOnIndex("Article.favoriteList", x -> {
+		d.perform((ss, ii) -> {
+			ii.perform("Article.favoriteList", x -> {
 				if (!x.remove(i, user.getId()))
 					throw new RuntimeException();
+				return null;
 			});
-			d.performOnIndex("User.favoriteList", x -> {
+			ii.perform("User.favoriteList", x -> {
 				x.remove(user.getId(), new Object[] { a.getCreatedAt(), i });
+				return null;
 			});
-		});
+			return null;
+		}, true);
 
 		return Map.of("article", i);
 	}
@@ -275,8 +282,9 @@ public class ArticleApi {
 
 	public record Form(@Parameter(name = "article") Article article) {
 
-		public record Article(@Parameter(name = "title") String title, @Parameter(name = "description") String description,
-				@Parameter(name = "body") String body, @Parameter(name = "tagList") Collection<String> tagList) {
+		public record Article(@Parameter(name = "title") String title,
+				@Parameter(name = "description") String description, @Parameter(name = "body") String body,
+				@Parameter(name = "tagList") Collection<String> tagList) {
 		}
 	}
 
