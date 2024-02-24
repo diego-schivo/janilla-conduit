@@ -23,9 +23,9 @@
  */
 class Footer {
 
-	render = async (key, rendering) => {
-		if (key === undefined)
-			return await rendering.render(this, 'Footer');
+	render = async engine => {
+		if (engine.isRendering(this))
+			return await engine.render(this, 'Footer');
 	}
 }
 

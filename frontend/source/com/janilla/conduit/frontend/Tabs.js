@@ -22,35 +22,33 @@
  * SOFTWARE.
  */
 class Tabs {
-	
+
 	selector;
 
-	rendering;
-	
+	engine;
+
 	items;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.rendering = rendering.clone();
-				return await rendering.render(this, 'Tabs');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Tabs');
 		}
 
-		const n = {
-			'items': 'Tabs-item'
-		}[rendering.stack.at(-2).key];
-		if (n)
-			return await rendering.render(rendering.object[key], n);
+		if (engine.isRenderingArrayItem('items'))
+			return await engine.render(engine.target, 'Tabs-item');
 	}
 
 	refresh = async () => {
-		const h = await this.rendering.render(this);
-		this.selector().outerHTML = h;
+		const h = await this.engine.render(this);
+		const e = this.selector();
+		if (e)
+			e.outerHTML = h;
 		this.listen();
 	}
 
 	listen = () => {
-		this.selector().addEventListener('click', this.handleClick);
+		this.selector()?.addEventListener('click', this.handleClick);
 	}
 
 	handleClick = async e => {

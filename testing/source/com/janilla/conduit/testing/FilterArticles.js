@@ -21,3 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+class FilterArticles {
+
+	actions;
+
+	run = async () => {
+		await this.actions.filterArticlesByTag();
+		await new Promise(x => setTimeout(x, 200));
+	}
+}
+
+export default FilterArticles;

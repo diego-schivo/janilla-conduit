@@ -1,14 +1,14 @@
 <div class="card">
 	<div class="card-block">
-		<p class="card-text">${comment.body}</p>
+		<p class="card-text">__comment.body__</p>
 	</div>
 	<div class="card-footer">
-		<a href="#/@${comment.author.username}" class="comment-author">
-			<img src="${comment.author.image}" class="comment-author-img" />
+		<a href="#/@__comment.author.username__" class="comment-author">
+			<img src="<!--__comment.author.image__-->" class="comment-author-img" />
 		</a>
 		&nbsp;
-		<a href="#/@${comment.author.username}" class="comment-author">${comment.author.username}</a>
-		<span class="date-posted">${comment.createdAt}</span>
-		#{modOptions}
+		<a href="#/@__comment.author.username__" class="comment-author">__comment.author.username__</a>
+		<span class="date-posted">__comment.createdAt__</span>
+		<!--__modOptions__-->
 	</div>
 </div>

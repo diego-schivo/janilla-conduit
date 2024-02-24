@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -48,7 +49,13 @@ public class ArticleApi {
 		return nonAlphanumeric.splitAsStream(title.toLowerCase()).collect(Collectors.joining("-"));
 	}
 
+	Properties configuration;
+
 	Persistence persistence;
+
+	public void setConfiguration(Properties configuration) {
+		this.configuration = configuration;
+	}
 
 	public Persistence getPersistence() {
 		return persistence;
@@ -58,7 +65,7 @@ public class ArticleApi {
 		this.persistence = persistence;
 	}
 
-	@Handle(method = "POST", uri = "/api/articles")
+	@Handle(method = "POST", path = "/api/articles")
 	public Object create(Form form, User user) throws IOException {
 		var s = toSlug(form.article.title);
 		validate(null, s, form.article);
@@ -73,14 +80,14 @@ public class ArticleApi {
 		return Map.of("article", a);
 	}
 
-	@Handle(method = "PUT", uri = "/api/articles/([^/]*)")
+	@Handle(method = "PUT", path = "/api/articles/([^/]*)")
 	public Object update(String slug, Form form, User user) throws IOException {
 		var s = toSlug(form.article.title);
 		validate(slug, s, form.article);
 
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
-		var a = i >= 0 ? c.update(i, x -> {
+		var a = i > 0 ? c.update(i, x -> {
 			Reflection.copy(form.article, x);
 			x.setSlug(s);
 			x.setUpdatedAt(Instant.now());
@@ -89,23 +96,23 @@ public class ArticleApi {
 		return Collections.singletonMap("article", a);
 	}
 
-	@Handle(method = "DELETE", uri = "/api/articles/([^/]*)")
+	@Handle(method = "DELETE", path = "/api/articles/([^/]*)")
 	public void delete(String slug) throws IOException {
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
-		if (i >= 0)
+		if (i > 0)
 			c.delete(i);
 	}
 
-	@Handle(method = "GET", uri = "/api/articles/([^/]*)")
+	@Handle(method = "GET", path = "/api/articles/([^/]*)")
 	public Object get(String slug) throws IOException {
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
-		var a = i >= 0 ? c.read(i) : null;
+		var a = i > 0 ? c.read(i) : null;
 		return Collections.singletonMap("article", a);
 	}
 
-	@Handle(method = "GET", uri = "/api/articles")
+	@Handle(method = "GET", path = "/api/articles")
 	public Object list(@Parameter(name = "tag") String tag, @Parameter(name = "author") String author,
 			@Parameter(name = "favorited") String favorited, @Parameter(name = "skip") long skip,
 			@Parameter(name = "limit") long limit) throws IOException {
@@ -156,7 +163,7 @@ public class ArticleApi {
 		return Map.of("articles", r, "articlesCount", a.c);
 	}
 
-	@Handle(method = "GET", uri = "/api/articles/feed")
+	@Handle(method = "GET", path = "/api/articles/feed")
 	public Object listFeed(@Parameter(name = "skip") long skip, @Parameter(name = "limit") long limit, User user)
 			throws IOException {
 		var u = persistence.getCrud(User.class).performOnIndex("followList", user.getId(), LongStream::toArray);
@@ -166,9 +173,10 @@ public class ArticleApi {
 		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
 	}
 
-	@Handle(method = "POST", uri = "/api/articles/([^/]*)/comments")
+	@Handle(method = "POST", path = "/api/articles/([^/]*)/comments")
 	public Object createComment(String slug, CommentForm form, User user) throws IOException {
 		var v = new Validation();
+		v.setConfiguration(configuration);
 		if (v.isNotBlank("body", form.comment.body))
 			v.isSafe("body", form.comment.body);
 		v.orThrow();
@@ -187,7 +195,7 @@ public class ArticleApi {
 		return Map.of("comment", c);
 	}
 
-	@Handle(method = "DELETE", uri = "/api/articles/([^/]*)/comments/([^/]*)")
+	@Handle(method = "DELETE", path = "/api/articles/([^/]*)/comments/([^/]*)")
 	public void deleteComment(String slug, Long id, User user) throws IOException {
 		var c = persistence.getCrud(Comment.class);
 		var d = c.read(id);
@@ -197,7 +205,7 @@ public class ArticleApi {
 			throw new ForbiddenException();
 	}
 
-	@Handle(method = "GET", uri = "/api/articles/([^/]*)/comments")
+	@Handle(method = "GET", path = "/api/articles/([^/]*)/comments")
 	public Object listComments(String slug) throws IOException {
 		var i = persistence.getCrud(Article.class).performOnIndex("slug", slug, x -> (Long) x.findFirst().orElse(-1));
 		var c = persistence.getCrud(Comment.class);
@@ -205,15 +213,13 @@ public class ArticleApi {
 		return Map.of("comments", c.read(j));
 	}
 
-	@Handle(method = "POST", uri = "/api/articles/([^/]*)/favorite")
+	@Handle(method = "POST", path = "/api/articles/([^/]*)/favorite")
 	public Object favorite(String slug, User user) throws IOException {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
-		if (i < 0)
-			throw new RuntimeException();
-		var a = c.read(i);
+		var a = i > 0 ? c.read(i) : null;
 
 		var d = persistence.getDatabase();
 		d.perform((ss, ii) -> {
@@ -232,15 +238,13 @@ public class ArticleApi {
 		return Map.of("article", i);
 	}
 
-	@Handle(method = "DELETE", uri = "/api/articles/([^/]*)/favorite")
+	@Handle(method = "DELETE", path = "/api/articles/([^/]*)/favorite")
 	public Object unfavorite(String slug, User user) throws IOException {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
-		if (i < 0)
-			throw new RuntimeException();
-		var a = c.read(i);
+		var a = i > 0 ? c.read(i) : null;
 
 		var d = persistence.getDatabase();
 		d.perform((ss, ii) -> {
@@ -261,6 +265,7 @@ public class ArticleApi {
 
 	protected void validate(String slug1, String slug2, Form.Article article) throws IOException {
 		var v = new Validation();
+		v.setConfiguration(configuration);
 		var c = persistence.getCrud(Article.class);
 		if (v.isNotBlank("title", article.title) && v.isNotTooLong("title", article.title, 100)
 				&& v.isSafe("title", article.title)) {
@@ -280,17 +285,15 @@ public class ArticleApi {
 		v.orThrow();
 	}
 
-	public record Form(@Parameter(name = "article") Article article) {
+	public record Form(Article article) {
 
-		public record Article(@Parameter(name = "title") String title,
-				@Parameter(name = "description") String description, @Parameter(name = "body") String body,
-				@Parameter(name = "tagList") Collection<String> tagList) {
+		public record Article(String title, String description, String body, Collection<String> tagList) {
 		}
 	}
 
-	public record CommentForm(@Parameter(name = "comment") Comment comment) {
+	public record CommentForm(Comment comment) {
 
-		public record Comment(@Parameter(name = "body") String body) {
+		public record Comment(String body) {
 		}
 	}
 }

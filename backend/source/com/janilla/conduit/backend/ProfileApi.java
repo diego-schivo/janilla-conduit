@@ -42,7 +42,7 @@ public class ProfileApi {
 		this.persistence = persistence;
 	}
 
-	@Handle(method = "GET", uri = "/api/profiles/([^/]*)")
+	@Handle(method = "GET", path = "/api/profiles/([^/]*)")
 	public Object get(String username) throws IOException {
 		var c = persistence.getCrud(User.class);
 		var i = c.find("username", username);
@@ -50,7 +50,7 @@ public class ProfileApi {
 		return Collections.singletonMap("profile", u);
 	}
 
-	@Handle(method = "POST", uri = "/api/profiles/([^/]*)/follow")
+	@Handle(method = "POST", path = "/api/profiles/([^/]*)/follow")
 	public Object follow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
 		var i = c.find("username", username);
@@ -64,7 +64,7 @@ public class ProfileApi {
 		return Map.of("profile", u.getId());
 	}
 
-	@Handle(method = "DELETE", uri = "/api/profiles/([^/]*)/follow")
+	@Handle(method = "DELETE", path = "/api/profiles/([^/]*)/follow")
 	public Object unfollow(String username, User user) throws IOException {
 		var c = persistence.getCrud(User.class);
 		var i = c.find("username", username);

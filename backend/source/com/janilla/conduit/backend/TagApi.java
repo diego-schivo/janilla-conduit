@@ -41,7 +41,7 @@ public class TagApi {
 		this.persistence = persistence;
 	}
 
-	@Handle(method = "GET", uri = "/api/tags")
+	@Handle(method = "GET", path = "/api/tags")
 	public Tags tags() throws IOException {
 		var l = new ArrayList<String>();
 		persistence.getDatabase().perform((ss, ii) -> ii.perform("Tag.count", x -> {

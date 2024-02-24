@@ -10,7 +10,7 @@
 		<dependency>
 			<groupId>com.janilla</groupId>
 			<artifactId>janilla</artifactId>
-			<version>0.0.11</version>
+			<version>0.0.12-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
@@ -25,12 +25,18 @@
 				<artifactId>janilla-conduit-frontend</artifactId>
 				<version>0.0.1-SNAPSHOT</version>
 			</dependency>
+			<dependency>
+				<groupId>com.janilla</groupId>
+				<artifactId>janilla-conduit-fullstack</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<modules>
 		<module>backend</module>
 		<module>frontend</module>
 		<module>fullstack</module>
+		<module>testing</module>
 	</modules>
 	<properties>
 		<maven.compiler.source>21</maven.compiler.source>

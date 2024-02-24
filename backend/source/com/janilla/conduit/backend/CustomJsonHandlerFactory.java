@@ -24,19 +24,12 @@
 package com.janilla.conduit.backend;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.json.JsonToken;
-import com.janilla.json.ReflectionJsonIterator;
 import com.janilla.persistence.Persistence;
-import com.janilla.reflect.Reflection;
 import com.janilla.web.JsonHandlerFactory;
 
 public class CustomJsonHandlerFactory extends JsonHandlerFactory {
@@ -54,111 +47,19 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 	}
 
 	@Override
-	protected void render(Object object, HttpExchange context) throws IOException {
+	protected void render(Object object, HttpExchange exchange) throws IOException {
 		var o = configuration.getProperty("conduit.backend.cors.origin");
-		context.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
+		exchange.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
 
-		super.render(object, context);
+		super.render(object, exchange);
 	}
 
 	@Override
-	protected Iterator<JsonToken<?>> newJsonIterator(Object object, HttpExchange context) {
-		return new ReflectionJsonIterator(object) {
-
-			@Override
-			public Iterator<JsonToken<?>> newValueIterator(Object object) {
-				var o = getStack().peek();
-				if (o instanceof Entry e) {
-					var n = (String) e.getKey();
-					object = switch (n) {
-					case "article" -> {
-						if (object instanceof Long i)
-							try {
-								object = persistence.getCrud(Article.class).read(i);
-							} catch (IOException f) {
-								throw new UncheckedIOException(f);
-							}
-						yield object;
-					}
-					case "author", "profile" -> {
-						if (object instanceof Long i)
-							try {
-								object = persistence.getCrud(User.class).read(i);
-							} catch (IOException f) {
-								throw new UncheckedIOException(f);
-							}
-						yield object;
-					}
-					default -> object;
-					};
-				}
-				if (object != null)
-					object = switch (object) {
-					case Article a -> {
-						var m = Reflection.properties(Article.class).filter(p -> switch (p) {
-						case "id" -> false;
-						default -> true;
-						}).map(k -> {
-//							System.out.println("k=" + k);
-							var g = Reflection.getter(Article.class, k);
-							Object v;
-							try {
-								v = g.invoke(a);
-							} catch (ReflectiveOperationException f) {
-								throw new RuntimeException(f);
-							}
-							return new SimpleEntry<>(k, v);
-						}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
-						var u = ((CustomHttpExchange) context).user.get();
-						try {
-							if (u != null)
-								persistence.getCrud(User.class).performOnIndex("favoriteList", u.getId(), x -> {
-									if (x.anyMatch(y -> y == a.getId()))
-										m.put("favorited", true);
-									return null;
-								});
-							if (!m.containsKey("favorited"))
-								m.put("favorited", false);
-							m.put("favoritesCount",
-									persistence.getCrud(Article.class).count("favoriteList", a.getId()));
-						} catch (IOException e) {
-							throw new UncheckedIOException(e);
-						}
-						yield m;
-					}
-					case User u -> {
-						var m = Reflection.properties(User.class).filter(p -> switch (p) {
-						case "hash", "id", "salt" -> false;
-						default -> true;
-						}).map(k -> {
-							var g = Reflection.getter(User.class, k);
-							Object w;
-							try {
-								w = g.invoke(u);
-							} catch (ReflectiveOperationException h) {
-								throw new RuntimeException(h);
-							}
-							return new SimpleEntry<>(k, w);
-						}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
-						var v = ((CustomHttpExchange) context).user.get();
-						try {
-							if (v != null)
-								persistence.getCrud(User.class).performOnIndex("followList", v.getId(), x -> {
-									if (x.anyMatch(y -> y == u.getId()))
-										m.put("following", true);
-									return null;
-								});
-							if (!m.containsKey("following"))
-								m.put("following", false);
-						} catch (IOException e) {
-							throw new UncheckedIOException(e);
-						}
-						yield m;
-					}
-					default -> object;
-					};
-				return super.newValueIterator(object);
-			}
-		};
+	protected Iterator<JsonToken<?>> newJsonIterator(Object object, HttpExchange exchange) {
+		var i = new CustomReflectionJsonIterator();
+		i.setObject(object);
+		i.persistence = persistence;
+		i.user = ((ConduitBackendApp.Exchange) exchange).user;
+		return i;
 	}
 }

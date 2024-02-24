@@ -21,13 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.frontend;
+package com.janilla.conduit.testing;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Properties;
 import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
 import com.janilla.io.IO;
 import com.janilla.util.Lazy;
@@ -35,21 +37,21 @@ import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
 
-public class ConduitFrontend {
+public class ConduitTestingApp {
 
 	public static void main(String[] args) throws IOException {
-		var c = new Properties();
-		try (var s = ConduitFrontend.class.getResourceAsStream("configuration.properties")) {
-			c.load(s);
+		var a = new ConduitTestingApp();
+		{
+			var c = new Properties();
+			try (var s = a.getClass().getResourceAsStream("configuration.properties")) {
+				c.load(s);
+			}
+			a.setConfiguration(c);
 		}
 
-		var f = new ConduitFrontend();
-		f.setConfiguration(c);
-
-		var s = new HttpServer();
-		s.setExecutor(Runnable::run);
-		s.setPort(Integer.parseInt(c.getProperty("conduit.frontend.http.port")));
-		s.setHandler(f.getHandler());
+		var s = a.new Server();
+		s.setPort(Integer.parseInt(a.getConfiguration().getProperty("conduit.testing.server.port")));
+		s.setHandler(a.getHandler());
 		s.run();
 	}
 
@@ -57,8 +59,21 @@ public class ConduitFrontend {
 
 	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
 		var b = new ApplicationHandlerBuilder();
-		b.setApplication(ConduitFrontend.this);
-		return b.build();
+		b.setApplication(this);
+		var h1 = b.build();
+
+		return c -> {
+			URI u;
+			try {
+				u = c.getRequest().getURI();
+			} catch (NullPointerException e) {
+				u = null;
+			}
+			var h = Test.fullstack != null && !(u != null && u.getPath().startsWith("/test/"))
+					? Test.fullstack.getHandler()
+					: h1;
+			h.accept(c);
+		};
 	});
 
 	public Properties getConfiguration() {
@@ -73,30 +88,24 @@ public class ConduitFrontend {
 		return handler.get();
 	}
 
-	@Handle(method = "GET", uri = "/")
-	public Page getPage() {
-		return new Page();
+	@Handle(method = "GET", path = "/")
+	public @Render(template = "App.html") Object getApp() {
+		return new Object();
 	}
 
-	@Handle(method = "GET", uri = "/script.js")
-	public Script getScript() {
-		var u = configuration.getProperty("conduit.frontend.backendUrl");
-		return new Script(u);
-	}
+	class Server extends HttpServer {
 
-	@Render(template = "head.html")
-	public record Head() {
-	}
-
-	@Render(template = "page.html")
-	public record Page() {
-
-		public Head head() {
-			return new Head();
+		@Override
+		protected HttpExchange newExchange(HttpRequest request) {
+			URI u;
+			try {
+				u = request.getURI();
+			} catch (NullPointerException e) {
+				u = null;
+			}
+			return Test.fullstack != null && u != null && u.getPath().startsWith("/api/")
+					? Test.fullstack.getBackend().new Exchange()
+					: super.newExchange(request);
 		}
-	}
-
-	@Render(template = "script.js")
-	public record Script(String backendUrl) {
 	}
 }

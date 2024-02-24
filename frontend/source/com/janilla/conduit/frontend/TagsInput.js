@@ -25,16 +25,16 @@ class TagsInput {
 
 	selector;
 	
-	rendering;
+	engine;
 
-	render = async (key, rendering) => {
-		if (key === undefined) {
-			this.rendering = rendering.clone();
-			return await rendering.render(this, 'TagsInput');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'TagsInput');
 		}
 
-		if (rendering.stack.at(-2).key === 'tagList')
-			return await rendering.render(rendering.object[key], 'TagsInput-tag');
+		if (engine.isRenderingArrayItem('tagList'))
+			return await engine.render(engine.target, 'TagsInput-tag');
 	}
 
 	listen = () => {
@@ -58,7 +58,7 @@ class TagsInput {
 		const i = e.currentTarget;
 		const d = i.nextElementSibling;
 		if (!d.querySelector(`[value="${i.value}"]`)) {
-			const h = await this.rendering.render(i.value, 'TagsInput-tag');
+			const h = await this.engine.render(i.value, 'TagsInput-tag');
 			d.insertAdjacentHTML('beforeend', h);
 		}
 		i.value = '';

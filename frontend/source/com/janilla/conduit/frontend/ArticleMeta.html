@@ -1,10 +1,10 @@
 <div class="article-meta">
-	<a href="#/@${article.author.username}">
-		<img src="${article.author.image}" />
+	<a href="#/@__article.author.username__">
+		<img src="<!--__article.author.image__-->" />
 	</a>
 	<div class="info">
-		<a href="#/@${article.author.username}" class="author">${article.author.username}</a>
-		<span class="date">${article.createdAt}</span>
+		<a href="#/@__article.author.username__" class="author">__article.author.username__</a>
+		<span class="date">__article.createdAt__</span>
 	</div>
-	#{content}
+	<!--__content__-->
 </div>

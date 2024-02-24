@@ -28,78 +28,89 @@ class ArticleList {
 
 	selector;
 
-	conduit;
-
-	rendering;
+	engine;
 
 	articlePreviews;
 
 	pagination;
 
-	render = async (key, rendering) => {
-		if (key === undefined) {
-			this.conduit = rendering.stack[0].object;
-			this.rendering = rendering.clone();
-			return await rendering.render(this, 'ArticleList');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'ArticleList');
 		}
 	}
 
 	refresh = async () => {
+		const e = this.selector();
+		if (!e)
+			return;
 		delete this.articlePreviews;
 		delete this.pagination;
-		const h = await this.rendering.render(this);
-		this.selector().outerHTML = h;
+		const h = await this.render(this.engine);
+		e.outerHTML = h;
 		this.listen();
 	}
 
 	listen = () => {
-		if (!this.articlePreviews)
-			this.fetchArticles().then(c => {
-				if (c > 10) {
-					this.pagination = new Pagination();
-					this.pagination.selector = () => this.selector().lastElementChild;
-					this.pagination.pagesCount = Math.ceil(c / 10);
-					this.pagination.pageNumber = 1;
-				} else
-					this.pagination = null;
-				return this.rendering.render(this, `ArticleList-${c ? 'nonempty' : 'empty'}`);
-			}).then(h => {
-				this.selector().innerHTML = h;
-				this.listen();
-			});
-		this.selector().addEventListener('pageselect', this.handlePageSelect);
-		this.articlePreviews?.forEach(p => p.listen());
+		const e = this.selector();
+		if (!e)
+			return;
+		addEventListener('pageload', this.handlePageLoad);
+		addEventListener('pageunload', this.handlePageUnload);
+		e.addEventListener('pageselect', this.handlePageSelect);
+		this.articlePreviews?.forEach(x => x.listen());
 		this.pagination?.listen();
 	}
 
+	handlePageLoad = async () => {
+		const c = await this.fetchArticles();
+		if (c > 10) {
+			this.pagination = new Pagination();
+			this.pagination.selector = () => this.selector().lastElementChild;
+			this.pagination.pagesCount = Math.ceil(c / 10);
+			this.pagination.pageNumber = 1;
+		} else
+			this.pagination = null;
+		const h = await this.engine.render(this, `ArticleList-${c ? 'nonempty' : 'empty'}`);
+		const e = this.selector();
+		if (e)
+			e.innerHTML = h;
+		this.listen();
+	}
+
+	handlePageUnload = () => {
+		removeEventListener('pageload', this.handlePageLoad);
+	}
+
+	handlePageSelect = async () => {
+		await this.fetchArticles();
+		const h = await this.engine.render(this.articlePreviews);
+		const e = this.selector();
+		e.querySelectorAll('.article-preview').forEach(p => p.remove());
+		e.insertAdjacentHTML('afterbegin', h);
+		this.listen();
+	}
+
 	fetchArticles = async () => {
-		const u = new URL(`${this.conduit.backendUrl}/api/articles`);
+		const u = new URL(`${this.engine.app.api.url}/articles`);
 		u.searchParams.set('skip', ((this.pagination?.pageNumber ?? 1) - 1) * 10);
 		u.searchParams.set('limit', 10);
 		this.selector().dispatchEvent(new CustomEvent('articlesfetch', {
 			bubbles: true,
 			detail: { url: u }
 		}));
-		return fetch(u, {
-			headers: this.conduit.backendHeaders
-		}).then(s => s.json()).then(j => {
-			this.articlePreviews = j.articles.map((a, i) => {
-				const q = new ArticlePreview();
-				q.selector = () => this.selector().children[i];
-				q.article = a;
-				return q;
-			});
-			return j.articlesCount;
+		const s = await fetch(u, {
+			headers: this.engine.app.api.headers
 		});
-	}
-
-	handlePageSelect = async () => {
-		this.fetchArticles().then(() => this.rendering.render(this.articlePreviews)).then(h => {
-			const e = this.selector();
-			e.querySelectorAll('.article-preview').forEach(p => p.remove());
-			e.insertAdjacentHTML('afterbegin', h);
-			this.listen();
+		const j = await s.json();
+		this.articlePreviews = j.articles.map((a, i) => {
+			const p = new ArticlePreview();
+			p.selector = () => this.selector().children[i];
+			p.article = a;
+			return p;
 		});
+		return j.articlesCount;
 	}
 }
 

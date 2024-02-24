@@ -29,20 +29,20 @@ class CommentForm {
 
 	article;
 
-	conduit;
+	engine;
 
 	errors;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				return await rendering.render(this, `CommentForm-${this.conduit.user ? 'authenticated' : 'unauthenticated'}`);
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, `CommentForm-${this.engine.app.currentUser ? 'authenticated' : 'unauthenticated'}`);
+		}
 
-			case 'errors':
-				this.errors = new Errors();
-				this.errors.selector = () => this.selector().firstElementChild;
-				return this.errors;
+		if (engine.key === 'errors') {
+			this.errors = new Errors();
+			this.errors.selector = () => this.selector().firstElementChild;
+			return this.errors;
 		}
 	}
 
@@ -53,9 +53,9 @@ class CommentForm {
 	handleSubmit = async e => {
 		e.preventDefault();
 		const f = e.currentTarget;
-		const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.article.slug}/comments`, {
+		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/comments`, {
 			method: 'POST',
-			headers: { ...this.conduit.backendHeaders, 'Content-Type': 'application/json' },
+			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ comment: Object.fromEntries(new FormData(f)) })
 		});
 		const j = await s.json();

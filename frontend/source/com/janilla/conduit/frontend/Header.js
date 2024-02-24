@@ -23,14 +23,15 @@
  */
 class Header {
 
-	user;
+	engine;
 
 	get navItems() {
 		const h = {
 			hash: '#/',
 			text: 'Home'
 		};
-		if (this.user)
+		const u = this.engine.app.currentUser;
+		if (u)
 			return [
 				h, {
 					hash: '#/editor',
@@ -39,8 +40,8 @@ class Header {
 					hash: '#/settings',
 					text: '<i class="ion-gear-a"></i>&nbsp;Settings'
 				}, {
-					hash: `#/@${this.user.username}`,
-					text: `<img src="${this.user.image}" class="user-pic" /> ${this.user.username}`
+					hash: `#/@${u.username}`,
+					text: `<img src="${u.image}" class="user-pic" /> ${u.username}`
 				}];
 		else
 			return [
@@ -53,17 +54,17 @@ class Header {
 				}];
 	}
 
-	render = async (key, rendering) => {
-		if (key === undefined) {
-			this.user = rendering.stack[0].object.user;
-			return await rendering.render(this, 'Header');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Header');
 		}
 
-		if (rendering.stack.at(-2).key === 'navItems') {
-			let i = rendering.object[key];
+		if (engine.isRenderingArrayItem('navItems')) {
+			const i = engine.target;
 			if (i.hash === location.hash)
 				i.active = 'active';
-			return await rendering.render(i, 'Header-navitem');
+			return await engine.render(i, 'Header-navitem');
 		}
 	}
 }

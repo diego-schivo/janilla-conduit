@@ -28,45 +28,45 @@ import java.net.URI;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import com.janilla.conduit.backend.ConduitBackend;
-import com.janilla.conduit.frontend.ConduitFrontend;
+import com.janilla.conduit.backend.ConduitBackendApp;
+import com.janilla.conduit.frontend.ConduitFrontendApp;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpServer;
 import com.janilla.io.IO;
 import com.janilla.util.Lazy;
 
-public class ConduitFullstack {
+public class ConduitFullstackApp {
 
 	public static void main(String[] args) throws IOException {
-		var c = new Properties();
-		try (var s = ConduitFullstack.class.getResourceAsStream("configuration.properties")) {
-			c.load(s);
+		var a = new ConduitFullstackApp();
+		{
+			var c = new Properties();
+			try (var s = a.getClass().getResourceAsStream("configuration.properties")) {
+				c.load(s);
+			}
+			a.setConfiguration(c);
 		}
+		a.getBackend().populate();
 
-		var f = new ConduitFullstack();
-		f.setConfiguration(c);
-		f.backend.get().populate();
-
-		var s = new CustomHttpServer();
-		s.fullstack = f;
-		s.setExecutor(Runnable::run);
-		s.setPort(Integer.parseInt(c.getProperty("conduit.fullstack.http.port")));
-		s.setHandler(f.getHandler());
+		var s = a.new Server();
+		s.setPort(Integer.parseInt(a.getConfiguration().getProperty("conduit.fullstack.server.port")));
+		s.setHandler(a.getHandler());
 		s.run();
 	}
 
 	Properties configuration;
 
-	Supplier<ConduitBackend> backend = Lazy.of(() -> {
-		var b = new ConduitBackend();
-		b.setConfiguration(configuration);
-		return b;
+	Supplier<ConduitBackendApp> backend = Lazy.of(() -> {
+		var a = new ConduitBackendApp();
+		a.setConfiguration(configuration);
+		return a;
 	});
 
-	Supplier<ConduitFrontend> frontend = Lazy.of(() -> {
-		var f = new ConduitFrontend();
-		f.setConfiguration(configuration);
-		return f;
+	Supplier<ConduitFrontendApp> frontend = Lazy.of(() -> {
+		var a = new ConduitFrontendApp();
+		a.setConfiguration(configuration);
+		return a;
 	});
 
 	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
@@ -98,15 +98,30 @@ public class ConduitFullstack {
 		this.configuration = configuration;
 	}
 
-	public ConduitBackend getBackend() {
+	public ConduitBackendApp getBackend() {
 		return backend.get();
 	}
 
-	public ConduitFrontend getFrontend() {
+	public ConduitFrontendApp getFrontend() {
 		return frontend.get();
 	}
 
 	public IO.Consumer<HttpExchange> getHandler() {
 		return handler.get();
+	}
+
+	class Server extends HttpServer {
+
+		@Override
+		protected HttpExchange newExchange(HttpRequest request) {
+			URI u;
+			try {
+				u = request.getURI();
+			} catch (NullPointerException e) {
+				u = null;
+			}
+			return u != null && u.getPath().startsWith("/api/") ? getBackend().new Exchange()
+					: super.newExchange(request);
+		}
 	}
 }

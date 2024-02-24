@@ -32,29 +32,21 @@ import com.janilla.http.HttpResponse.Status;
 import com.janilla.web.AnnotationDrivenToMethodInvocation;
 import com.janilla.web.Handle;
 
-public class AccessControl {
+public class AccessControlWeb {
 
 	Properties configuration;
 
 	AnnotationDrivenToMethodInvocation toInvocation;
 
-	public Properties getConfiguration() {
-		return configuration;
-	}
-
 	public void setConfiguration(Properties configuration) {
 		this.configuration = configuration;
-	}
-
-	public AnnotationDrivenToMethodInvocation getToInvocation() {
-		return toInvocation;
 	}
 
 	public void setToInvocation(AnnotationDrivenToMethodInvocation toInvocation) {
 		this.toInvocation = toInvocation;
 	}
 
-	@Handle(method = "OPTIONS", uri = "/api/(.*)")
+	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
 		var o = configuration.getProperty("conduit.backend.cors.origin");
 		var s = toInvocation.getValueAndGroupsStream(request).flatMap(w -> w.value().methods().stream())

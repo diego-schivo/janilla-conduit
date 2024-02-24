@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 class Pagination {
-	
+
 	selector;
 
 	pagesCount;
@@ -35,17 +35,12 @@ class Pagination {
 		return i;
 	}
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				return this.pagesCount > 1 ? await rendering.render(this, 'Pagination') : null;
-		}
+	render = async engine => {
+		if (engine.isRendering(this))
+			return this.pagesCount > 1 ? await engine.render(this, 'Pagination') : null;
 
-		const n = {
-			'pageItems': 'Pagination-page'
-		}[rendering.stack.at(-2).key];
-		if (n)
-			return await rendering.render(rendering.object[key], n);
+		if (engine.isRenderingArrayItem('pageItems'))
+			return await engine.render(engine.target, 'Pagination-page');
 	}
 
 	listen = () => {

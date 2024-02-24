@@ -25,44 +25,40 @@ class PopularTags {
 
 	selector;
 
-	conduit;
-
-	rendering;
+	engine;
 
 	tags;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
-				return await rendering.render(this, 'PopularTags');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'PopularTags');
 		}
 
-		const n = {
-			'tags': 'PopularTags-tag'
-		}[rendering.stack.at(-2).key];
-		if (n)
-			return await rendering.render(rendering.object[key], n);
+		if (engine.isRenderingArrayItem('tags'))
+			return await engine.render(engine.target, 'PopularTags-tag');
 	}
 
 	listen = () => {
-		if (!this.tags)
-			this.fetchTags().then(() => {
-				return this.rendering.render(this, `PopularTags-${this.tags.length ? 'nonempty' : 'empty'}`);
-			}).then(h => {
-				this.selector().lastElementChild.outerHTML = h;
-				this.listen();
-			});
+		const e = this.selector();
+		if (!e)
+			return;
+		addEventListener('pageload', this.handlePageLoad);
+		addEventListener('pageunload', this.handlePageUnload);
 		this.selector().addEventListener('click', this.handleClick);
 	}
 
-	fetchTags = async () => {
-		return fetch(`${this.conduit.backendUrl}/api/tags`, {
-			headers: this.conduit.backendHeaders
-		}).then(s => s.json()).then(j => {
-			this.tags = j.tags;
-		});
+	handlePageLoad = async () => {
+		await this.fetchTags();
+		const h = await this.engine.render(this, `PopularTags-${this.tags.length ? 'nonempty' : 'empty'}`);
+		const e = this.selector();
+		if (e)
+			e.lastElementChild.outerHTML = h;
+		this.listen();
+	}
+
+	handlePageUnload = () => {
+		removeEventListener('pageload', this.handlePageLoad);
 	}
 
 	handleClick = async e => {
@@ -74,6 +70,12 @@ class PopularTags {
 			bubbles: true,
 			detail: { tag: a.textContent }
 		}));
+	}
+
+	fetchTags = async () => {
+		const a = this.engine.app.api;
+		const s = await fetch(`${a.url}/tags`, { headers: a.headers });
+		this.tags = (await s.json()).tags;
 	}
 }
 

@@ -34,21 +34,18 @@ class ArticlePreview {
 
 	favoriteButton;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				return await rendering.render(this, 'ArticlePreview');
+	render = async engine => {
+		if (engine.isRendering(this))
+			return await engine.render(this, 'ArticlePreview');
 
+		switch (engine.key) {
 			case 'meta':
-				if (rendering.object === this) {
-					this.meta = new ArticleMeta();
-					this.meta.selector = () => this.selector().firstElementChild;
-					return this.meta;
-				}
-				break;
+				this.meta = new ArticleMeta();
+				this.meta.selector = () => this.selector().firstElementChild;
+				return this.meta;
 
 			case 'content':
-				switch (rendering.object) {
+				switch (engine.target) {
 					case this.meta:
 						this.favoriteButton = new FavoriteButton();
 						this.favoriteButton.article = this.article;
@@ -61,17 +58,17 @@ class ArticlePreview {
 				break;
 
 			case 'className':
-				if (rendering.object === this.favoriteButton)
+				if (engine.target === this.favoriteButton)
 					return `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
 				break;
 		}
 
-		if (rendering.stack.at(-2)?.key === 'tagList')
-			return await rendering.render(rendering.object[key], 'ArticlePreview-tag');
+		if (engine.isRenderingArrayItem('tagList'))
+			return await engine.render(engine.target, 'ArticlePreview-tag');
 	}
 
 	listen = () => {
-		this.meta.listen();
+		this.meta?.listen();
 	}
 }
 

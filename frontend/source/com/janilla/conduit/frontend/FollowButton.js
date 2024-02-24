@@ -27,9 +27,7 @@ class FollowButton {
 
 	user;
 
-	conduit;
-
-	rendering;
+	engine;
 
 	get className() {
 		return this.user.following ? 'btn-secondary' : 'btn-outline-secondary';
@@ -39,12 +37,10 @@ class FollowButton {
 		return `${this.user.following ? 'Unfollow' : 'Follow'} ${this.user.username}`;
 	}
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
-				return await rendering.render(this, 'FollowButton');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'FollowButton');
 		}
 	}
 
@@ -54,17 +50,19 @@ class FollowButton {
 
 	handleClick = async e => {
 		e.preventDefault();
-		if (!this.conduit.user)
+		if (!this.engine.app.currentUser) {
 			location.hash = '#/login';
-		const s = await fetch(`${this.conduit.backendUrl}/api/profiles/${this.user.username}/follow`, {
+			return;
+		}
+		const s = await fetch(`${this.engine.app.api.url}/profiles/${this.user.username}/follow`, {
 			method: this.user.following ? 'DELETE' : 'POST',
-			headers: this.conduit.backendHeaders
+			headers: this.engine.app.api.headers
 		});
 		if (s.ok) {
 			const u = (await s.json()).profile;
 			this.user.following = u.following;
 
-				this.selector().outerHTML = await this.rendering.render(this);
+			this.selector().outerHTML = await this.engine.render(this);
 			this.listen();
 
 			this.selector().dispatchEvent(new CustomEvent('followtoggle', { bubbles: true }));

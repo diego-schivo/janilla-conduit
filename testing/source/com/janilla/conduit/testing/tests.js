@@ -21,21 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
+import ManageArticle from './ManageArticle.js';
+import FilterArticles from './FilterArticles.js';
 
-import com.janilla.web.AnnotationDrivenToMethodInvocation;
-import com.janilla.web.ApplicationHandlerBuilder;
-import com.janilla.web.MethodHandlerFactory;
-
-public class CustomApplicationHandlerBuilder extends ApplicationHandlerBuilder {
-
-	@Override
-	protected MethodHandlerFactory buildMethodHandlerFactory() {
-		var f = super.buildMethodHandlerFactory();
-		f.setArgumentsResolver(new CustomMethodArgumentsResolver());
-
-		((ConduitBackend) application).toInvocation = (AnnotationDrivenToMethodInvocation) f.getToInvocation();
-
-		return f;
-	}
-}
+export default {
+	'ManageArticle': () => new ManageArticle(),
+	'FilterArticles': () => new FilterArticles()
+};

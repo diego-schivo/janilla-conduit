@@ -27,13 +27,20 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Validation {
 
+	Properties configuration;
+
 	Map<String, Collection<String>> errors = new LinkedHashMap<>();
+
+	public void setConfiguration(Properties configuration) {
+		this.configuration = configuration;
+	}
 
 	boolean hasNotBeenTaken(String name, Object value) {
 		if (value == null)
@@ -66,6 +73,8 @@ public class Validation {
 			.map(String::toLowerCase).sorted().collect(Collectors.toCollection(LinkedHashSet::new));
 
 	boolean isSafe(String name, String value) {
+		if (!Boolean.parseBoolean(configuration.getProperty("conduit.backend.reject-unsafe-data")))
+			return true;
 		if (value == null || value.isEmpty()
 				|| nonWord.splitAsStream(value).allMatch(w -> w.isEmpty() || safeWords.contains(w.toLowerCase())))
 			return true;

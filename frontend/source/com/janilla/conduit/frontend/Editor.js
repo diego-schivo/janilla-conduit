@@ -32,7 +32,7 @@ class Editor {
 
 	article;
 
-	conduit;
+	engine;
 
 	errors;
 
@@ -42,19 +42,20 @@ class Editor {
 		return location.hash.split('/')[2];
 	}
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				if (this.slug) {
-					const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.slug}`, {
-						headers: this.conduit.backendHeaders
-					});
-					this.article = s.ok ? (await s.json()).article : null;
-				} else
-					this.article = null;
-				return await rendering.render(this, 'Editor');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			if (this.slug) {
+				const s = await fetch(`${this.engine.app.api.url}/articles/${this.slug}`, {
+					headers: this.engine.app.api.headers
+				});
+				this.article = s.ok ? (await s.json()).article : null;
+			} else
+				this.article = null;
+			return await engine.render(this, 'Editor');
+		}
 
+		switch (engine.key) {
 			case 'errors':
 				this.errors = new Errors();
 				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
@@ -89,9 +90,9 @@ class Editor {
 					break;
 			}
 		});
-		const s = await fetch(this.slug ? `${this.conduit.backendUrl}/api/articles/${this.slug}` : `${this.conduit.backendUrl}/api/articles`, {
+		const s = await fetch(this.slug ? `${this.engine.app.api.url}/articles/${this.slug}` : `${this.engine.app.api.url}/articles`, {
 			method: this.slug ? 'PUT' : 'POST',
-			headers: { ...this.conduit.backendHeaders, 'Content-Type': 'application/json' },
+			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ article: a })
 		});
 		const j = await s.json();

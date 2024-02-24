@@ -27,9 +27,7 @@ class FavoriteButton {
 
 	article;
 
-	conduit;
-
-	rendering;
+	engine;
 
 	get className() {
 		return this.article.favorited ? 'btn-primary' : 'btn-outline-primary';
@@ -39,12 +37,10 @@ class FavoriteButton {
 		return `${this.article.favorited ? 'Unfavorite' : 'Favorite'} Article <span class="counter">(${this.article.favoritesCount})</span>`;
 	}
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
-				return await rendering.render(this, 'FavoriteButton');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'FavoriteButton');
 		}
 	}
 
@@ -54,17 +50,19 @@ class FavoriteButton {
 
 	handleClick = async e => {
 		e.preventDefault();
-		if (!this.conduit.user)
+		if (!this.engine.app.currentUser) {
 			location.hash = '#/login';
-		const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.article.slug}/favorite`, {
+			return;
+		}
+		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/favorite`, {
 			method: this.article.favorited ? 'DELETE' : 'POST',
-			headers: this.conduit.backendHeaders
+			headers: this.engine.app.api.headers
 		});
 		if (s.ok) {
 			const a = (await s.json()).article;
 			['favorited', 'favoritesCount'].forEach(n => this.article[n] = a[n]);
 
-				this.selector().outerHTML = await this.rendering.render(this);
+			this.selector().outerHTML = await this.engine.render(this);
 			this.listen();
 
 			this.selector().dispatchEvent(new CustomEvent('favoritetoggle', { bubbles: true }));

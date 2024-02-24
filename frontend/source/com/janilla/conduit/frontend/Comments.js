@@ -30,21 +30,19 @@ class Comments {
 
 	article;
 
-	conduit;
-
-	rendering;
+	engine;
 
 	form;
 
 	cards;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
-				return await rendering.render(this, 'Comments');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Comments');
+		}
 
+		switch (engine.key) {
 			case 'form':
 				this.form = new CommentForm();
 				this.form.article = this.article;
@@ -52,8 +50,8 @@ class Comments {
 				return this.form;
 
 			case 'cards':
-				const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.article.slug}/comments`, {
-					headers: this.conduit.backendHeaders
+				const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/comments`, {
+					headers: this.engine.app.api.headers
 				});
 				this.cards = s.ok ? (await s.json()).comments.map((c, i) => {
 					const d = new CommentCard();
@@ -76,13 +74,12 @@ class Comments {
 
 	handleCommentAdd = async e => {
 		const c = new CommentCard();
-		c.conduit = this.conduit;
 		c.article = this.article;
 		c.comment = e.detail.comment;
 		c.selector = () => this.selector().firstElementChild.children[1];
 		this.cards.unshift(c);
 
-		const h = await this.rendering.render(c);
+		const h = await this.engine.render(c);
 		this.form.selector().insertAdjacentHTML('afterend', h);
 		c.listen();
 	}

@@ -28,21 +28,21 @@ class Register {
 	selector;
 
 	title = 'Sign up';
-	
-	conduit;
+
+	engine;
 
 	errors;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				return await rendering.render(this, 'Register');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Register');
+		}
 
-			case 'errors':
-				this.errors = new Errors();
-				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
-				return this.errors;
+		if (engine.key === 'errors') {
+			this.errors = new Errors();
+			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
+			return this.errors;
 		}
 	}
 
@@ -52,16 +52,16 @@ class Register {
 
 	handleSubmit = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.conduit.backendUrl}/api/users`, {
+		const s = await fetch(`${this.engine.app.api.url}/users`, {
 			method: 'POST',
-			headers: { ...this.conduit.backendHeaders, 'Content-Type': 'application/json' },
+			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ user: Object.fromEntries(new FormData(e.currentTarget)) })
 		});
 		const j = await s.json();
 		this.errors.messages = s.ok ? null : j;
 		await this.errors.refresh();
 		if (s.ok) {
-			dispatchEvent(new CustomEvent('userchange', {
+			dispatchEvent(new CustomEvent('currentuserchange', {
 				detail: { user: j.user }
 			}));
 			location.hash = '#/';

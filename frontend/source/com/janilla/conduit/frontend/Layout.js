@@ -28,17 +28,23 @@ class Layout {
 
 	selector;
 
-	header;
+	engine;
 
-	page;
+	header;
 
 	footer;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				return await rendering.render(this, 'Layout');
+	get page() {
+		return this.engine.app.currentPage;
+	}
 
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Layout');
+		}
+
+		switch (engine.key) {
 			case 'header':
 				this.header = new Header();
 				return this.header;
@@ -50,7 +56,7 @@ class Layout {
 	}
 
 	listen = () => {
-		this.page?.listen();
+		this.page.listen();
 	}
 }
 

@@ -23,6 +23,8 @@
  */
 module com.janilla.conduit.fullstack {
 
-	requires com.janilla.conduit.backend;
-	requires com.janilla.conduit.frontend;
+	exports com.janilla.conduit.fullstack;
+
+	requires transitive com.janilla.conduit.backend;
+	requires transitive com.janilla.conduit.frontend;
 }

@@ -2,22 +2,22 @@
 	<div class="container page">
 		<div class="row">
 			<div class="col-md-10 offset-md-1 col-xs-12">
-				#{errors}
+				<!--__errors__-->
 				<form>
 					<fieldset>
 						<fieldset class="form-group">
 							<input type="text" class="form-control form-control-lg" placeholder="Article Title"
-								name="title" value="${article.title}" />
+								name="title" value="__article.title__" />
 						</fieldset>
 						<fieldset class="form-group">
 							<input type="text" class="form-control" placeholder="What's this article about?"
-								name="description" value="${article.description}" />
+								name="description" value="__article.description__" />
 						</fieldset>
 						<fieldset class="form-group">
 							<textarea class="form-control" rows="8" placeholder="Write your article (in markdown)"
-								name="body">${article.body}</textarea>
+								name="body">__article.body__</textarea>
 						</fieldset>
-						#{tags}
+						<!--__tags__-->
 						<button class="btn btn-lg pull-xs-right btn-primary">Publish Article</button>
 					</fieldset>
 				</form>

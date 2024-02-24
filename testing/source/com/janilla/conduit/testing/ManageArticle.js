@@ -21,18 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
+class ManageArticle {
 
-import com.janilla.http.HttpExchange;
-import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpServer;
+	actions;
 
-class CustomHttpServer extends HttpServer {
-
-	ConduitBackend backend;
-
-	@Override
-	protected HttpExchange newExchange(HttpRequest request) {
-		return backend.newExchange();
+	run = async () => {
+		await this.actions.registerUser();
+		await this.actions.createArticle();
+		await this.actions.updateArticle();
+		await this.actions.deleteArticle();
+		await this.actions.logoutUser();
+		await new Promise(x => setTimeout(x, 200));
 	}
 }
+
+export default ManageArticle;

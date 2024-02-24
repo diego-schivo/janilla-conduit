@@ -25,7 +25,7 @@ class Errors {
 
 	#messages;
 
-	rendering;
+	engine;
 	
 	get messages() {
 		return this.#messages;
@@ -35,18 +35,18 @@ class Errors {
 		this.#messages = x ? Object.entries(x).flatMap(([k, v]) => v.map(w => `${k} ${w}`)) : null;
 	}
 
-	render = async (key, rendering) => {
-		if (key === undefined) {
-			this.rendering = rendering.clone();
-			return await rendering.render(this, 'Errors');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Errors');
 		}
 
-		if (rendering.stack.at(-2).key === 'messages')
-			return await rendering.render(this.messages[key], 'Errors-message');
+		if (engine.isRenderingArrayItem('messages'))
+			return await engine.render(engine.target, 'Errors-message');
 	}
 
 	refresh = async () => {
-		const h = await this.rendering.render(this);
+		const h = await this.engine.render(this);
 		this.selector().outerHTML = h;
 	}
 }

@@ -26,8 +26,10 @@ import PopularTags from './PopularTags.js';
 import Tabs from './Tabs.js';
 
 class Home {
-	
+
 	selector;
+
+	engine;
 
 	title = 'Home';
 
@@ -37,15 +39,13 @@ class Home {
 
 	popularTags;
 
-	tab;
+	activeTab;
 
-	tag;
-	
-	user;
+	selectedTag;
 
 	get tabItems() {
 		const i = [];
-		if (this.user)
+		if (this.engine.app.currentUser)
 			i.push({
 				name: 'feed',
 				text: 'Your Feed'
@@ -54,39 +54,40 @@ class Home {
 			name: 'all',
 			text: 'Global Feed'
 		});
-		if (this.tab === 'tag')
+		if (this.activeTab === 'tag')
 			i.push({
 				name: 'tag',
-				text: `<i class="ion-pound"></i>${this.tag}`
+				text: `<i class="ion-pound"></i>${this.selectedTag}`
 			});
-		i.find(j => j.name === this.tab).active = 'active';
+		i.find(j => j.name === this.activeTab).active = 'active';
 		return i;
 	}
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.user = rendering.stack[0].object.user;
-				this.tab = this.user ? 'feed' : 'all';
-				return await rendering.render(this, 'Home');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			this.activeTab = engine.app.currentUser ? 'feed' : 'all';
+			return await engine.render(this, 'Home');
+		}
 
+		switch (engine.key) {
 			case 'banner':
-				return this.user ? null : await rendering.render(this, 'Home-banner');
+				return !engine.app.currentUser ? await engine.render(this, 'Home-banner') : null;
 
 			case 'tabs':
 				this.tabs = new Tabs();
-				this.tabs.selector = () => this.selector().querySelector('.feed-toggle').firstElementChild;
+				this.tabs.selector = () => this.selector()?.querySelector('.feed-toggle')?.firstElementChild;
 				this.tabs.items = this.tabItems;
 				return this.tabs;
 
 			case 'articleList':
 				this.articleList = new ArticleList();
-				this.articleList.selector = () => this.selector().querySelector('.feed-toggle').nextElementSibling;
+				this.articleList.selector = () => this.selector()?.querySelector('.feed-toggle')?.nextElementSibling;
 				return this.articleList;
 
 			case 'popularTags':
 				this.popularTags = new PopularTags();
-				this.popularTags.selector = () => this.selector().querySelector('.sidebar').firstElementChild;
+				this.popularTags.selector = () => this.selector()?.querySelector('.sidebar')?.firstElementChild;
 				return this.popularTags;
 		}
 	}
@@ -102,10 +103,10 @@ class Home {
 	}
 
 	handleTabSelect = async e => {
-		this.tab = e.detail.tab;
-		if (this.tab !== 'tag' && this.tag) {
+		this.activeTab = e.detail.tab;
+		if (this.activeTab !== 'tag' && this.selectedTag) {
 			e.preventDefault();
-			delete this.tag;
+			delete this.selectedTag;
 			this.tabs.items = this.tabItems;
 			await this.tabs.refresh();
 		}
@@ -114,15 +115,15 @@ class Home {
 
 	handleArticlesFetch = async e => {
 		const u = e.detail.url;
-		if (this.tab === 'feed')
+		if (this.activeTab === 'feed')
 			u.pathname += '/feed';
-		if (this.tag)
-			u.searchParams.set('tag', this.tag);
+		if (this.selectedTag)
+			u.searchParams.set('tag', this.selectedTag);
 	}
 
 	handleTagSelect = async e => {
-		this.tab = 'tag';
-		this.tag = e.detail.tag;
+		this.activeTab = 'tag';
+		this.selectedTag = e.detail.tag;
 		this.tabs.items = this.tabItems;
 		await this.tabs.refresh();
 		await this.articleList.refresh();

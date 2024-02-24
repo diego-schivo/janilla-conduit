@@ -25,6 +25,7 @@ package com.janilla.conduit.backend;
 
 import java.io.IOException;
 
+import com.janilla.frontend.RenderEngine.ObjectAndType;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Error;
 import com.janilla.web.ExceptionHandlerFactory;
@@ -32,17 +33,19 @@ import com.janilla.web.HandlerFactory;
 
 public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 
-	protected HandlerFactory renderFactory;
+	protected HandlerFactory mainFactory;
 
-	public void setRenderFactory(HandlerFactory renderFactory) {
-		this.renderFactory = renderFactory;
+	public void setMainFactory(HandlerFactory mainFactory) {
+		this.mainFactory = mainFactory;
 	}
 
 	@Override
-	protected void handle(Error error, HttpExchange context) throws IOException {
-		super.handle(error, context);
+	protected void handle(Error error, HttpExchange exchange) throws IOException {
+		super.handle(error, exchange);
 
-		if (context.getException() instanceof ValidationException e)
-			renderFactory.createHandler(e.getErrors(), context).accept(context);
+		if (exchange.getException() instanceof ValidationException e) {
+			var o = new ObjectAndType(e.getErrors(), null);
+			mainFactory.createHandler(o, exchange).accept(exchange);
+		}
 	}
 }

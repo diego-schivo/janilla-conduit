@@ -31,7 +31,7 @@ class Profile {
 
 	title = 'Profile';
 
-	conduit;
+	engine;
 
 	profile;
 
@@ -55,22 +55,21 @@ class Profile {
 		return i;
 	}
 
-	render = async (key, rendering) => {
-		let s, j;
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				// this.rendering = rendering.clone();
-				s = await fetch(`${this.conduit.backendUrl}/api/profiles/${this.username}`, {
-					headers: this.conduit.backendHeaders
-				});
-				if (s.ok)
-					this.profile = (await s.json()).profile;
-				return await rendering.render(this, 'Profile');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			const s = await fetch(`${this.engine.app.api.url}/profiles/${this.username}`, {
+				headers: this.engine.app.api.headers
+			});
+			if (s.ok)
+				this.profile = (await s.json()).profile;
+			return await engine.render(this, 'Profile');
+		}
 
+		switch (engine.key) {
 			case 'action':
-				if (this.profile.username === this.conduit.user?.username)
-					return await rendering.render(null, 'Profile-edit');
+				if (this.profile.username === this.engine.app.currentUser?.username)
+					return await engine.render(this, 'Profile-edit');
 				this.followButton = new FollowButton();
 				this.followButton.user = this.profile;
 				this.followButton.selector = () => this.selector().querySelector('p').nextElementSibling;

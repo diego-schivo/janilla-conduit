@@ -36,7 +36,7 @@ public class CustomMethodArgumentsResolver extends MethodArgumentsResolver {
 	protected Object resolveArgument(Type type, HttpExchange context, Supplier<String[]> values,
 			EntryList<String, String> entries, String body) {
 		if (type == User.class)
-			return ((CustomHttpExchange) context).user.get();
+			return ((ConduitBackendApp.Exchange) context).getUser();
 		return super.resolveArgument(type, context, values, entries, body);
 	}
 

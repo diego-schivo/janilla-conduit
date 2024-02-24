@@ -21,12 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import Conduit from './Conduit.js';
+module com.janilla.conduit.testing {
 
-const l = () => {
-	const c = new Conduit();
-	c.backendUrl = '${backendUrl}';
-	c.run();
+	exports com.janilla.conduit.testing;
+
+	opens com.janilla.conduit.testing;
+
+	requires transitive com.janilla.conduit.fullstack;
 }
-
-document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', l) : l();

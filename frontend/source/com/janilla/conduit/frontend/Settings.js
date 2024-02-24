@@ -28,21 +28,21 @@ class Settings {
 	selector;
 
 	title = 'Settings';
-	
-	conduit;
+
+	engine;
 
 	errors;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				return await rendering.render(this, 'Settings');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Settings');
+		}
 
-			case 'errors':
-				this.errors = new Errors();
-				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
-				return this.errors;
+		if (engine.key === 'errors') {
+			this.errors = new Errors();
+			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
+			return this.errors;
 		}
 	}
 
@@ -53,23 +53,23 @@ class Settings {
 
 	handleSubmit = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.conduit.backendUrl}/api/user`, {
+		const s = await fetch(`${this.engine.app.api.url}/user`, {
 			method: 'PUT',
-			headers: { ...this.conduit.backendHeaders, 'Content-Type': 'application/json' },
+			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ user: Object.fromEntries(new FormData(e.currentTarget)) })
 		});
 		const j = await s.json();
 		this.errors.messages = s.ok ? null : j;
 		await this.errors.refresh();
 		if (s.ok) {
-			this.conduit.user = j.user;
-			location.hash = `#/@${this.conduit.user.username}`;
+			this.engine.app.currentUser = j.user;
+			location.hash = `#/@${this.engine.app.currentUser.username}`;
 		}
 	}
 
 	handleLogoutClick = async e => {
 		e.preventDefault();
-		dispatchEvent(new CustomEvent('userchange', {
+		dispatchEvent(new CustomEvent('currentuserchange', {
 			detail: { user: null }
 		}));
 		location.hash = '#/';

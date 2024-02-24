@@ -3,24 +3,24 @@
 		<div class="row">
 			<div class="col-md-6 offset-md-3 col-xs-12">
 				<h1 class="text-xs-center">Your Settings</h1>
-				#{errors}
+				<!--__errors__-->
 				<form>
 					<fieldset>
 						<fieldset class="form-group">
 							<input class="form-control" type="text" placeholder="URL of profile picture" name="image"
-								value="${user.image}" />
+								value="<!--__user.image__-->" />
 						</fieldset>
 						<fieldset class="form-group">
 							<input class="form-control form-control-lg" type="text" placeholder="Your Name"
-								name="username" value="${user.username}" />
+								name="username" value="__user.username__" />
 						</fieldset>
 						<fieldset class="form-group">
 							<textarea class="form-control form-control-lg" rows="8" placeholder="Short bio about you"
-								name="bio">${user.bio}</textarea>
+								name="bio">__user.bio__</textarea>
 						</fieldset>
 						<fieldset class="form-group">
 							<input class="form-control form-control-lg" type="text" placeholder="Email" name="email"
-								value="${user.email}" />
+								value="__user.email__" />
 						</fieldset>
 						<fieldset class="form-group">
 							<input class="form-control form-control-lg" type="password" placeholder="New Password"

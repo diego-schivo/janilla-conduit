@@ -31,9 +31,7 @@ class ArticleActions {
 
 	article;
 
-	conduit;
-
-	rendering;
+	engine;
 
 	meta;
 
@@ -41,15 +39,15 @@ class ArticleActions {
 
 	favoriteButton;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				this.rendering = rendering.clone();
-				return await rendering.render(this, 'ArticleActions');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'ArticleActions');
+		}
 
+		switch (engine.key) {
 			case 'meta':
-				if (rendering.object === this) {
+				if (engine.target === this) {
 					this.meta = new ArticleMeta();
 					this.meta.selector = this.selector;
 					return this.meta;
@@ -57,8 +55,8 @@ class ArticleActions {
 				break;
 
 			case 'content':
-				if (rendering.object === this.meta) {
-					if (this.article.author.username === this.conduit.user?.username) {
+				if (engine.target === this.meta) {
+					if (this.article.author.username === this.engine.app.currentUser?.username) {
 						this.meta.content = {
 							listen: () => {
 								const e = this.meta.content.selector();
@@ -66,7 +64,7 @@ class ArticleActions {
 								e.querySelector('button').addEventListener('click', this.handleDeleteClick);
 							}
 						};
-						return await rendering.render(this, 'ArticleActions-canModify');
+						return await engine.render(this, 'ArticleActions-canModify');
 					} else {
 						this.meta.content = {
 							listen: () => {
@@ -74,7 +72,7 @@ class ArticleActions {
 								this.favoriteButton.listen();
 							}
 						};
-						return await rendering.render(this, 'ArticleActions-cannotModify');
+						return await engine.render(this, 'ArticleActions-cannotModify');
 					}
 				}
 				break;
@@ -101,7 +99,7 @@ class ArticleActions {
 		delete this.meta;
 		delete this.followButton;
 		delete this.favoriteButton;
-		const h = await this.rendering.render(this);
+		const h = await this.engine.render(this);
 		this.selector().outerHTML = h;
 		this.listen();
 	}
@@ -112,9 +110,9 @@ class ArticleActions {
 
 	handleDeleteClick = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.article.slug}`, {
+		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}`, {
 			method: 'DELETE',
-			headers: this.conduit.backendHeaders
+			headers: this.engine.app.api.headers
 		});
 		if (s.ok)
 			location.hash = '#/';

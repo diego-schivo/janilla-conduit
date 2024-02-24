@@ -25,21 +25,20 @@ class CommentCard {
 
 	selector;
 
+	engine;
+
 	article;
 
 	comment;
 
-	conduit;
-
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				return await rendering.render(this, 'CommentCard');
-
-			case 'modOptions':
-				return this.conduit.user?.username === this.comment.author.username ? await rendering.render(this, 'CommentCard-modOptions') : '';
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'CommentCard');
 		}
+
+		if (engine.key === 'modOptions')
+			return engine.app.currentUser?.username === this.comment.author.username ? await engine.render(this, 'CommentCard-modOptions') : '';
 	}
 
 	listen = () => {
@@ -48,9 +47,9 @@ class CommentCard {
 
 	handleDeleteClick = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.article.slug}/comments/${this.comment.id}`, {
+		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/comments/${this.comment.id}`, {
 			method: 'DELETE',
-			headers: this.conduit.backendHeaders
+			headers: this.engine.app.api.headers
 		});
 		if (s.ok) {
 			const c = this.selector();

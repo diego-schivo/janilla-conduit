@@ -24,21 +24,22 @@
 import Errors from './Errors.js';
 
 class Login {
-	
+
 	selector;
 
 	title = 'Sign in';
 
-	conduit;
+	engine;
 
 	errors;
 
-	render = async (key, rendering) => {
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				return await rendering.render(this, 'Login');
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Login');
+		}
 
+		switch (engine.key) {
 			case 'errors':
 				this.errors = new Errors();
 				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
@@ -52,16 +53,16 @@ class Login {
 
 	handleSubmit = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.conduit.backendUrl}/api/users/login`, {
+		const s = await fetch(`${this.engine.app.api.url}/users/login`, {
 			method: 'POST',
-			headers: { ...this.conduit.backendHeaders, 'Content-Type': 'application/json' },
+			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ user: Object.fromEntries(new FormData(e.currentTarget)) })
 		});
 		const j = await s.json();
 		this.errors.messages = s.ok ? null : j;
 		await this.errors.refresh();
 		if (s.ok) {
-			dispatchEvent(new CustomEvent('userchange', {
+			dispatchEvent(new CustomEvent('currentuserchange', {
 				detail: { user: j.user }
 			}));
 			location.hash = '#/';

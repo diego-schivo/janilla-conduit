@@ -21,33 +21,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
+package com.janilla.conduit.testing;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.function.Supplier;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Properties;
 
-import com.janilla.http.HttpExchange;
-import com.janilla.json.Jwt;
-import com.janilla.util.Lazy;
+import com.janilla.conduit.fullstack.ConduitFullstackApp;
+import com.janilla.web.Handle;
 
-class CustomHttpExchange extends HttpExchange {
+public class Test {
 
-	ConduitBackend backend;
+	static ConduitFullstackApp fullstack;
 
-	Supplier<User> user = Lazy.of(() -> {
-		var a = getRequest().getHeaders().get("Authorization");
-		var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
-		var p = t != null ? Jwt.verifyToken(t, backend.getConfiguration().getProperty("conduit.backend.jwt.key"))
-				: null;
-		var e = p != null ? (String) p.get("loggedInAs") : null;
-		try {
-			var c = backend.getPersistence().getCrud(User.class);
-			var i = e != null ? c.find("email", e) : -1;
-			var u = i >= 0 ? c.read(i) : null;
-			return u;
-		} catch (IOException f) {
-			throw new UncheckedIOException(f);
+	Properties configuration;
+
+	public void setConfiguration(Properties configuration) {
+		this.configuration = configuration;
+	}
+
+	@Handle(method = "POST", path = "/test/start")
+	public void start() throws IOException {
+		if (fullstack != null)
+			throw new RuntimeException();
+		fullstack = new ConduitFullstackApp();
+		fullstack.setConfiguration(configuration);
+		{
+			var p = configuration.getProperty("conduit.backend.database.path");
+			if (p.startsWith("~"))
+				p = System.getProperty("user.home") + p.substring(1);
+			var f = Path.of(p);
+			try (var s = getClass().getResourceAsStream("conduit.database")) {
+				Files.copy(s, f, StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
-	});
+	}
+
+	@Handle(method = "POST", path = "/test/stop")
+	public void stop() {
+		if (fullstack == null)
+			throw new RuntimeException();
+		fullstack = null;
+	}
 }

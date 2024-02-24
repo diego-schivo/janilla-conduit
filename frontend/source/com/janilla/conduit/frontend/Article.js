@@ -29,10 +29,6 @@ class Article {
 
 	selector;
 
-	conduit;
-
-	// rendering;
-
 	title = 'Article';
 
 	article;
@@ -47,19 +43,18 @@ class Article {
 		return location.hash.split('/')[2];
 	}
 
-	render = async (key, rendering) => {
+	render = async engine => {
 		let s;
-		switch (key) {
-			case undefined:
-				this.conduit = rendering.stack[0].object;
-				// this.rendering = rendering.clone();
-				s = await fetch(`${this.conduit.backendUrl}/api/articles/${this.slug}`, {
-					headers: this.conduit.backendHeaders
-				});
-				if (s.ok)
-					this.article = (await s.json()).article;
-				return await rendering.render(this, 'Article');
+		if (engine.isRendering(this)) {
+			s = await fetch(`${engine.app.api.url}/articles/${this.slug}`, {
+				headers: engine.app.api.headers
+			});
+			if (s.ok)
+				this.article = (await s.json()).article;
+			return await engine.render(this, 'Article');
+		}
 
+		switch (engine.key) {
 			case 'actions1':
 				this.actions1 = new ArticleActions();
 				this.actions1.article = this.article;
@@ -67,7 +62,7 @@ class Article {
 				return this.actions1;
 
 			case 'body':
-				if (rendering.object === this.article)
+				if (engine.target === this.article)
 					return formatMarkdownAsHTML(parseMarkdown(this.article.body));
 				break;
 
@@ -84,11 +79,8 @@ class Article {
 				return this.comments;
 		}
 
-		const n = {
-			'tagList': 'Article-tag'
-		}[rendering.stack.at(-2)?.key];
-		if (n)
-			return await rendering.render(rendering.object[key], n);
+		if (engine.isRenderingArrayItem('tagList'))
+			return await engine.render(engine.target, 'Article-tag');
 	}
 
 	listen = () => {

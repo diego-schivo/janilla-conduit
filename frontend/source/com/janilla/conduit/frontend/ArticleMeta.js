@@ -36,9 +36,9 @@ class ArticleMeta {
 		x.selector = () => this.selector().lastElementChild;
 	}
 
-	render = async (key, rendering) => {
-		if (key === undefined)
-			return await rendering.render(this, 'ArticleMeta');
+	render = async engine => {
+		if (engine.isRendering(this))
+			return await engine.render(this, 'ArticleMeta');
 	}
 
 	listen = () => {

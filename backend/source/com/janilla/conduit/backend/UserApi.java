@@ -37,7 +37,6 @@ import javax.crypto.spec.PBEKeySpec;
 
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
-import com.janilla.reflect.Parameter;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.Handle;
 
@@ -63,9 +62,10 @@ public class UserApi {
 		this.configuration = configuration;
 	}
 
-	@Handle(method = "POST", uri = "/api/users/login")
+	@Handle(method = "POST", path = "/api/users/login")
 	public Object authenticate(Authenticate authenticate) throws IOException {
 		var v = new Validation();
+		v.setConfiguration(configuration);
 		v.isNotBlank("email", authenticate.user.email);
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
@@ -83,7 +83,7 @@ public class UserApi {
 		return get(u);
 	}
 
-	@Handle(method = "GET", uri = "/api/user")
+	@Handle(method = "GET", path = "/api/user")
 	public Object get(User user) {
 		var h = Map.of("alg", "HS256", "typ", "JWT");
 		var p = user != null ? Map.of("loggedInAs", user.getEmail()) : null;
@@ -93,10 +93,11 @@ public class UserApi {
 						: null);
 	}
 
-	@Handle(method = "POST", uri = "/api/users")
+	@Handle(method = "POST", path = "/api/users")
 	public Object register(Register register) throws IOException {
 		var u = register.user;
 		var v = new Validation();
+		v.setConfiguration(configuration);
 		var c = persistence.getCrud(User.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
 			var i = c.find("username", u.username);
@@ -122,10 +123,11 @@ public class UserApi {
 		return get(w);
 	}
 
-	@Handle(method = "PUT", uri = "/api/user")
+	@Handle(method = "PUT", path = "/api/user")
 	public Object update(Update update, User user) throws IOException {
 		var u = update.user;
 		var v = new Validation();
+		v.setConfiguration(configuration);
 		var c = persistence.getCrud(User.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 				&& !u.username.equals(user.getUsername())) {
@@ -172,27 +174,24 @@ public class UserApi {
 		}
 	}
 
-	public record Authenticate(@Parameter(name = "user") User user) {
+	public record Authenticate(User user) {
 
-		public record User(@Parameter(name = "email") String email, @Parameter(name = "password") String password) {
+		public record User(String email, String password) {
 		}
 	}
 
-	public record Register(@Parameter(name = "user") User user) {
+	public record Register(User user) {
 
-		public record User(@Parameter(name = "username") String username, @Parameter(name = "email") String email,
-				@Parameter(name = "password") String password) {
+		public record User(String username, String email, String password) {
 		}
 	}
 
 	public record CurrentUser(String email, String token, String username, String bio, String image) {
 	}
 
-	public record Update(@Parameter(name = "user") User user) {
+	public record Update(User user) {
 
-		public record User(@Parameter(name = "image") String image, @Parameter(name = "username") String username,
-				@Parameter(name = "bio") String bio, @Parameter(name = "email") String email,
-				@Parameter(name = "password") String password) {
+		public record User(String image, String username, String bio, String email, String password) {
 		}
 	}
 }
