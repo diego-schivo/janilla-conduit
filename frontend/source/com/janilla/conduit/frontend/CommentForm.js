@@ -39,7 +39,7 @@ class CommentForm {
 			return await engine.render(this, `CommentForm-${this.engine.app.currentUser ? 'authenticated' : 'unauthenticated'}`);
 		}
 
-		if (engine.key === 'errors') {
+		if (engine.isRendering(this, 'errors')) {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().firstElementChild;
 			return this.errors;
@@ -52,10 +52,11 @@ class CommentForm {
 
 	handleSubmit = async e => {
 		e.preventDefault();
+		const a = this.engine.app.api;
 		const f = e.currentTarget;
-		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/comments`, {
+		const s = await fetch(`${a.url}/articles/${this.article.slug}/comments`, {
 			method: 'POST',
-			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
+			headers: { ...a.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ comment: Object.fromEntries(new FormData(f)) })
 		});
 		const j = await s.json();

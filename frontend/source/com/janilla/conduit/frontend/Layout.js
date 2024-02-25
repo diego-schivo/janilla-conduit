@@ -44,14 +44,14 @@ class Layout {
 			return await engine.render(this, 'Layout');
 		}
 
-		switch (engine.key) {
-			case 'header':
-				this.header = new Header();
-				return this.header;
+		if (engine.isRendering(this, 'header')) {
+			this.header = new Header();
+			return this.header;
+		}
 
-			case 'footer':
-				this.footer = new Footer();
-				return this.footer;
+		if (engine.isRendering(this, 'footer')) {
+			this.footer = new Footer();
+			return this.footer;
 		}
 	}
 

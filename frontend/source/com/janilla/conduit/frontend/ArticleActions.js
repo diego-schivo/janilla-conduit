@@ -45,49 +45,44 @@ class ArticleActions {
 			return await engine.render(this, 'ArticleActions');
 		}
 
-		switch (engine.key) {
-			case 'meta':
-				if (engine.target === this) {
-					this.meta = new ArticleMeta();
-					this.meta.selector = this.selector;
-					return this.meta;
-				}
-				break;
-
-			case 'content':
-				if (engine.target === this.meta) {
-					if (this.article.author.username === this.engine.app.currentUser?.username) {
-						this.meta.content = {
-							listen: () => {
-								const e = this.meta.content.selector();
-								e.querySelector('a').addEventListener('click', this.handleEditClick);
-								e.querySelector('button').addEventListener('click', this.handleDeleteClick);
-							}
-						};
-						return await engine.render(this, 'ArticleActions-canModify');
-					} else {
-						this.meta.content = {
-							listen: () => {
-								this.followButton.listen();
-								this.favoriteButton.listen();
-							}
-						};
-						return await engine.render(this, 'ArticleActions-cannotModify');
+		if (engine.isRendering(this, 'meta')) {
+			this.meta = new ArticleMeta();
+			this.meta.selector = this.selector;
+			return this.meta;
+		}
+		if (engine.isRendering(this.meta, 'content')) {
+			if (this.article.author.username === this.engine.app.currentUser?.username) {
+				this.meta.content = {
+					listen: () => {
+						const e = this.meta.content.selector();
+						e.querySelector('a').addEventListener('click', this.handleEditClick);
+						e.querySelector('button').addEventListener('click', this.handleDeleteClick);
 					}
-				}
-				break;
+				};
+				return await engine.render(this, 'ArticleActions-canModify');
+			} else {
+				this.meta.content = {
+					listen: () => {
+						this.followButton.listen();
+						this.favoriteButton.listen();
+					}
+				};
+				return await engine.render(this, 'ArticleActions-cannotModify');
+			}
+		}
 
-			case 'followButton':
-				this.followButton = new FollowButton();
-				this.followButton.user = this.article.author;
-				this.followButton.selector = () => this.meta.content.selector().firstElementChild;
-				return this.followButton;
+		if (engine.isRendering(this, 'followButton')) {
+			this.followButton = new FollowButton();
+			this.followButton.user = this.article.author;
+			this.followButton.selector = () => this.meta.content.selector().firstElementChild;
+			return this.followButton;
+		}
 
-			case 'favoriteButton':
-				this.favoriteButton = new FavoriteButton();
-				this.favoriteButton.article = this.article;
-				this.favoriteButton.selector = () => this.meta.content.selector().lastElementChild;
-				return this.favoriteButton;
+		if (engine.isRendering(this, 'favoriteButton')) {
+			this.favoriteButton = new FavoriteButton();
+			this.favoriteButton.article = this.article;
+			this.favoriteButton.selector = () => this.meta.content.selector().lastElementChild;
+			return this.favoriteButton;
 		}
 	}
 
@@ -99,7 +94,7 @@ class ArticleActions {
 		delete this.meta;
 		delete this.followButton;
 		delete this.favoriteButton;
-		const h = await this.engine.render(this);
+		const h = await this.render(this.engine);
 		this.selector().outerHTML = h;
 		this.listen();
 	}
@@ -110,9 +105,10 @@ class ArticleActions {
 
 	handleDeleteClick = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}`, {
+		const a = this.engine.app.api;
+		const s = await fetch(`${a.url}/articles/${this.article.slug}`, {
 			method: 'DELETE',
-			headers: this.engine.app.api.headers
+			headers: a.headers
 		});
 		if (s.ok)
 			location.hash = '#/';

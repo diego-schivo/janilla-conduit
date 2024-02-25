@@ -50,6 +50,7 @@ class ArticleList {
 		const h = await this.render(this.engine);
 		e.outerHTML = h;
 		this.listen();
+		this.handlePageLoad();
 	}
 
 	listen = () => {
@@ -93,16 +94,15 @@ class ArticleList {
 	}
 
 	fetchArticles = async () => {
-		const u = new URL(`${this.engine.app.api.url}/articles`);
+		const a = this.engine.app.api;
+		const u = new URL(`${a.url}/articles`);
 		u.searchParams.set('skip', ((this.pagination?.pageNumber ?? 1) - 1) * 10);
 		u.searchParams.set('limit', 10);
 		this.selector().dispatchEvent(new CustomEvent('articlesfetch', {
 			bubbles: true,
 			detail: { url: u }
 		}));
-		const s = await fetch(u, {
-			headers: this.engine.app.api.headers
-		});
+		const s = await fetch(u, { headers: a.headers });
 		const j = await s.json();
 		this.articlePreviews = j.articles.map((a, i) => {
 			const p = new ArticlePreview();

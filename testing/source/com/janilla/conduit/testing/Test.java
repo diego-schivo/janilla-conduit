@@ -53,6 +53,7 @@ public class Test {
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
 			var f = Path.of(p);
+			Files.createDirectories(f.getParent());
 			try (var s = getClass().getResourceAsStream("conduit.database")) {
 				Files.copy(s, f, StandardCopyOption.REPLACE_EXISTING);
 			}

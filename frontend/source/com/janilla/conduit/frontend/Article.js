@@ -46,40 +46,40 @@ class Article {
 	render = async engine => {
 		let s;
 		if (engine.isRendering(this)) {
-			s = await fetch(`${engine.app.api.url}/articles/${this.slug}`, {
-				headers: engine.app.api.headers
+			const a = engine.app.api;
+			s = await fetch(`${a.url}/articles/${this.slug}`, {
+				headers: a.headers
 			});
 			if (s.ok)
 				this.article = (await s.json()).article;
 			return await engine.render(this, 'Article');
 		}
 
-		switch (engine.key) {
-			case 'actions1':
-				this.actions1 = new ArticleActions();
-				this.actions1.article = this.article;
-				this.actions1.selector = () => this.selector().querySelector('h1').nextElementSibling;
-				return this.actions1;
-
-			case 'body':
-				if (engine.target === this.article)
-					return formatMarkdownAsHTML(parseMarkdown(this.article.body));
-				break;
-
-			case 'actions2':
-				this.actions2 = new ArticleActions();
-				this.actions2.article = this.article;
-				this.actions2.selector = () => this.selector().querySelector('.article-actions').firstElementChild;
-				return this.actions2;
-
-			case 'comments':
-				this.comments = new Comments();
-				this.comments.article = this.article;
-				this.comments.selector = () => this.selector().querySelector('.article-actions').nextElementSibling;
-				return this.comments;
+		if (engine.isRendering(this, 'actions1')) {
+			this.actions1 = new ArticleActions();
+			this.actions1.article = this.article;
+			this.actions1.selector = () => this.selector().querySelector('h1').nextElementSibling;
+			return this.actions1;
 		}
 
-		if (engine.isRenderingArrayItem('tagList'))
+		if (engine.isRendering(this.article, 'body'))
+			return formatMarkdownAsHTML(parseMarkdown(this.article.body));
+
+		if (engine.isRendering(this, 'actions2')) {
+			this.actions2 = new ArticleActions();
+			this.actions2.article = this.article;
+			this.actions2.selector = () => this.selector().querySelector('.article-actions').firstElementChild;
+			return this.actions2;
+		}
+
+		if (engine.isRendering(this, 'comments')) {
+			this.comments = new Comments();
+			this.comments.article = this.article;
+			this.comments.selector = () => this.selector().querySelector('.article-actions').nextElementSibling;
+			return this.comments;
+		}
+
+		if (engine.isRendering(this, 'tagList', true))
 			return await engine.render(engine.target, 'Article-tag');
 	}
 

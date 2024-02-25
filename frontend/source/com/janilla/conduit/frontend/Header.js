@@ -60,7 +60,7 @@ class Header {
 			return await engine.render(this, 'Header');
 		}
 
-		if (engine.isRenderingArrayItem('navItems')) {
+		if (engine.isRendering(this, 'navItems', true)) {
 			const i = engine.target;
 			if (i.hash === location.hash)
 				i.active = 'active';

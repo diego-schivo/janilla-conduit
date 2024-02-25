@@ -39,7 +39,7 @@ class Settings {
 			return await engine.render(this, 'Settings');
 		}
 
-		if (engine.key === 'errors') {
+		if (engine.isRendering(this, 'errors')) {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
 			return this.errors;
@@ -53,9 +53,10 @@ class Settings {
 
 	handleSubmit = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.engine.app.api.url}/user`, {
+		const a = this.engine.app.api;
+		const s = await fetch(`${a.url}/user`, {
 			method: 'PUT',
-			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
+			headers: { ...a.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ user: Object.fromEntries(new FormData(e.currentTarget)) })
 		});
 		const j = await s.json();

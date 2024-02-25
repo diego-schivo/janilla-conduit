@@ -21,18 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class ManageArticle {
+class RegisterTest {
 
 	actions;
 
 	run = async () => {
-		await this.actions.registerUser();
-		await this.actions.createArticle();
-		await this.actions.updateArticle();
-		await this.actions.deleteArticle();
-		await this.actions.logoutUser();
+		await this.actions.openRegister();
+		await this.actions.enter('Username', 'foo bar');
+		await this.actions.enter('Email', 'foo@bar');
+		await this.actions.enter('Password', 'foo');
+		await this.actions.submit('Sign up');
+		await this.actions.filterByFeed('Global Feed');
 		await new Promise(x => setTimeout(x, 200));
 	}
 }
 
-export default ManageArticle;
+export default RegisterTest;

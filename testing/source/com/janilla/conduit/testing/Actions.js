@@ -21,78 +21,109 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+const select = (document, expression) => {
+	const q = resolve => {
+		const e = document.evaluate(expression, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+		// console.log(expression, e);
+		if (e)
+			resolve(e);
+		return e;
+	};
+	let o, t;
+	const r = resolve => {
+		return element => {
+			if (o) {
+				clearTimeout(t);
+				o.disconnect();
+				o = null;
+			}
+			setTimeout(() => resolve(element), 200);
+		};
+	};
+	return new Promise((resolve, reject) => {
+		if (!q(r(resolve))) {
+			o = new MutationObserver(() => q(r(resolve)));
+			o.observe(document.body, { childList: true, subtree: true });
+			t = setTimeout(() => {
+				if (o) {
+					o.disconnect();
+					o = null;
+				}
+				reject(`Timeout (expression=${expression})`);
+			}, 2000);
+		}
+	});
+};
+
 class Actions {
 
 	document;
 
-	addArticleTag = async x => {
-		const e = (await this.select('input[placeholder="Enter tags"]'));
-		e.value = x;
+	addTag = async tag => {
+		const e = await select(this.document, `//input[contains(@placeholder,"tags")]`);
+		e.value = tag;
 		e.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter' }));
 	}
 
-	createArticle = async () => {
-		(await this.select('//a[contains(normalize-space(),"New Article")]')).click();
-		(await this.select('input[placeholder="Article Title"]')).value = 'foo';
-		(await this.select('input[placeholder="What\'s this article about?"]')).value = 'foo bar';
-		(await this.select('textarea[placeholder^="Write your article"]')).value = 'foo bar baz';
-		for (const x of ['foo', 'bar'])
-			await this.addArticleTag(x);
-		(await this.select('//button[normalize-space()="Publish Article"]')).click();
+	enter = async (placeholder, text) => {
+		(await select(this.document, `//*[contains(@placeholder,"${placeholder}")]`)).value = text;
 	}
 
-	deleteArticle = async () => {
-		(await this.select('//button[normalize-space()="Delete Article"]')).click();
-	}
-	
-	filterArticlesByTag = async () => {
-		(await this.select('//p[normalize-space()="Popular Tags"]/following-sibling::*/a')).click();
+	filterByFeed = async title => {
+		(await select(this.document, `//*[contains(@class,"feed-toggle")]//a[contains(normalize-space(),"${title}")]`)).click();
+		await select(this.document, `//*[contains(@class,"feed-toggle")]//a[contains(@class,"active") and contains(normalize-space(),"${title}")]`);
 	}
 
-	logoutUser = async () => {
-		(await this.select('//a[normalize-space()="foo bar"]')).click();
-		(await this.select('//a[normalize-space()="Edit Profile Settings"]')).click();
-		(await this.select('//button[normalize-space()="Or click here to logout."]')).click();
+	filterByPage = async page => {
+		(await select(this.document, `//*[contains(@class,"pagination")]//a[contains(normalize-space(),"${page}")]`)).click();
+		await select(this.document, `//*[@class="pagination"]//*[contains(@class,"active")]/a[contains(normalize-space(),"${page}")]`);
 	}
 
-	registerUser = async () => {
-		(await this.select('//a[normalize-space()="Sign up"]')).click();
-		(await this.select('input[placeholder="Username"]')).value = 'foo bar';
-		(await this.select('input[placeholder="Email"]')).value = 'foo@bar';
-		(await this.select('input[placeholder="Password"]')).value = 'foo';
-		(await this.select('//button[normalize-space()="Sign up"]')).click();
+	filterByTag = async tag => {
+		(await select(this.document, `//*[contains(@class,"sidebar")]//a[contains(normalize-space(),"${tag}")]`)).click();
+		await select(this.document, `//*[contains(@class,"feed-toggle")]//a[contains(@class,"active") and contains(normalize-space(),"${tag}")]`);
 	}
 
-	removeArticleTag = async x => {
-		const e = (await this.select(`//input[@placeholder="Enter tags"]/following-sibling::*/span[normalize-space()="${x}"]`));
-		e.firstElementChild.click();
+	login = async (email, password) => {
+		await this.openLogin();
+		await this.enter('Email', email);
+		await this.enter('Password', password);
+		await this.submit('Sign in');
 	}
 
-	updateArticle = async () => {
-		(await this.select('//a[normalize-space()="Edit Article"]')).click();
-		(await this.select('input[placeholder="What\'s this article about?"]')).value = 'foo qux';
-		await this.removeArticleTag('bar');
-		await this.addArticleTag('qux');
-		(await this.select('//button[normalize-space()="Publish Article"]')).click();
+	openArticle = async title => {
+		(await select(this.document, `//*[contains(@class,"article-preview")]//h1[contains(normalize-space(),"${title}")]`)).click();
+		await select(this.document, `//*[contains(@class,"article-page")]`);
 	}
 
-	select = query => {
-		const q = resolve => {
-			const e = query.startsWith('//')
-				? this.document.evaluate(query, this.document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
-				: this.document.querySelector(query);
-			if (e)
-				setTimeout(() => resolve(e), 100);
-			return e;
-		};
-		return new Promise(resolve => {
-			if (!q(resolve))
-				new MutationObserver((m, o) => {
-					if (q(resolve))
-						o.disconnect();
-				}).observe(this.document.body, { childList: true, subtree: true });
-		});
-	};
+	openEditor = async () => {
+		(await select(this.document, `//nav//a[contains(normalize-space(),"New Article")]`)).click();
+		await select(this.document, `//*[contains(@class,"editor-page")]`);
+	}
+
+	openLogin = async () => {
+		(await select(this.document, `//nav//a[contains(normalize-space(),"Sign in")]`)).click();
+		await select(this.document, `//*[contains(@class,"auth-page")]`);
+	}
+
+	openProfile = async username => {
+		(await select(this.document, `//*[contains(@class,"article-meta")]//a[contains(normalize-space(),"${username}")]`)).click();
+		await select(this.document, `//*[contains(@class,"profile-page")]`);
+	}
+
+	openRegister = async () => {
+		(await select(this.document, `//nav//a[contains(normalize-space(),"Sign up")]`)).click();
+		await select(this.document, `//*[contains(@class,"auth-page")]`);
+	}
+
+	openSettings = async () => {
+		(await select(this.document, `//nav//a[contains(normalize-space(),"Settings")]`)).click();
+		await select(this.document, `//h1[contains(normalize-space(),"Your Settings")]`);
+	}
+
+	submit = async text => {
+		(await select(this.document, `//button[contains(normalize-space(),"${text}")]`)).click();
+	}
 }
 
 export default Actions;

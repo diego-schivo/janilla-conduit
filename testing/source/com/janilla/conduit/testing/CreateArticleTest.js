@@ -21,14 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class FilterArticles {
+class CreateArticleTest {
 
 	actions;
 
 	run = async () => {
-		await this.actions.filterArticlesByTag();
+		await this.actions.login('sed@non', 'sed');
+		await this.actions.openEditor();
+		await this.actions.enter('Title', 'foo bar');
+		await this.actions.enter('about', 'foo bar baz qux');
+		await this.actions.enter('markdown', `# Heading level 1
+
+This is the first line.  
+And this is the second line.`);
+		await this.actions.addTag('foo');
+		await this.actions.addTag('bar');
+		await this.actions.submit('Publish Article');
+		await this.actions.openProfile('sed non');
+		await this.actions.openArticle('foo bar');
 		await new Promise(x => setTimeout(x, 200));
 	}
 }
 
-export default FilterArticles;
+export default CreateArticleTest;

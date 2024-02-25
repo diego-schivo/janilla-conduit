@@ -21,10 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import ManageArticle from './ManageArticle.js';
-import FilterArticles from './FilterArticles.js';
+import CreateArticleTest from './CreateArticleTest.js';
+import HomeTest from './HomeTest.js';
+import LoginTest from './LoginTest.js';
+import ProfileTest from './ProfileTest.js';
+import ReadArticleTest from './ReadArticleTest.js';
+import RegisterTest from './RegisterTest.js';
+import UpdateUserTest from './UpdateUserTest.js';
 
 export default {
-	'ManageArticle': () => new ManageArticle(),
-	'FilterArticles': () => new FilterArticles()
+	CreateArticle: () => new CreateArticleTest(),
+	Home: () => new HomeTest(),
+	Login: () => new LoginTest(),
+	Profile: () => new ProfileTest(),
+	ReadArticle: () => new ReadArticleTest(),
+	Register: () => new RegisterTest(),
+	UpdateUser: () => new UpdateUserTest()
 };

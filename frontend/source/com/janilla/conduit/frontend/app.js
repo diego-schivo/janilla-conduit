@@ -77,9 +77,11 @@ class App {
 			this.api.headers['Authorization'] = this.currentUser ? `Token ${this.currentUser.token}` : '';
 		}
 
+		addEventListener('hashchange', this.handleHashChange);
 		if (!location.hash)
 			location.hash = '#/';
-		await this.handleHashChange();
+		else
+			this.handleHashChange();
 	}
 
 	render = async engine => {
@@ -97,17 +99,18 @@ class App {
 	}
 
 	handleHashChange = async () => {
-		if (this.currentPage)
-			dispatchEvent(new CustomEvent('pageunload'));
-
 		{
 			const h = location.hash;
-			this.currentPage = this.pages[h.startsWith('#/@') ? 'profile' : h.split('/')[1]]();
-			document.title = [this.currentPage?.title, 'Conduit'].filter(x => x).join(' \u2014 ');
-			if (!this.currentPage)
-				return;
-			this.currentPage.selector = () => this.layout.selector().children[1];
+			const p = this.pages[h.startsWith('#/@') ? 'profile' : h.split('/')[1]]();
+			if (this.currentPage)
+				dispatchEvent(new CustomEvent('pageunload'));
+			this.currentPage = p;
 		}
+
+		document.title = [this.currentPage?.title, 'Conduit'].filter(x => x).join(' \u2014 ');
+		if (!this.currentPage)
+			return;
+		this.currentPage.selector = () => this.layout.selector().children[1];
 
 		{
 			const e = new CustomRenderEngine();
@@ -154,9 +157,5 @@ class CustomRenderEngine extends RenderEngine {
 	}
 }
 
-const l = () => {
-	const a = new App();
-	a.run();
-}
-
+const l = () => new App().run();
 (document.readyState === 'loading') ? document.addEventListener('DOMContentLoaded', l) : l();

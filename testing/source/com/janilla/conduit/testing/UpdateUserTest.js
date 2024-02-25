@@ -21,54 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class FollowButton {
+class UpdateUserTest {
 
-	selector;
+	actions;
 
-	user;
-
-	engine;
-
-	get className() {
-		return this.user.following ? 'btn-secondary' : 'btn-outline-secondary';
-	}
-
-	get content() {
-		return `${this.user.following ? 'Unfollow' : 'Follow'} ${this.user.username}`;
-	}
-
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'FollowButton');
-		}
-	}
-
-	listen = () => {
-		this.selector().addEventListener('click', this.handleClick);
-	}
-
-	handleClick = async e => {
-		e.preventDefault();
-		if (!this.engine.app.currentUser) {
-			location.hash = '#/login';
-			return;
-		}
-		const a = this.engine.app.api;
-		const s = await fetch(`${a.url}/profiles/${this.user.username}/follow`, {
-			method: this.user.following ? 'DELETE' : 'POST',
-			headers: a.headers
-		});
-		if (s.ok) {
-			const u = (await s.json()).profile;
-			this.user.following = u.following;
-
-			this.selector().outerHTML = await this.render(this.engine);
-			this.listen();
-
-			this.selector().dispatchEvent(new CustomEvent('followtoggle', { bubbles: true }));
-		}
+	run = async () => {
+		await this.actions.login('sed@non', 'sed');
+		await this.actions.openSettings();
+		await this.actions.enter('picture', "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>😁</text></svg>");
+		await this.actions.enter('Name', 'baz qux');
+		await this.actions.enter('bio', `This is the first line.
+And this is the second line.`);
+		await this.actions.enter('Email', 'baz@qux');
+		await this.actions.enter('Password', 'baz');
+		await this.actions.submit('Update Settings');
+		await this.actions.openProfile('baz qux');
+		await new Promise(x => setTimeout(x, 200));
 	}
 }
 
-export default FollowButton;
+export default UpdateUserTest;

@@ -42,25 +42,26 @@ class Comments {
 			return await engine.render(this, 'Comments');
 		}
 
-		switch (engine.key) {
-			case 'form':
-				this.form = new CommentForm();
-				this.form.article = this.article;
-				this.form.selector = () => this.selector().firstElementChild.firstElementChild;
-				return this.form;
+		if (engine.isRendering(this, 'form')) {
+			this.form = new CommentForm();
+			this.form.article = this.article;
+			this.form.selector = () => this.selector().firstElementChild.firstElementChild;
+			return this.form;
+		}
 
-			case 'cards':
-				const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/comments`, {
-					headers: this.engine.app.api.headers
-				});
-				this.cards = s.ok ? (await s.json()).comments.map((c, i) => {
-					const d = new CommentCard();
-					d.article = this.article;
-					d.comment = c;
-					d.selector = () => this.selector().firstElementChild.children[1 + i];
-					return d;
-				}) : null;
-				return this.cards;
+		if (engine.isRendering(this, 'cards')) {
+			const a = engine.app.api;
+			const s = await fetch(`${a.url}/articles/${this.article.slug}/comments`, {
+				headers: a.headers
+			});
+			this.cards = s.ok ? (await s.json()).comments.map((c, i) => {
+				const d = new CommentCard();
+				d.article = this.article;
+				d.comment = c;
+				d.selector = () => this.selector().firstElementChild.children[1 + i];
+				return d;
+			}) : null;
+			return this.cards;
 		}
 	}
 

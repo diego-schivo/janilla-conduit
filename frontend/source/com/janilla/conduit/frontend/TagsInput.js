@@ -33,7 +33,7 @@ class TagsInput {
 			return await engine.render(this, 'TagsInput');
 		}
 
-		if (engine.isRenderingArrayItem('tagList'))
+		if (engine.isRendering(this, 'tagList', true))
 			return await engine.render(engine.target, 'TagsInput-tag');
 	}
 

@@ -58,33 +58,35 @@ class Profile {
 	render = async engine => {
 		if (engine.isRendering(this)) {
 			this.engine = engine.clone();
-			const s = await fetch(`${this.engine.app.api.url}/profiles/${this.username}`, {
-				headers: this.engine.app.api.headers
+			const a = engine.app.api;
+			const s = await fetch(`${a.url}/profiles/${this.username}`, {
+				headers: a.headers
 			});
 			if (s.ok)
 				this.profile = (await s.json()).profile;
 			return await engine.render(this, 'Profile');
 		}
 
-		switch (engine.key) {
-			case 'action':
-				if (this.profile.username === this.engine.app.currentUser?.username)
-					return await engine.render(this, 'Profile-edit');
-				this.followButton = new FollowButton();
-				this.followButton.user = this.profile;
-				this.followButton.selector = () => this.selector().querySelector('p').nextElementSibling;
-				return this.followButton;
+		if (engine.isRendering(this, 'action')) {
+			if (this.profile.username === this.engine.app.currentUser?.username)
+				return await engine.render(this, 'Profile-edit');
+			this.followButton = new FollowButton();
+			this.followButton.user = this.profile;
+			this.followButton.selector = () => this.selector().querySelector('p').nextElementSibling;
+			return this.followButton;
+		}
 
-			case 'tabs':
-				this.tabs = new Tabs();
-				this.tabs.selector = () => this.selector().querySelector('.feed-toggle').firstElementChild;
-				this.tabs.items = this.tabItems;
-				return this.tabs;
+		if (engine.isRendering(this, 'tabs')) {
+			this.tabs = new Tabs();
+			this.tabs.selector = () => this.selector().querySelector('.feed-toggle').firstElementChild;
+			this.tabs.items = this.tabItems;
+			return this.tabs;
+		}
 
-			case 'articleList':
-				this.articleList = new ArticleList();
-				this.articleList.selector = () => this.selector().querySelector('.feed-toggle').nextElementSibling;
-				return this.articleList;
+		if (engine.isRendering(this, 'articleList')) {
+			this.articleList = new ArticleList();
+			this.articleList.selector = () => this.selector().querySelector('.feed-toggle').nextElementSibling;
+			return this.articleList;
 		}
 	}
 

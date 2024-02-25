@@ -29,7 +29,7 @@ class Pagination {
 
 	pageNumber;
 
-	get pageItems() {
+	get items() {
 		const i = Array.from({ length: this.pagesCount }, (x, j) => ({ number: 1 + j }));
 		i[this.pageNumber - 1].active = 'active';
 		return i;
@@ -39,15 +39,15 @@ class Pagination {
 		if (engine.isRendering(this))
 			return this.pagesCount > 1 ? await engine.render(this, 'Pagination') : null;
 
-		if (engine.isRenderingArrayItem('pageItems'))
-			return await engine.render(engine.target, 'Pagination-page');
+		if (engine.isRendering(this, 'items', true))
+			return await engine.render(engine.target, 'Pagination-item');
 	}
 
 	listen = () => {
-		document.querySelector('.pagination').addEventListener('click', this.handlePageClick);
+		this.selector().addEventListener('click', this.handleClick);
 	}
 
-	handlePageClick = async e => {
+	handleClick = async e => {
 		e.preventDefault();
 		const i = e.target.closest('.page-item');
 		if (!i || i.classList.contains('active'))

@@ -38,32 +38,26 @@ class ArticlePreview {
 		if (engine.isRendering(this))
 			return await engine.render(this, 'ArticlePreview');
 
-		switch (engine.key) {
-			case 'meta':
-				this.meta = new ArticleMeta();
-				this.meta.selector = () => this.selector().firstElementChild;
-				return this.meta;
-
-			case 'content':
-				switch (engine.target) {
-					case this.meta:
-						this.favoriteButton = new FavoriteButton();
-						this.favoriteButton.article = this.article;
-						this.meta.content = this.favoriteButton;
-						return this.favoriteButton;
-
-					case this.favoriteButton:
-						return this.article.favoritesCount;
-				}
-				break;
-
-			case 'className':
-				if (engine.target === this.favoriteButton)
-					return `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
-				break;
+		if (engine.isRendering(this, 'meta')) {
+			this.meta = new ArticleMeta();
+			this.meta.selector = () => this.selector().firstElementChild;
+			return this.meta;
 		}
 
-		if (engine.isRenderingArrayItem('tagList'))
+		if (engine.isRendering(this.meta, 'content')) {
+			this.favoriteButton = new FavoriteButton();
+			this.favoriteButton.article = this.article;
+			this.meta.content = this.favoriteButton;
+			return this.favoriteButton;
+		}
+
+		if (engine.isRendering(this.favoriteButton, 'content'))
+			return this.article.favoritesCount;
+
+		if (engine.isRendering(this.favoriteButton, 'className'))
+			return `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
+
+		if (engine.isRendering(this, 'tagList', true))
 			return await engine.render(engine.target, 'ArticlePreview-tag');
 	}
 

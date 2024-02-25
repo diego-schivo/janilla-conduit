@@ -70,25 +70,26 @@ class Home {
 			return await engine.render(this, 'Home');
 		}
 
-		switch (engine.key) {
-			case 'banner':
-				return !engine.app.currentUser ? await engine.render(this, 'Home-banner') : null;
+		if (engine.isRendering(this, 'banner'))
+			return !engine.app.currentUser ? await engine.render(this, 'Home-banner') : null;
 
-			case 'tabs':
-				this.tabs = new Tabs();
-				this.tabs.selector = () => this.selector()?.querySelector('.feed-toggle')?.firstElementChild;
-				this.tabs.items = this.tabItems;
-				return this.tabs;
+		if (engine.isRendering(this, 'tabs')) {
+			this.tabs = new Tabs();
+			this.tabs.selector = () => this.selector()?.querySelector('.feed-toggle')?.firstElementChild;
+			this.tabs.items = this.tabItems;
+			return this.tabs;
+		}
 
-			case 'articleList':
-				this.articleList = new ArticleList();
-				this.articleList.selector = () => this.selector()?.querySelector('.feed-toggle')?.nextElementSibling;
-				return this.articleList;
+		if (engine.isRendering(this, 'articleList')) {
+			this.articleList = new ArticleList();
+			this.articleList.selector = () => this.selector()?.querySelector('.feed-toggle')?.nextElementSibling;
+			return this.articleList;
+		}
 
-			case 'popularTags':
-				this.popularTags = new PopularTags();
-				this.popularTags.selector = () => this.selector()?.querySelector('.sidebar')?.firstElementChild;
-				return this.popularTags;
+		if (engine.isRendering(this, 'popularTags')) {
+			this.popularTags = new PopularTags();
+			this.popularTags.selector = () => this.selector()?.querySelector('.sidebar')?.firstElementChild;
+			return this.popularTags;
 		}
 	}
 

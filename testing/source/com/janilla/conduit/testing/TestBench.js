@@ -36,13 +36,13 @@ class TestBench {
 		if (engine.isRendering(this))
 			return engine.render(this, 'TestBench');
 
-		if (engine.key === 'launcher') {
+		if (engine.isRendering(this, 'launcher')) {
 			this.launcher = new Launcher();
 			this.launcher.selector = () => this.selector().firstElementChild;
 			return this.launcher;
 		}
 
-		if (engine.key === 'runner') {
+		if (engine.isRendering(this, 'runner')) {
 			this.runner = new Runner();
 			this.runner.selector = () => this.selector().lastElementChild;
 			return this.runner;
@@ -51,13 +51,26 @@ class TestBench {
 
 	listen = () => {
 		this.selector().addEventListener('testsuitelaunch', this.handleTestSuiteLaunch);
+		this.selector().addEventListener('testcomplete', this.handleTestComplete);
 		this.launcher.listen();
 		this.runner.listen();
 	}
-	
+
 	handleTestSuiteLaunch = e => {
+		this.launcher.selector().querySelectorAll('[data-key]').forEach(e => e.className = '');
 		this.runner.keys = e.detail.tests;
 		this.runner.refresh();
+	}
+
+	handleTestComplete = e => {
+		const f = this.launcher.selector().querySelector(`[data-key="${e.detail.key}"]`);
+		if (e.detail.error) {
+			f.className = 'failed';
+			f.setAttribute('title', e.detail.error);
+		} else {
+			f.className = 'succeeded';
+			f.removeAttribute('title');
+		}
 	}
 }
 
@@ -73,12 +86,18 @@ class Launcher {
 		if (engine.isRendering(this))
 			return engine.render(this, 'TestBench-Launcher');
 
-		if (engine.isRenderingArrayItem('items'))
+		if (engine.isRendering(this, 'items', true))
 			return await engine.render(engine.target, 'TestBench-Launcher-item');
 	}
 
 	listen = () => {
+		this.selector().querySelector('input').addEventListener('change', this.handleInputChange);
 		this.selector().querySelector('form').addEventListener('submit', this.handleFormSubmit);
+	}
+
+	handleInputChange = e => {
+		const c = e.currentTarget.checked;
+		this.selector().querySelectorAll('[data-key] input').forEach(f => f.checked = c);
 	}
 
 	handleFormSubmit = async e => {
@@ -98,17 +117,18 @@ class Runner {
 	engine;
 
 	keys;
-	
+
 	render = async engine => {
 		if (engine.isRendering(this)) {
 			this.engine = engine.clone();
 			return engine.render(this, 'TestBench-Runner');
 		}
 
-		if (engine.key === 'iframe') {
+		if (engine.isRendering(this, 'iframe')) {
 			if (!this.keys?.length)
 				return null;
 			await fetch('/test/start', { method: 'POST' });
+			localStorage.removeItem('jwtToken');
 			return engine.render(this, 'TestBench-Runner-iframe');
 		}
 	}
@@ -128,9 +148,19 @@ class Runner {
 		const t = tests[k]();
 		t.actions = new Actions();
 		t.actions.document = i.contentDocument;
-		await t.run();
-		await fetch('/test/stop', { method: 'POST' });
-		await this.refresh();
+		t.run().then(() => this.selector().dispatchEvent(new CustomEvent('testcomplete', {
+			bubbles: true,
+			detail: { key: k }
+		}))).catch(f => this.selector().dispatchEvent(new CustomEvent('testcomplete', {
+			bubbles: true,
+			detail: {
+				key: k,
+				error: f
+			}
+		}))).finally(async () => {
+			await fetch('/test/stop', { method: 'POST' });
+			await this.refresh();
+		});
 	}
 }
 

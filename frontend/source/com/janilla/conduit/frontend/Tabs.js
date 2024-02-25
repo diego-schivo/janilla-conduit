@@ -35,12 +35,12 @@ class Tabs {
 			return await engine.render(this, 'Tabs');
 		}
 
-		if (engine.isRenderingArrayItem('items'))
+		if (engine.isRendering(this, 'items', true))
 			return await engine.render(engine.target, 'Tabs-item');
 	}
 
 	refresh = async () => {
-		const h = await this.engine.render(this);
+		const h = await this.render(this.engine);
 		const e = this.selector();
 		if (e)
 			e.outerHTML = h;

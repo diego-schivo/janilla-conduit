@@ -46,8 +46,9 @@ class Editor {
 		if (engine.isRendering(this)) {
 			this.engine = engine.clone();
 			if (this.slug) {
-				const s = await fetch(`${this.engine.app.api.url}/articles/${this.slug}`, {
-					headers: this.engine.app.api.headers
+				const a = engine.app.api;
+				const s = await fetch(`${a.url}/articles/${this.slug}`, {
+					headers: a.headers
 				});
 				this.article = s.ok ? (await s.json()).article : null;
 			} else
@@ -55,19 +56,20 @@ class Editor {
 			return await engine.render(this, 'Editor');
 		}
 
-		switch (engine.key) {
-			case 'errors':
-				this.errors = new Errors();
-				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
-				return this.errors;
+		if (engine.isRendering(this, 'errors')) {
+			this.errors = new Errors();
+			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
+			return this.errors;
+		}
 
-			case 'tags':
-				this.tags = new TagsInput();
-				this.tags.selector = () => this.selector().querySelector('button').previousElementSibling;
-				return this.tags;
+		if (engine.isRendering(this, 'tags')) {
+			this.tags = new TagsInput();
+			this.tags.selector = () => this.selector().querySelector('button').previousElementSibling;
+			return this.tags;
+		}
 
-			case 'tagList':
-				return this.article?.tagList;
+		if (engine.isRendering(this, 'tagList')) {
+			return this.article?.tagList;
 		}
 	}
 
@@ -90,9 +92,10 @@ class Editor {
 					break;
 			}
 		});
-		const s = await fetch(this.slug ? `${this.engine.app.api.url}/articles/${this.slug}` : `${this.engine.app.api.url}/articles`, {
+		const b = this.engine.app.api;
+		const s = await fetch(this.slug ? `${b.url}/articles/${this.slug}` : `${b.url}/articles`, {
 			method: this.slug ? 'PUT' : 'POST',
-			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
+			headers: { ...b.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ article: a })
 		});
 		const j = await s.json();

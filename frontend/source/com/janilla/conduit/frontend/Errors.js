@@ -41,12 +41,12 @@ class Errors {
 			return await engine.render(this, 'Errors');
 		}
 
-		if (engine.isRenderingArrayItem('messages'))
+		if (engine.isRendering(this, 'messages', true))
 			return await engine.render(engine.target, 'Errors-message');
 	}
 
 	refresh = async () => {
-		const h = await this.engine.render(this);
+		const h = await this.render(this.engine);
 		this.selector().outerHTML = h;
 	}
 }

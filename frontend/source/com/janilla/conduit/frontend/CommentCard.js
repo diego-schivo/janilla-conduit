@@ -37,7 +37,7 @@ class CommentCard {
 			return await engine.render(this, 'CommentCard');
 		}
 
-		if (engine.key === 'modOptions')
+		if (engine.isRendering(this, 'modOptions'))
 			return engine.app.currentUser?.username === this.comment.author.username ? await engine.render(this, 'CommentCard-modOptions') : '';
 	}
 
@@ -47,9 +47,10 @@ class CommentCard {
 
 	handleDeleteClick = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/comments/${this.comment.id}`, {
+		const a = this.engine.app.api;
+		const s = await fetch(`${a.url}/articles/${this.article.slug}/comments/${this.comment.id}`, {
 			method: 'DELETE',
-			headers: this.engine.app.api.headers
+			headers: a.headers
 		});
 		if (s.ok) {
 			const c = this.selector();

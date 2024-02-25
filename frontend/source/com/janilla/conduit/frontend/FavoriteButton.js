@@ -54,15 +54,16 @@ class FavoriteButton {
 			location.hash = '#/login';
 			return;
 		}
-		const s = await fetch(`${this.engine.app.api.url}/articles/${this.article.slug}/favorite`, {
+		const a = this.engine.app.api;
+		const s = await fetch(`${a.url}/articles/${this.article.slug}/favorite`, {
 			method: this.article.favorited ? 'DELETE' : 'POST',
-			headers: this.engine.app.api.headers
+			headers: a.headers
 		});
 		if (s.ok) {
 			const a = (await s.json()).article;
 			['favorited', 'favoritesCount'].forEach(n => this.article[n] = a[n]);
 
-			this.selector().outerHTML = await this.engine.render(this);
+			this.selector().outerHTML = await this.render(this.engine);
 			this.listen();
 
 			this.selector().dispatchEvent(new CustomEvent('favoritetoggle', { bubbles: true }));

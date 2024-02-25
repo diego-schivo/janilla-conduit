@@ -39,11 +39,10 @@ class Login {
 			return await engine.render(this, 'Login');
 		}
 
-		switch (engine.key) {
-			case 'errors':
-				this.errors = new Errors();
-				this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
-				return this.errors;
+		if (engine.isRendering(this, 'errors')) {
+			this.errors = new Errors();
+			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
+			return this.errors;
 		}
 	}
 
@@ -53,9 +52,10 @@ class Login {
 
 	handleSubmit = async e => {
 		e.preventDefault();
-		const s = await fetch(`${this.engine.app.api.url}/users/login`, {
+		const a = this.engine.app.api;
+		const s = await fetch(`${a.url}/users/login`, {
 			method: 'POST',
-			headers: { ...this.engine.app.api.headers, 'Content-Type': 'application/json' },
+			headers: { ...a.headers, 'Content-Type': 'application/json' },
 			body: JSON.stringify({ user: Object.fromEntries(new FormData(e.currentTarget)) })
 		});
 		const j = await s.json();

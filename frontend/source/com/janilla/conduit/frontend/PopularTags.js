@@ -35,7 +35,7 @@ class PopularTags {
 			return await engine.render(this, 'PopularTags');
 		}
 
-		if (engine.isRenderingArrayItem('tags'))
+		if (engine.isRendering(this, 'tags', true))
 			return await engine.render(engine.target, 'PopularTags-tag');
 	}
 
