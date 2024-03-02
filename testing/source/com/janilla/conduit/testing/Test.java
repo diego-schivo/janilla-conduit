@@ -49,12 +49,12 @@ public class Test {
 		fullstack = new ConduitFullstackApp();
 		fullstack.setConfiguration(configuration);
 		{
-			var p = configuration.getProperty("conduit.backend.database.path");
+			var p = configuration.getProperty("conduit.database.file");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
 			var f = Path.of(p);
 			Files.createDirectories(f.getParent());
-			try (var s = getClass().getResourceAsStream("conduit.database")) {
+			try (var s = getClass().getResourceAsStream("conduit-test.database")) {
 				Files.copy(s, f, StandardCopyOption.REPLACE_EXISTING);
 			}
 		}

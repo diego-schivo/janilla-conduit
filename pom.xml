@@ -10,7 +10,7 @@
 		<dependency>
 			<groupId>com.janilla</groupId>
 			<artifactId>janilla</artifactId>
-			<version>0.1.0</version>
+			<version>0.1.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
@@ -53,9 +53,26 @@
 				</excludes>
 			</resource>
 		</resources>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>3.2.0</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>java</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<name>Janilla Conduit</name>
-	<description>A fully fledged fullstack application built with Janilla including CRUD operations, authentication, routing, pagination, and more</description>
+	<description>A fully fledged fullstack application built with Janilla
+		including CRUD operations, authentication, routing, pagination, and more</description>
 	<url>https://github.com/diego-schivo/janilla-conduit</url>
 	<licenses>
 		<license>

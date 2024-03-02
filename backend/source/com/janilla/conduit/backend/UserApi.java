@@ -87,7 +87,7 @@ public class UserApi {
 	public Object get(User user) {
 		var h = Map.of("alg", "HS256", "typ", "JWT");
 		var p = user != null ? Map.of("loggedInAs", user.getEmail()) : null;
-		var t = p != null ? Jwt.generateToken(h, p, configuration.getProperty("conduit.backend.jwt.key")) : null;
+		var t = p != null ? Jwt.generateToken(h, p, configuration.getProperty("conduit.jwt.key")) : null;
 		return Collections.singletonMap("user",
 				user != null ? new CurrentUser(user.getEmail(), t, user.getUsername(), user.getBio(), user.getImage())
 						: null);
@@ -98,13 +98,14 @@ public class UserApi {
 		var u = register.user;
 		var v = new Validation();
 		v.setConfiguration(configuration);
-		var c = persistence.getCrud(User.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
+			var c = persistence.getCrud(User.class);
 			var i = c.find("username", u.username);
 			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("username", w);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email)) {
+			var c = persistence.getCrud(User.class);
 			var i = c.find("email", u.email);
 			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("email", w);
@@ -112,6 +113,13 @@ public class UserApi {
 		if (v.isNotBlank("password", u.password))
 			v.isSafe("password", u.password);
 		v.orThrow();
+
+		if (Boolean.parseBoolean(configuration.getProperty("conduit.live-demo"))) {
+			var c = persistence.getCrud(User.class).count();
+			if (c >= 1000)
+				throw new ValidationException("existing users", "are too many (" + c + ")");
+		}
+
 		var w = new User();
 		Reflection.copy(u, w);
 		setHashAndSalt(w, u.password);

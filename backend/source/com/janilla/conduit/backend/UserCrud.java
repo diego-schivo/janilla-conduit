@@ -21,19 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-class RegisterTest {
+package com.janilla.conduit.backend;
 
-	actions;
+import java.io.IOException;
 
-	run = async () => {
-		await this.actions.openRegister();
-		await this.actions.enter('Username', 'foo bar');
-		await this.actions.enter('Email', 'foo@bar');
-		await this.actions.enter('Password', 'foo');
-		await this.actions.submit('Sign up');
-		await this.actions.filterByFeed('Global Feed');
-		await new Promise(x => setTimeout(x, 200));
+import com.janilla.persistence.Crud;
+
+public class UserCrud extends Crud<User> {
+
+	public boolean follow(Long profile, Long user) throws IOException {
+		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.add(user, profile)), true);
+	}
+
+	public boolean unfollow(Long profile, Long user) throws IOException {
+		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.remove(user, profile)), true);
 	}
 }
-
-export default RegisterTest;

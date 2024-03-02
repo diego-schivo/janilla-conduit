@@ -1,19 +1,2 @@
-@import "TestBench.css";
-
-html {
-	font-size: 16px;
-}
-
-html * {
-	font-size: 1rem;
-}
-
-body,
-ul {
-	margin: 0;
-	padding: 0;
-}
-
-ul {
-	list-style: none;
-}
+@import 'base.css';
+@import 'TestBench.css';

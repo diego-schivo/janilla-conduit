@@ -24,12 +24,29 @@
 package com.janilla.conduit.backend;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.janilla.persistence.Crud;
 
 class ArticleCrud extends Crud<Article> {
+
+	public boolean favorite(Long id, Instant createdAt, Long user) throws IOException {
+		return database.perform((ss, ii) -> {
+			var s = ii.perform("Article.favoriteList", i -> i.add(id, user));
+			ii.perform("User.favoriteList", i -> i.add(user, new Object[] { createdAt, id }));
+			return s;
+		}, true);
+	}
+
+	public boolean unfavorite(Long id, Instant createdAt, Long user) throws IOException {
+		return database.perform((ss, ii) -> {
+			var s = ii.perform("Article.favoriteList", i -> i.remove(id, user));
+			ii.perform("User.favoriteList", i -> i.remove(user, new Object[] { createdAt, id }));
+			return s;
+		}, true);
+	}
 
 	@Override
 	protected void updateIndex(String name, Map<Object, Object> remove, Map<Object, Object> add) throws IOException {

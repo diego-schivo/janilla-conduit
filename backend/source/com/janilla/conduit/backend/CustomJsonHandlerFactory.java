@@ -48,7 +48,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 
 	@Override
 	protected void render(Object object, HttpExchange exchange) throws IOException {
-		var o = configuration.getProperty("conduit.backend.cors.origin");
+		var o = configuration.getProperty("conduit.api.cors.origin");
 		exchange.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
 
 		super.render(object, exchange);

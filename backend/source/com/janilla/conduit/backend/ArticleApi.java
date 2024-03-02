@@ -70,6 +70,12 @@ public class ArticleApi {
 		var s = toSlug(form.article.title);
 		validate(null, s, form.article);
 
+		if (Boolean.parseBoolean(configuration.getProperty("conduit.live-demo"))) {
+			var c = persistence.getCrud(Article.class).count();
+			if (c >= 1000)
+				throw new ValidationException("existing articles", "are too many (" + c + ")");
+		}
+
 		var a = new Article();
 		Reflection.copy(form.article, a);
 		a.setSlug(s);
@@ -181,6 +187,12 @@ public class ArticleApi {
 			v.isSafe("body", form.comment.body);
 		v.orThrow();
 
+		if (Boolean.parseBoolean(configuration.getProperty("conduit.live-demo"))) {
+			var c = persistence.getCrud(Comment.class).count();
+			if (c >= 1000)
+				throw new ValidationException("existing comments", "are too many (" + c + ")");
+		}
+
 		var a = persistence.getCrud(Article.class).find("slug", slug);
 		if (a < 0)
 			throw new RuntimeException();
@@ -217,24 +229,10 @@ public class ArticleApi {
 	public Object favorite(String slug, User user) throws IOException {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
-		var c = persistence.getCrud(Article.class);
+		var c = (ArticleCrud) persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
 		var a = i > 0 ? c.read(i) : null;
-
-		var d = persistence.getDatabase();
-		d.perform((ss, ii) -> {
-			ii.perform("Article.favoriteList", x -> {
-				if (!x.add(i, user.getId()))
-					throw new RuntimeException();
-				return null;
-			});
-			ii.perform("User.favoriteList", x -> {
-				x.add(user.getId(), new Object[] { a.getCreatedAt(), i });
-				return null;
-			});
-			return null;
-		}, true);
-
+		c.favorite(a.getId(), a.getCreatedAt(), user.getId());
 		return Map.of("article", i);
 	}
 
@@ -242,24 +240,10 @@ public class ArticleApi {
 	public Object unfavorite(String slug, User user) throws IOException {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
-		var c = persistence.getCrud(Article.class);
+		var c = (ArticleCrud) persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
 		var a = i > 0 ? c.read(i) : null;
-
-		var d = persistence.getDatabase();
-		d.perform((ss, ii) -> {
-			ii.perform("Article.favoriteList", x -> {
-				if (!x.remove(i, user.getId()))
-					throw new RuntimeException();
-				return null;
-			});
-			ii.perform("User.favoriteList", x -> {
-				x.remove(user.getId(), new Object[] { a.getCreatedAt(), i });
-				return null;
-			});
-			return null;
-		}, true);
-
+		c.unfavorite(a.getId(), a.getCreatedAt(), user.getId());
 		return Map.of("article", i);
 	}
 

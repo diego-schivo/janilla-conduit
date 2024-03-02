@@ -1,24 +1,101 @@
 <div class="article-page">
 	<div class="banner">
 		<div class="container">
-			<h1>__article.title__</h1>
-			<!--__actions1__-->
+			<h1>${article.title}</h1>
+			<!--${actions1}-->
 		</div>
 	</div>
 	<div class="container page">
 		<div class="row article-content">
 			<div class="col-md-12">
-				<p>__article.description__</p>
-				<!--__article.body__-->
+				<p>${article.description}</p>
+				<!--${article.body}-->
 				<ul class="tag-list">
-					<!--__article.tagList__-->
+					<!--${article.tagList}-->
 				</ul>
 			</div>
 		</div>
 		<hr />
 		<div class="article-actions">
-			<!--__actions2__-->
+			<!--${actions2}-->
 		</div>
-		<!--__comments__-->
+		<!--${comments}-->
 	</div>
 </div>
+
+<template id="Article-Actions">
+	<!--${meta}-->
+</template>
+
+<template id="Article-Actions-canModify">
+	<span>
+		<a class="btn btn-sm btn-outline-secondary">
+			<i class="ion-edit"></i> Edit Article
+		</a>
+		<button class="btn btn-sm btn-outline-danger">
+			<i class="ion-trash-a"></i> Delete Article
+		</button>
+	</span>
+</template>
+
+<template id="Article-Actions-cannotModify">
+	<span>
+		<!--${followButton}-->
+		<!--${favoriteButton}-->
+	</span>
+</template>
+
+<template id="Article-tag">
+	<li class="tag-default tag-pill tag-outline">${}</li>
+</template>
+
+<template id="Article-Comments">
+	<div class="row">
+		<div class="col-xs-12 col-md-8 offset-md-2">
+			<!--${form}-->
+			<!--${cards}-->
+		</div>
+	</div>
+</template>
+
+<template id="Article-Comments-Card">
+	<div class="card">
+		<div class="card-block">
+			<p class="card-text">${comment.body}</p>
+		</div>
+		<div class="card-footer">
+			<a href="#/@${comment.author.username}" class="comment-author">
+				<img src="<!--${comment.author.image}-->" class="comment-author-img" />
+			</a>
+			&nbsp;
+			<a href="#/@${comment.author.username}" class="comment-author">${comment.author.username}</a>
+			<span class="date-posted">${comment.createdAt}</span>
+			<!--${modOptions}-->
+		</div>
+	</div>
+</template>
+
+<template id="Article-Comments-Card-modOptions">
+	<span class="mod-options">
+		<i class="ion-trash-a"></i>
+	</span>
+</template>
+
+<template id="Article-Comments-Form-authenticated">
+	<div>
+		<!--${errors}-->
+		<form class="card comment-form">
+			<div class="card-block">
+				<textarea class="form-control" placeholder="Write a comment..." rows="3" name="body"></textarea>
+			</div>
+			<div class="card-footer">
+				<img src="<!--${currentUser.image}-->" class="comment-author-img" />
+				<button class="btn btn-sm btn-primary">Post Comment</button>
+			</div>
+		</form>
+	</div>
+</template>
+
+<template id="Article-Comments-Form-unauthenticated">
+	<a href="#/login">Sign in</a> or <a href="#/register">sign up</a> to add comments on this article.
+</template>

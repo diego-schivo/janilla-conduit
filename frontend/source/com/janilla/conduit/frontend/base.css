@@ -1,0 +1,131 @@
+:root {
+	--enable-flex: true;
+	--enable-grid-classes: true;
+	--font-family-logo: 'Titillium Web', sans-serif;
+	--font-family-sans-serif: 'Source Sans Pro', sans-serif;
+	--brand-primary: #5CB85C;
+	--brand-danger: #B85C5C;
+	--navbar-padding-x: 0rem !important;
+}
+
+html {
+	position: relative;
+	min-height: 100vh;
+	padding-bottom: 100px;
+}
+
+body {
+	font-family: var(--font-family-sans-serif);
+}
+
+a {
+	color: var(--brand-primary);
+
+	&:focus,
+	&:hover {
+		color: var(--brand-primary);
+	}
+}
+
+.btn-primary {
+	background-color: var(--brand-primary);
+	border-color: var(--brand-primary);
+
+	&:focus,
+	&:hover {
+		background-color: var(--brand-primary);
+		border-color: var(--brand-primary);
+	}
+}
+
+.btn-outline-primary {
+	border-color: var(--brand-primary);
+	color: var(--brand-primary);
+
+	&:focus,
+	&:hover {
+		background-color: var(--brand-primary);
+		border-color: var(--brand-primary);
+	}
+}
+
+.page-item {
+	&.active .page-link {
+		background-color: var(--brand-primary);
+		border-color: var(--brand-primary);
+
+		&:focus,
+		&:hover {
+			background-color: var(--brand-primary);
+			border-color: var(--brand-primary);
+		}
+	}
+}
+
+.page-link {
+	color: var(--brand-primary);
+}
+
+.logo-font {
+	font-family: var(--font-family-logo);
+}
+
+.tag-default {
+	color: #fff !important;
+	font-size: 0.8rem;
+	padding-top: 0.1rem;
+	padding-bottom: 0.1rem;
+	white-space: nowrap;
+	margin-right: 3px;
+	margin-bottom: 0.2rem;
+	display: inline-block;
+
+	&:hover {
+		text-decoration: none;
+	}
+
+	&.tag-outline {
+		border: 1px solid #ddd;
+		color: #aaa !important;
+		background: none !important;
+	}
+}
+
+ul.tag-list {
+	padding-left: 0px !important;
+	display: inline-block;
+	list-style: none !important;
+
+	li {
+		display: inline-block !important;
+	}
+}
+
+.nav-link {
+	.user-pic {
+		height: 26px;
+		border-radius: 50px;
+		float: left;
+		margin-right: 5px;
+	}
+
+	&:hover {
+		transition: 0.1s all;
+	}
+}
+
+.banner {
+	color: #fff;
+	background: #333;
+	padding: 2rem;
+	margin-bottom: 2rem;
+
+	h1 {
+		text-shadow: 0px 1px 3px rgba(0,0,0,0.3);
+		margin-bottom: 0px;
+	}
+}
+
+.container.page {
+	margin-top: 1.5rem;
+}

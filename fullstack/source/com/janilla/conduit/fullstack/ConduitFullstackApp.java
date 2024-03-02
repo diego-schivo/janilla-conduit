@@ -47,10 +47,11 @@ public class ConduitFullstackApp {
 			}
 			a.setConfiguration(c);
 		}
-		a.getBackend().populate();
+		a.getBackend().getPersistence();
 
 		var s = a.new Server();
 		s.setPort(Integer.parseInt(a.getConfiguration().getProperty("conduit.fullstack.server.port")));
+//		System.out.println("s.getPort()=" + s.getPort());
 		s.setHandler(a.getHandler());
 		s.run();
 	}
@@ -80,6 +81,7 @@ public class ConduitFullstackApp {
 				} catch (NullPointerException e) {
 					u = null;
 				}
+//				System.out.println("u=" + u);
 				yield u != null && u.getPath().startsWith("/api/") ? backend.get().getHandler()
 						: frontend.get().getHandler();
 			}

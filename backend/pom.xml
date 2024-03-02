@@ -8,4 +8,15 @@
 		<artifactId>janilla-conduit</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>com.janilla.conduit.backend.ConduitBackendApp</mainClass>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

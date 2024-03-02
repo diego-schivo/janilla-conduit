@@ -75,15 +75,11 @@ public class ConduitFrontendApp {
 
 	@Handle(method = "GET", path = "/")
 	public App getApp() {
-		var u = configuration.getProperty("conduit.frontend.api.url");
+		var u = configuration.getProperty("conduit.api.url");
 		return new App(u);
 	}
 
 	@Render(template = "app.html")
 	public record App(String apiUrl) {
-
-		public @Render(template = "head.html") Object head() {
-			return new Object();
-		}
 	}
 }

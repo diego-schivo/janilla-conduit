@@ -21,9 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import Footer from './Footer.js';
-import Header from './Header.js';
-
 class Layout {
 
 	selector;
@@ -57,6 +54,62 @@ class Layout {
 
 	listen = () => {
 		this.page.listen();
+	}
+}
+
+class Header {
+
+	engine;
+
+	get navItems() {
+		const h = {
+			hash: '#/',
+			text: 'Home'
+		};
+		const u = this.engine.app.currentUser;
+		if (u)
+			return [
+				h, {
+					hash: '#/editor',
+					text: '<i class="ion-compose"></i>&nbsp;New Article'
+				}, {
+					hash: '#/settings',
+					text: '<i class="ion-gear-a"></i>&nbsp;Settings'
+				}, {
+					hash: `#/@${u.username}`,
+					text: `<img src="${u.image}" class="user-pic" /> ${u.username}`
+				}];
+		else
+			return [
+				h, {
+					hash: '#/login',
+					text: 'Sign in'
+				}, {
+					hash: '#/register',
+					text: 'Sign up'
+				}];
+	}
+
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'Header');
+		}
+
+		if (engine.isRendering(this, 'navItems', true)) {
+			const i = engine.target;
+			if (i.hash === location.hash)
+				i.active = 'active';
+			return await engine.render(i, 'Header-navitem');
+		}
+	}
+}
+
+class Footer {
+
+	render = async engine => {
+		if (engine.isRendering(this))
+			return await engine.render(this, 'Footer');
 	}
 }
 

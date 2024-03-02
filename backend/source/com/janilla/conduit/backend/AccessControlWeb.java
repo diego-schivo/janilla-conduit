@@ -48,11 +48,11 @@ public class AccessControlWeb {
 
 	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
-		var o = configuration.getProperty("conduit.backend.cors.origin");
+		var o = configuration.getProperty("conduit.api.cors.origin");
 		var s = toInvocation.getValueAndGroupsStream(request).flatMap(w -> w.value().methods().stream())
 				.map(m -> m.getAnnotation(Handle.class).method()).collect(Collectors.toSet());
 		var m = s.contains(null) ? "*" : s.stream().collect(Collectors.joining(", "));
-		var h = configuration.getProperty("conduit.backend.cors.headers");
+		var h = configuration.getProperty("conduit.api.cors.headers");
 
 		response.setStatus(new Status(204, "No Content"));
 		response.getHeaders().set("Access-Control-Allow-Origin", o);

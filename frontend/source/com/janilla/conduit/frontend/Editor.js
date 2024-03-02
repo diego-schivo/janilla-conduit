@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 import Errors from './Errors.js';
-import TagsInput from './TagsInput.js';
 
 class Editor {
 
@@ -103,6 +102,50 @@ class Editor {
 		await this.errors.refresh();
 		if (s.ok)
 			location.hash = `#/article/${j.article.slug}`;
+	}
+}
+
+class TagsInput {
+
+	selector;
+	
+	engine;
+
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'TagsInput');
+		}
+
+		if (engine.isRendering(this, 'tagList', true))
+			return await engine.render(engine.target, 'TagsInput-tag');
+	}
+
+	listen = () => {
+		const i = this.selector().firstElementChild;
+		i.addEventListener('keydown', this.handleInputKeyDown);
+		i.nextElementSibling.addEventListener('click', this.handleCloseClick);
+	}
+
+	handleCloseClick = e => {
+		const i = e.target.closest('.ion-close-round');
+		if (!i)
+			return;
+		e.preventDefault();
+		i.closest('.tag-default').remove();
+	}
+
+	handleInputKeyDown = async e => {
+		if (e.key !== 'Enter')
+			return;
+		e.preventDefault();
+		const i = e.currentTarget;
+		const d = i.nextElementSibling;
+		if (!d.querySelector(`[value="${i.value}"]`)) {
+			const h = await this.engine.render(i.value, 'TagsInput-tag');
+			d.insertAdjacentHTML('beforeend', h);
+		}
+		i.value = '';
 	}
 }
 

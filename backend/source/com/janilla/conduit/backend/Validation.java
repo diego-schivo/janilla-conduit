@@ -73,7 +73,7 @@ public class Validation {
 			.map(String::toLowerCase).sorted().collect(Collectors.toCollection(LinkedHashSet::new));
 
 	boolean isSafe(String name, String value) {
-		if (!Boolean.parseBoolean(configuration.getProperty("conduit.backend.reject-unsafe-data")))
+		if (!Boolean.parseBoolean(configuration.getProperty("conduit.live-demo")))
 			return true;
 		if (value == null || value.isEmpty()
 				|| nonWord.splitAsStream(value).allMatch(w -> w.isEmpty() || safeWords.contains(w.toLowerCase())))

@@ -1,0 +1,4 @@
+.error-messages {
+	color: var(--brand-danger) !important;
+	font-weight: bold;
+}

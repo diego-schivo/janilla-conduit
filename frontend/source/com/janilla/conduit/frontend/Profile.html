@@ -3,10 +3,10 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-xs-12 col-md-10 offset-md-1">
-					<img src="<!--__profile.image__-->" class="user-img" />
-					<h4>__profile.username__</h4>
-					<p>__profile.bio__</p>
-					<!--__action__-->
+					<img src="<!--${profile.image}-->" class="user-img" />
+					<h4>${profile.username}</h4>
+					<p>${profile.bio}</p>
+					<!--${action}-->
 				</div>
 			</div>
 		</div>
@@ -15,10 +15,16 @@
 		<div class="row">
 			<div class="col-xs-12 col-md-10 offset-md-1">
 				<div class="feed-toggle">
-					<!--__tabs__-->
+					<!--${tabs}-->
 				</div>
-				<!--__articleList__-->
+				<!--${articleList}-->
 			</div>
 		</div>
 	</div>
 </div>
+
+<template id="Profile-edit">
+	<a href="#/settings" class="btn btn-sm btn-outline-secondary action-btn">
+		<i class="ion-gear-a"></i> Edit Profile Settings
+	</a>
+</template>

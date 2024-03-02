@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 import ArticleList from './ArticleList.js';
-import PopularTags from './PopularTags.js';
 import Tabs from './Tabs.js';
 
 class Home {
@@ -128,6 +127,64 @@ class Home {
 		this.tabs.items = this.tabItems;
 		await this.tabs.refresh();
 		await this.articleList.refresh();
+	}
+}
+
+class PopularTags {
+
+	selector;
+
+	engine;
+
+	tags;
+
+	render = async engine => {
+		if (engine.isRendering(this)) {
+			this.engine = engine.clone();
+			return await engine.render(this, 'PopularTags');
+		}
+
+		if (engine.isRendering(this, 'tags', true))
+			return await engine.render(engine.target, 'PopularTags-tag');
+	}
+
+	listen = () => {
+		const e = this.selector();
+		if (!e)
+			return;
+		addEventListener('pageload', this.handlePageLoad);
+		addEventListener('pageunload', this.handlePageUnload);
+		this.selector().addEventListener('click', this.handleClick);
+	}
+
+	handlePageLoad = async () => {
+		await this.fetchTags();
+		const h = await this.engine.render(this, `PopularTags-${this.tags.length ? 'nonempty' : 'empty'}`);
+		const e = this.selector();
+		if (e)
+			e.lastElementChild.outerHTML = h;
+		this.listen();
+	}
+
+	handlePageUnload = () => {
+		removeEventListener('pageload', this.handlePageLoad);
+	}
+
+	handleClick = async e => {
+		e.preventDefault();
+		const a = e.target.closest('.tag-default');
+		if (!a)
+			return;
+		this.selector().dispatchEvent(new CustomEvent('tagselect', {
+			bubbles: true,
+			detail: { tag: a.textContent }
+		}));
+	}
+
+	fetchTags = async () => {
+		const a = this.engine.app.api;
+		const s = await fetch(`${a.url}/tags`, { headers: a.headers });
+		this.tags = (await s.json()).tags;
 	}
 }
 

@@ -52,29 +52,19 @@ public class ProfileApi {
 
 	@Handle(method = "POST", path = "/api/profiles/([^/]*)/follow")
 	public Object follow(String username, User user) throws IOException {
-		var c = persistence.getCrud(User.class);
+		var c = (UserCrud) persistence.getCrud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
-		var d = persistence.getDatabase();
-		d.perform((ss, ii) -> ii.perform("User.followList", x -> {
-			if (!x.add(user.getId(), u.getId()))
-				throw new RuntimeException();
-			return null;
-		}), true);
+		c.follow(u.getId(), user.getId());
 		return Map.of("profile", u.getId());
 	}
 
 	@Handle(method = "DELETE", path = "/api/profiles/([^/]*)/follow")
 	public Object unfollow(String username, User user) throws IOException {
-		var c = persistence.getCrud(User.class);
+		var c = (UserCrud) persistence.getCrud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
-		var d = persistence.getDatabase();
-		d.perform((ss, ii) -> ii.perform("User.followList", x -> {
-			if (!x.remove(user.getId(), u.getId()))
-				throw new RuntimeException();
-			return null;
-		}), true);
+		c.unfollow(u.getId(), user.getId());
 		return Map.of("profile", u.getId());
 	}
 }

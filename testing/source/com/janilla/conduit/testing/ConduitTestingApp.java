@@ -89,7 +89,7 @@ public class ConduitTestingApp {
 	}
 
 	@Handle(method = "GET", path = "/")
-	public @Render(template = "App.html") Object getApp() {
+	public @Render(template = "app.html") Object getApp() {
 		return new Object();
 	}
 

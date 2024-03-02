@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import ArticlePreview from './ArticlePreview.js';
-import Pagination from './Pagination.js';
+import ArticleMeta from './ArticleMeta.js';
+import FavoriteButton from './FavoriteButton.js';
 
 class ArticleList {
 
@@ -105,12 +105,95 @@ class ArticleList {
 		const s = await fetch(u, { headers: a.headers });
 		const j = await s.json();
 		this.articlePreviews = j.articles.map((a, i) => {
-			const p = new ArticlePreview();
+			const p = new Preview();
 			p.selector = () => this.selector().children[i];
 			p.article = a;
 			return p;
 		});
 		return j.articlesCount;
+	}
+}
+
+class Preview {
+
+	selector;
+
+	article;
+
+	meta;
+
+	favoriteButton;
+
+	render = async engine => {
+		if (engine.isRendering(this))
+			return await engine.render(this, 'ArticleList-Preview');
+
+		if (engine.isRendering(this, 'meta')) {
+			this.meta = new ArticleMeta();
+			this.meta.selector = () => this.selector().firstElementChild;
+			return this.meta;
+		}
+
+		if (engine.isRendering(this.meta, 'content')) {
+			this.favoriteButton = new FavoriteButton();
+			this.favoriteButton.article = this.article;
+			this.meta.content = this.favoriteButton;
+			return this.favoriteButton;
+		}
+
+		if (engine.isRendering(this.favoriteButton, 'content'))
+			return this.article.favoritesCount;
+
+		if (engine.isRendering(this.favoriteButton, 'className'))
+			return `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
+
+		if (engine.isRendering(this, 'tagList', true))
+			return await engine.render(engine.target, 'ArticleList-Preview-tag');
+	}
+
+	listen = () => {
+		this.meta?.listen();
+	}
+}
+
+class Pagination {
+
+	selector;
+
+	pagesCount;
+
+	pageNumber;
+
+	get items() {
+		const i = Array.from({ length: this.pagesCount }, (x, j) => ({ number: 1 + j }));
+		i[this.pageNumber - 1].active = 'active';
+		return i;
+	}
+
+	render = async engine => {
+		if (engine.isRendering(this))
+			return this.pagesCount > 1 ? await engine.render(this, 'ArticleList-Pagination') : null;
+
+		if (engine.isRendering(this, 'items', true))
+			return await engine.render(engine.target, 'ArticleList-Pagination-item');
+	}
+
+	listen = () => {
+		this.selector().addEventListener('click', this.handleClick);
+	}
+
+	handleClick = async e => {
+		e.preventDefault();
+		const i = e.target.closest('.page-item');
+		if (!i || i.classList.contains('active'))
+			return;
+		this.pageNumber = parseInt(i.textContent);
+		const p = i.closest('.pagination');
+		p.querySelectorAll('.page-item').forEach(j => j.classList[j === i ? 'add' : 'remove']('active'));
+		p.dispatchEvent(new CustomEvent('pageselect', {
+			bubbles: true,
+			detail: { pageNumber: this.pageNumber }
+		}));
 	}
 }
 
