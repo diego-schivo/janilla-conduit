@@ -38,8 +38,9 @@ From the project root, run the following command to run the fullstack applicatio
 mvn compile exec:java -pl fullstack
 ```
 
-Then open a browser and navigate to `http://localhost:8080/` (APIs use the same port 8080).  
-We suggest flagging the Disable Cache checkbox in the Network tab of the Web Developer Tools.
+Then open a browser and navigate to `http://localhost:8080/` (APIs use the same port 8080).
+
+> **_Note:_**  I suggest flagging the Disable Cache checkbox in the Network tab of the Web Developer Tools.
 
 Alternatively, you can run the backend and frontend applications separately:
 
@@ -57,13 +58,14 @@ If you want to change the API URL, simply edit the `configuration.properties` fi
 
 ### Set up the project in an IDE
 
-We use [Eclipse IDE](https://eclipseide.org/) for development:
+I use [Eclipse IDE](https://eclipseide.org/) for development:
 
 1. download the [Eclipse Installer](https://www.eclipse.org/downloads/packages/installer)
 2. install the package for Enterprise Java and Web Developers with JRE 21.0.1
 3. launch the IDE and choose Import projects from Git (with smart import)
 4. select GitHub as the repository source, then search for `janilla-conduit fork:true` and complete the wizard
 5. select a project (eg: `janilla-conduit-fullstack`) and launch Debug as Java Application
+6. open a browser and navigate to `http://localhost:8080/`
 
 ### Testing
 
