@@ -34,16 +34,12 @@ public class ProfileApi {
 
 	Persistence persistence;
 
-	public Persistence getPersistence() {
-		return persistence;
-	}
-
 	public void setPersistence(Persistence persistence) {
 		this.persistence = persistence;
 	}
 
 	@Handle(method = "GET", path = "/api/profiles/([^/]*)")
-	public Object get(String username) throws IOException {
+	public Object read(String username) throws IOException {
 		var c = persistence.getCrud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;

@@ -32,22 +32,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 import com.janilla.persistence.Crud.Page;
 import com.janilla.persistence.Persistence;
-import com.janilla.reflect.Parameter;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.ForbiddenException;
 import com.janilla.web.Handle;
 
 public class ArticleApi {
-
-	static Pattern nonAlphanumeric = Pattern.compile("[^\\p{Alnum}]+", Pattern.UNICODE_CHARACTER_CLASS);
-
-	static String toSlug(String title) {
-		return nonAlphanumeric.splitAsStream(title.toLowerCase()).collect(Collectors.joining("-"));
-	}
 
 	Properties configuration;
 
@@ -55,10 +47,6 @@ public class ArticleApi {
 
 	public void setConfiguration(Properties configuration) {
 		this.configuration = configuration;
-	}
-
-	public Persistence getPersistence() {
-		return persistence;
 	}
 
 	public void setPersistence(Persistence persistence) {
@@ -86,6 +74,14 @@ public class ArticleApi {
 		return Map.of("article", a);
 	}
 
+	@Handle(method = "GET", path = "/api/articles/([^/]*)")
+	public Object read(String slug) throws IOException {
+		var c = persistence.getCrud(Article.class);
+		var i = c.find("slug", slug);
+		var a = i > 0 ? c.read(i) : null;
+		return Collections.singletonMap("article", a);
+	}
+
 	@Handle(method = "PUT", path = "/api/articles/([^/]*)")
 	public Object update(String slug, Form form, User user) throws IOException {
 		var s = toSlug(form.article.title);
@@ -110,73 +106,26 @@ public class ArticleApi {
 			c.delete(i);
 	}
 
-	@Handle(method = "GET", path = "/api/articles/([^/]*)")
-	public Object get(String slug) throws IOException {
-		var c = persistence.getCrud(Article.class);
-		var i = c.find("slug", slug);
-		var a = i > 0 ? c.read(i) : null;
-		return Collections.singletonMap("article", a);
-	}
-
 	@Handle(method = "GET", path = "/api/articles")
-	public Object list(@Parameter(name = "tag") String tag, @Parameter(name = "author") String author,
-			@Parameter(name = "favorited") String favorited, @Parameter(name = "skip") long skip,
-			@Parameter(name = "limit") long limit) throws IOException {
-		class A {
-
-			Object[] o;
-
-			long c;
-		}
-		var a = new A();
-		{
-			var c = persistence.getCrud(User.class);
-			var d = persistence.getDatabase();
-			if (tag != null && !tag.isBlank())
-				d.perform((ss, ii) -> ii.perform("Article.tagList", x -> {
-					a.o = x.list(tag).skip(skip).limit(limit).toArray();
-					a.c = x.count(tag);
-					return null;
-				}), false);
-			else if (author != null && !author.isBlank()) {
-				var u = c.find("username", author);
-				if (u >= 0)
-					d.perform((ss, ii) -> ii.perform("Article.author", x -> {
-						a.o = x.list(u).skip(skip).limit(limit).toArray();
-						a.c = x.count(u);
-						return null;
-					}), false);
-			} else if (favorited != null && !favorited.isBlank()) {
-				var u = c.find("username", favorited);
-				if (u >= 0)
-					d.perform((ss, ii) -> ii.perform("User.favoriteList", x -> {
-						a.o = x.list(u).skip(skip).limit(limit).toArray();
-						a.c = x.count(u);
-						return null;
-					}), false);
-			} else
-				d.perform((ss, ii) -> ii.perform("Article", x -> {
-					a.o = x.list(null).skip(skip).limit(limit).toArray();
-					a.c = x.count(null);
-					return null;
-				}), false);
-		}
-
-		var c = persistence.getCrud(Article.class);
-		var i = Arrays.stream(a.o).mapToLong(x -> (Long) ((Object[]) x)[1]).toArray();
-		var r = c.read(i);
-
-		return Map.of("articles", r, "articlesCount", a.c);
+	public Object list(Filter filter, Range range) throws IOException {
+		var t = filter.tag != null && !filter.tag.isBlank() ? new Object[] { filter.tag } : new Object[0];
+		var a = filter.author != null && !filter.author.isBlank()
+				? new Object[] { persistence.getCrud(User.class).find("username", filter.author) }
+				: new Object[0];
+		var f = filter.favorited != null && !filter.favorited.isBlank()
+				? new Object[] { persistence.getCrud(User.class).find("username", filter.favorited) }
+				: new Object[0];
+		var p = persistence.getCrud(Article.class).filter(Map.of("tagList", t, "author", a, "favoriteList", f),
+				range.skip, range.limit);
+		return Map.of("articles", persistence.getCrud(Article.class).read(p.ids()), "articlesCount", p.total());
 	}
 
 	@Handle(method = "GET", path = "/api/articles/feed")
-	public Object listFeed(@Parameter(name = "skip") long skip, @Parameter(name = "limit") long limit, User user)
-			throws IOException {
-		var u = persistence.getCrud(User.class).performOnIndex("followList", user.getId(), LongStream::toArray);
-		var c = persistence.getCrud(Article.class);
-		var i = u.length > 0 ? Arrays.stream(u).boxed().toArray() : null;
-		var p = i != null ? c.filter("author", skip, limit, i) : Page.empty();
-		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
+	public Object listFeed(Range range, User user) throws IOException {
+		var u = persistence.getCrud(User.class).filter("followList", user.getId());
+		var p = u.length > 0 ? persistence.getCrud(Article.class).filter("author", range.skip, range.limit,
+				Arrays.stream(u).boxed().toArray()) : Page.empty();
+		return Map.of("articles", persistence.getCrud(Article.class).read(p.ids()), "articlesCount", p.total());
 	}
 
 	@Handle(method = "POST", path = "/api/articles/([^/]*)/comments")
@@ -194,7 +143,7 @@ public class ArticleApi {
 		}
 
 		var a = persistence.getCrud(Article.class).find("slug", slug);
-		if (a < 0)
+		if (a <= 0)
 			throw new RuntimeException();
 
 		var c = new Comment();
@@ -219,9 +168,9 @@ public class ArticleApi {
 
 	@Handle(method = "GET", path = "/api/articles/([^/]*)/comments")
 	public Object listComments(String slug) throws IOException {
-		var i = persistence.getCrud(Article.class).performOnIndex("slug", slug, x -> (Long) x.findFirst().orElse(-1));
+		var i = persistence.getCrud(Article.class).find("slug", slug);
 		var c = persistence.getCrud(Comment.class);
-		var j = c.performOnIndex("article", i, LongStream::toArray);
+		var j = c.filter("article", i);
 		return Map.of("comments", c.read(j));
 	}
 
@@ -247,13 +196,19 @@ public class ArticleApi {
 		return Map.of("article", i);
 	}
 
+	static Pattern nonAlphanumeric = Pattern.compile("[^\\p{Alnum}]+", Pattern.UNICODE_CHARACTER_CLASS);
+
+	protected String toSlug(String title) {
+		return nonAlphanumeric.splitAsStream(title.toLowerCase()).collect(Collectors.joining("-"));
+	}
+
 	protected void validate(String slug1, String slug2, Form.Article article) throws IOException {
 		var v = new Validation();
 		v.setConfiguration(configuration);
 		var c = persistence.getCrud(Article.class);
 		if (v.isNotBlank("title", article.title) && v.isNotTooLong("title", article.title, 100)
 				&& v.isSafe("title", article.title)) {
-			var i = c.performOnIndex("slug", slug2, LongStream::toArray);
+			var i = c.filter("slug", slug2);
 			var a = c.read(i).filter(x -> !x.getSlug().equals(slug1)).findFirst().orElse(null);
 			v.isUnique("title", a);
 		}
@@ -267,6 +222,12 @@ public class ArticleApi {
 		if (v.isNotTooLong("tagList", t, 100) && v.isSafe("tagList", t))
 			;
 		v.orThrow();
+	}
+
+	public record Filter(String tag, String author, String favorited) {
+	}
+
+	public record Range(long skip, long limit) {
 	}
 
 	public record Form(Article article) {

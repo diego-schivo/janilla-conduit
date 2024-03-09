@@ -51,7 +51,6 @@ public class ConduitFullstackApp {
 
 		var s = a.new Server();
 		s.setPort(Integer.parseInt(a.getConfiguration().getProperty("conduit.fullstack.server.port")));
-//		System.out.println("s.getPort()=" + s.getPort());
 		s.setHandler(a.getHandler());
 		s.run();
 	}

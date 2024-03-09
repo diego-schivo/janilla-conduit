@@ -24,7 +24,6 @@
 package com.janilla.conduit.backend;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import com.janilla.persistence.Persistence;
 import com.janilla.web.Handle;
@@ -33,21 +32,14 @@ public class TagApi {
 
 	Persistence persistence;
 
-	public Persistence getPersistence() {
-		return persistence;
-	}
-
 	public void setPersistence(Persistence persistence) {
 		this.persistence = persistence;
 	}
 
 	@Handle(method = "GET", path = "/api/tags")
 	public Tags tags() throws IOException {
-		var l = new ArrayList<String>();
-		persistence.getDatabase().perform((ss, ii) -> ii.perform("Tag.count", x -> {
-			x.values().limit(10).forEach(y -> l.add((String) y));
-			return null;
-		}), false);
+		var l = persistence.getDatabase().perform(
+				(ss, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
 		return new Tags(l);
 	}
 

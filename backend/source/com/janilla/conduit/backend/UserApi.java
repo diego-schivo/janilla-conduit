@@ -46,20 +46,22 @@ public class UserApi {
 
 	Properties configuration;
 
-	public Persistence getPersistence() {
-		return persistence;
-	}
-
 	public void setPersistence(Persistence persistence) {
 		this.persistence = persistence;
 	}
 
-	public Properties getConfiguration() {
-		return configuration;
-	}
-
 	public void setConfiguration(Properties configuration) {
 		this.configuration = configuration;
+	}
+
+	@Handle(method = "GET", path = "/api/user")
+	public Object getCurrent(User user) {
+		var h = Map.of("alg", "HS256", "typ", "JWT");
+		var p = user != null ? Map.of("loggedInAs", user.getEmail()) : null;
+		var t = p != null ? Jwt.generateToken(h, p, configuration.getProperty("conduit.jwt.key")) : null;
+		return Collections.singletonMap("user",
+				user != null ? new CurrentUser(user.getEmail(), t, user.getUsername(), user.getBio(), user.getImage())
+						: null);
 	}
 
 	@Handle(method = "POST", path = "/api/users/login")
@@ -80,17 +82,7 @@ public class UserApi {
 			v.isValid("email or password", u != null && h.equals(u.getHash()));
 			v.orThrow();
 		}
-		return get(u);
-	}
-
-	@Handle(method = "GET", path = "/api/user")
-	public Object get(User user) {
-		var h = Map.of("alg", "HS256", "typ", "JWT");
-		var p = user != null ? Map.of("loggedInAs", user.getEmail()) : null;
-		var t = p != null ? Jwt.generateToken(h, p, configuration.getProperty("conduit.jwt.key")) : null;
-		return Collections.singletonMap("user",
-				user != null ? new CurrentUser(user.getEmail(), t, user.getUsername(), user.getBio(), user.getImage())
-						: null);
+		return getCurrent(u);
 	}
 
 	@Handle(method = "POST", path = "/api/users")
@@ -128,7 +120,7 @@ public class UserApi {
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600)) + "</text></svg>");
 		persistence.getCrud(User.class).create(w);
-		return get(w);
+		return getCurrent(w);
 	}
 
 	@Handle(method = "PUT", path = "/api/user")
@@ -157,7 +149,7 @@ public class UserApi {
 			if (u.password != null && !u.password.isBlank())
 				setHashAndSalt(x, u.password);
 		});
-		return get(w);
+		return getCurrent(w);
 	}
 
 	static Random random = new SecureRandom();
@@ -182,6 +174,9 @@ public class UserApi {
 		}
 	}
 
+	public record CurrentUser(String email, String token, String username, String bio, String image) {
+	}
+
 	public record Authenticate(User user) {
 
 		public record User(String email, String password) {
@@ -192,9 +187,6 @@ public class UserApi {
 
 		public record User(String username, String email, String password) {
 		}
-	}
-
-	public record CurrentUser(String email, String token, String username, String bio, String image) {
 	}
 
 	public record Update(User user) {

@@ -39,7 +39,7 @@ public class CustomPersistence extends Persistence {
 		if (super.initializeIndex(name, index))
 			return true;
 		return switch (name) {
-		case "Article.favoriteList", "User.followList" -> {
+		case "User.favoriteList", "User.followList" -> {
 			@SuppressWarnings("unchecked")
 			var i = (Index<Long, Long>) index;
 			i.setKeyHelper(ElementHelper.LONG);
@@ -53,7 +53,7 @@ public class CustomPersistence extends Persistence {
 			i.setValueHelper(ElementHelper.STRING);
 			yield true;
 		}
-		case "User.favoriteList" -> {
+		case "Article.favoriteList" -> {
 			@SuppressWarnings("unchecked")
 			var i = (Index<Long, Object[]>) index;
 			i.setKeyHelper(ElementHelper.LONG);

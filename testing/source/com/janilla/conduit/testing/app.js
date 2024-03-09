@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 import RenderEngine from './RenderEngine.js';
-import TestBench from './TestBench.js';
+import { TestBench } from './TestBench.js';
 
 class App {
 
