@@ -28,7 +28,7 @@ You can view a live demo over at <https://conduit.janilla.com/>.
 
 ### Run the project locally
 
-If you are unfamiliar with the terminal, you can set up the project in an IDE (section below).
+> **_Note:_**  if you are unfamiliar with the terminal, you can set up the project in an IDE (section below).
 
 Make sure you have Java SE Platform (JDK 21) and [Apache Maven](https://maven.apache.org/install.html) installed.
 
@@ -40,7 +40,7 @@ mvn compile exec:java -pl fullstack
 
 Then open a browser and navigate to `http://localhost:8080/` (APIs use the same port 8080).
 
-> **_Note:_**  I suggest flagging the Disable Cache checkbox in the Network tab of the Web Developer Tools.
+> **_Note:_**  consider checking the Disable Cache checkbox in the Network tab of the Web Developer Tools.
 
 Alternatively, you can run the backend and frontend applications separately:
 
@@ -80,5 +80,7 @@ Run the following command:
 ```shell
 mvn compile exec:java -pl testing
 ```
+
+or launch the testing project from the IDE.
 
 Then navigate to `http://localhost:8080/`, select some tests and click Run, then wait for test color to change to either green (test succeeded) or red (test failed).
