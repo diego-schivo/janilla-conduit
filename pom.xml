@@ -10,7 +10,7 @@
 		<dependency>
 			<groupId>com.janilla</groupId>
 			<artifactId>janilla</artifactId>
-			<version>0.3.0</version>
+			<version>0.4.0</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
@@ -53,6 +53,15 @@
 				</excludes>
 			</resource>
 		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>com.janilla.conduit.fullstack.ConduitFullstackApp</mainClass>
+				</configuration>
+			</plugin>
+		</plugins>
 		<pluginManagement>
 			<plugins>
 				<plugin>

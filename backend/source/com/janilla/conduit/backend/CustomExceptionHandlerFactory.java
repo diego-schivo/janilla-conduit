@@ -44,7 +44,7 @@ public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 		super.handle(error, exchange);
 
 		if (exchange.getException() instanceof ValidationException e) {
-			var o = new ObjectAndType(e.getErrors(), null);
+			var o = new ObjectAndType(null, e.getErrors(), null);
 			mainFactory.createHandler(o, exchange).accept(exchange);
 		}
 	}

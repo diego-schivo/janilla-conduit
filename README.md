@@ -38,7 +38,7 @@ From the project root, run the following command to run the fullstack applicatio
 mvn compile exec:java -pl fullstack
 ```
 
-Then open a browser and navigate to `http://localhost:8080/` (APIs use the same port 8080).
+Then open a browser and navigate to <http://localhost:8080/> (APIs use the same port 8080).
 
 > **_Note:_**  consider checking the Disable Cache checkbox in the Network tab of the Web Developer Tools.
 
@@ -52,7 +52,7 @@ mvn compile exec:java -pl backend
 mvn compile exec:java -pl frontend
 ```
 
-Then navigate to `http://localhost:8080/` (the API port is 8081).  
+Then navigate to <http://localhost:8080/> (the API port is 8081).  
 
 If you want to change the API URL, simply edit the `configuration.properties` files located in the source package of each module.
 
@@ -81,6 +81,6 @@ Run the following command:
 mvn compile exec:java -pl testing
 ```
 
-or launch the testing project from the IDE.
+or launch the `janilla-conduit-testing` project from the IDE.
 
-Then navigate to `http://localhost:8080/`, select some tests and click Run, then wait for test color to change to either green (test succeeded) or red (test failed).
+Then navigate to <http://localhost:8080/>, select some tests and click Run, then wait for test color to change to either green (test succeeded) or red (test failed).
