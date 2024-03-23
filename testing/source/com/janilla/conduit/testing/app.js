@@ -21,32 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import RenderEngine from './RenderEngine.js';
-import { TestBench } from './TestBench.js';
+import ConduitTestingApp from './ConduitTestingApp.js';
 
-class App {
-
-	testBench;
-
-	run = async () => {
-		const e = new RenderEngine();
-		document.body.innerHTML = await e.render(this);
-		this.listen();
-	}
-
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.testBench = new TestBench();
-			this.testBench.selector = () => document.body.firstElementChild;
-			return this.testBench;
-		}
-	}
-
-	listen = () => {
-		this.testBench.listen();
-	}
-}
-
-const l = () => new App().run();
-
+const l = () => new ConduitTestingApp().run();
 document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', l) : l();

@@ -62,7 +62,7 @@ class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 			var u = new User();
 			var n = Randomize.phrase(2, 2, () -> Util.capitalizeFirstChar(Randomize.element(w)));
 			u.setUsername(n);
-			u.setEmail(n.toLowerCase().replace(' ', '.') + "@conduit.com");
+			u.setEmail(n.toLowerCase().replace(' ', '.') + "@lorem.ipsum");
 			UserApi.setHashAndSalt(u, n.toLowerCase().substring(0, n.indexOf(' ')));
 			u.setImage(
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
@@ -78,6 +78,7 @@ class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 				a.setTagList(Randomize.elements(1, 5, tags).distinct().toList());
 				a.setCreatedAt(Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
 						OffsetDateTime.now(ZoneOffset.UTC).toInstant()));
+				a.setUpdatedAt(a.getCreatedAt());
 				p.getCrud(Article.class).create(a);
 			}
 		}

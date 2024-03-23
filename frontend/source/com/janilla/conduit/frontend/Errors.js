@@ -35,18 +35,17 @@ class Errors {
 		this.#messages = x ? Object.entries(x).flatMap(([k, v]) => v.map(w => `${k} ${w}`)) : null;
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'Errors');
-		}
-
-		if (engine.isRendering(this, 'messages', true))
-			return await engine.render(engine.target, 'Errors-message');
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Errors';
+		}) || await e.match([this, 'messages', 'number'], (i, o) => {
+			o.template = 'Errors-message';
+		});
 	}
 
 	refresh = async () => {
-		const h = await this.render(this.engine);
+		const h = await this.engine.render();
 		this.selector().outerHTML = h;
 	}
 }

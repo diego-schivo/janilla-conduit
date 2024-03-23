@@ -45,44 +45,35 @@ class Article {
 		return location.hash.split('/')[2];
 	}
 
-	render = async engine => {
-		let s;
-		if (engine.isRendering(this)) {
-			const a = engine.app.api;
-			s = await fetch(`${a.url}/articles/${this.slug}`, {
+	render = async e => {
+		return await e.match([this], async (i, o) => {
+			const a = e.app.api;
+			const s = await fetch(`${a.url}/articles/${this.slug}`, {
 				headers: a.headers
 			});
 			if (s.ok)
 				this.article = (await s.json()).article;
-			return await engine.render(this, 'Article');
-		}
-
-		if (engine.isRendering(this, 'actions1')) {
+			o.template = 'Article';
+		}) || await e.match([this, 'actions1'], (i, o) => {
 			this.actions1 = new Actions();
 			this.actions1.article = this.article;
 			this.actions1.selector = () => this.selector().querySelector('h1').nextElementSibling;
-			return this.actions1;
-		}
-
-		if (engine.isRendering(this.article, 'body'))
-			return formatMarkdownAsHTML(parseMarkdown(this.article.body));
-
-		if (engine.isRendering(this, 'actions2')) {
+			o.value = this.actions1;
+		}) || await e.match([this, 'body'], (i, o) => {
+			o.value = formatMarkdownAsHTML(parseMarkdown(this.article.body));
+		}) || await e.match([this, 'actions2'], (i, o) => {
 			this.actions2 = new Actions();
 			this.actions2.article = this.article;
 			this.actions2.selector = () => this.selector().querySelector('.article-actions').firstElementChild;
-			return this.actions2;
-		}
-
-		if (engine.isRendering(this, 'comments')) {
+			o.value = this.actions2;
+		}) || await e.match([this, 'comments'], (i, o) => {
 			this.comments = new Comments();
 			this.comments.article = this.article;
 			this.comments.selector = () => this.selector().querySelector('.article-actions').nextElementSibling;
-			return this.comments;
-		}
-
-		if (engine.isRendering(this, 'tagList', true))
-			return await engine.render(engine.target, 'Article-tag');
+			o.value = this.comments;
+		}) || await e.match([this, 'tagList', 'number'], (i, o) => {
+			o.template = 'Article-tag';
+		});
 	}
 
 	listen = () => {
@@ -119,18 +110,15 @@ class Actions {
 
 	favoriteButton;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'Article-Actions');
-		}
-
-		if (engine.isRendering(this, 'meta')) {
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Article-Actions';
+		}) || await e.match([this, 'meta'], (i, o) => {
 			this.meta = new ArticleMeta();
 			this.meta.selector = this.selector;
-			return this.meta;
-		}
-		if (engine.isRendering(this.meta, 'content')) {
+			o.value = this.meta;
+		}) || await e.match([this.meta, 'content'], (i, o) => {
 			if (this.article.author.username === this.engine.app.currentUser?.username) {
 				this.meta.content = {
 					listen: () => {
@@ -139,7 +127,7 @@ class Actions {
 						e.querySelector('button').addEventListener('click', this.handleDeleteClick);
 					}
 				};
-				return await engine.render(this, 'Article-Actions-canModify');
+				o.template = 'Article-Actions-canModify';
 			} else {
 				this.meta.content = {
 					listen: () => {
@@ -147,23 +135,20 @@ class Actions {
 						this.favoriteButton.listen();
 					}
 				};
-				return await engine.render(this, 'Article-Actions-cannotModify');
+				o.template = 'Article-Actions-cannotModify';
 			}
-		}
-
-		if (engine.isRendering(this, 'followButton')) {
+			o.value = this.meta.content;
+		}) || await e.match([this.meta.content, 'followButton'], (i, o) => {
 			this.followButton = new FollowButton();
 			this.followButton.user = this.article.author;
 			this.followButton.selector = () => this.meta.content.selector().firstElementChild;
-			return this.followButton;
-		}
-
-		if (engine.isRendering(this, 'favoriteButton')) {
+			o.value = this.followButton;
+		}) || await e.match([this.meta.content, 'favoriteButton'], (i, o) => {
 			this.favoriteButton = new FavoriteButton();
 			this.favoriteButton.article = this.article;
 			this.favoriteButton.selector = () => this.meta.content.selector().lastElementChild;
-			return this.favoriteButton;
-		}
+			o.value = this.favoriteButton;
+		});
 	}
 
 	listen = () => {
@@ -174,7 +159,7 @@ class Actions {
 		delete this.meta;
 		delete this.followButton;
 		delete this.favoriteButton;
-		const h = await this.render(this.engine);
+		const h = await this.engine.render();
 		this.selector().outerHTML = h;
 		this.listen();
 	}
@@ -207,21 +192,17 @@ class Comments {
 
 	cards;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'Article-Comments');
-		}
-
-		if (engine.isRendering(this, 'form')) {
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Article-Comments';
+		}) || await e.match([this, 'form'], (i, o) => {
 			this.form = new CommentForm();
 			this.form.article = this.article;
 			this.form.selector = () => this.selector().firstElementChild.firstElementChild;
-			return this.form;
-		}
-
-		if (engine.isRendering(this, 'cards')) {
-			const a = engine.app.api;
+			o.value = this.form;
+		}) || await e.match([this, 'cards'], async (i, o) => {
+			const a = e.app.api;
 			const s = await fetch(`${a.url}/articles/${this.article.slug}/comments`, {
 				headers: a.headers
 			});
@@ -232,8 +213,8 @@ class Comments {
 				d.selector = () => this.selector().firstElementChild.children[1 + i];
 				return d;
 			}) : null;
-			return this.cards;
-		}
+			o.value = this.cards;
+		});
 	}
 
 	listen = () => {
@@ -251,7 +232,7 @@ class Comments {
 		c.selector = () => this.selector().firstElementChild.children[1];
 		this.cards.unshift(c);
 
-		const h = await this.engine.render(c);
+		const h = await this.engine.render({ value: c });
 		this.form.selector().insertAdjacentHTML('afterend', h);
 		c.listen();
 	}
@@ -272,14 +253,14 @@ class CommentCard {
 
 	comment;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'Article-Comments-Card');
-		}
-
-		if (engine.isRendering(this, 'modOptions'))
-			return engine.app.currentUser?.username === this.comment.author.username ? await engine.render(this, 'Article-Comments-Card-modOptions') : '';
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Article-Comments-Card';
+		}) || await e.match([this, 'modOptions'], (i, o) => {
+			if (e.app.currentUser?.username === this.comment.author.username)
+				o.template = 'Article-Comments-Card-modOptions';
+		});
 	}
 
 	listen = () => {
@@ -314,17 +295,15 @@ class CommentForm {
 
 	errors;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, `Article-Comments-Form-${this.engine.app.currentUser ? 'authenticated' : 'unauthenticated'}`);
-		}
-
-		if (engine.isRendering(this, 'errors')) {
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = `Article-Comments-Form-${this.engine.app.currentUser ? 'authenticated' : 'unauthenticated'}`;
+		}) || await e.match([this, 'errors'], (i, o) => {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().firstElementChild;
-			return this.errors;
-		}
+			o.value = this.errors;
+		});
 	}
 
 	listen = () => {

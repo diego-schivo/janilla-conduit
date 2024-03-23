@@ -33,17 +33,15 @@ class Settings {
 
 	errors;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'Settings');
-		}
-
-		if (engine.isRendering(this, 'errors')) {
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Settings';
+		}) || await e.match([this, 'errors'], (i, o) => {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
-			return this.errors;
-		}
+			o.value = this.errors;
+		});
 	}
 
 	listen = () => {

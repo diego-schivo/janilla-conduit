@@ -62,34 +62,28 @@ class Home {
 		return i;
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			this.activeTab = engine.app.currentUser ? 'feed' : 'all';
-			return await engine.render(this, 'Home');
-		}
-
-		if (engine.isRendering(this, 'banner'))
-			return !engine.app.currentUser ? await engine.render(this, 'Home-banner') : null;
-
-		if (engine.isRendering(this, 'tabs')) {
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			this.activeTab = e.app.currentUser ? 'feed' : 'all';
+			o.template = 'Home';
+		}) || await e.match([this, 'banner'], (i, o) => {
+			if (!e.app.currentUser)
+				o.template = 'Home-banner';
+		}) || await e.match([this, 'tabs'], (i, o) => {
 			this.tabs = new Tabs();
 			this.tabs.selector = () => this.selector()?.querySelector('.feed-toggle')?.firstElementChild;
 			this.tabs.items = this.tabItems;
-			return this.tabs;
-		}
-
-		if (engine.isRendering(this, 'articleList')) {
+			o.value = this.tabs;
+		}) || await e.match([this, 'articleList'], (i, o) => {
 			this.articleList = new ArticleList();
 			this.articleList.selector = () => this.selector()?.querySelector('.feed-toggle')?.nextElementSibling;
-			return this.articleList;
-		}
-
-		if (engine.isRendering(this, 'popularTags')) {
+			o.value = this.articleList;
+		}) || await e.match([this, 'popularTags'], (i, o) => {
 			this.popularTags = new PopularTags();
 			this.popularTags.selector = () => this.selector()?.querySelector('.sidebar')?.firstElementChild;
-			return this.popularTags;
-		}
+			o.value = this.popularTags;
+		});
 	}
 
 	listen = () => {
@@ -138,14 +132,13 @@ class PopularTags {
 
 	tags;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'PopularTags');
-		}
-
-		if (engine.isRendering(this, 'tags', true))
-			return await engine.render(engine.target, 'PopularTags-tag');
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = this.tags === undefined ? 'PopularTags' : `PopularTags-${this.tags.length ? 'nonempty' : 'empty'}`;
+		}) || await e.match([this, 'tags', 'number'], (i, o) => {
+			o.template = 'PopularTags-tag';
+		});
 	}
 
 	listen = () => {
@@ -159,7 +152,7 @@ class PopularTags {
 
 	handlePageLoad = async () => {
 		await this.fetchTags();
-		const h = await this.engine.render(this, `PopularTags-${this.tags.length ? 'nonempty' : 'empty'}`);
+		const h = await this.engine.render();
 		const e = this.selector();
 		if (e)
 			e.lastElementChild.outerHTML = h;

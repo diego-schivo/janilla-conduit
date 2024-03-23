@@ -41,35 +41,29 @@ class Editor {
 		return location.hash.split('/')[2];
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
+	render = async e => {
+		return await e.match([this], async (i, o) => {
+			this.engine = e.clone();
 			if (this.slug) {
-				const a = engine.app.api;
+				const a = e.app.api;
 				const s = await fetch(`${a.url}/articles/${this.slug}`, {
 					headers: a.headers
 				});
 				this.article = s.ok ? (await s.json()).article : null;
 			} else
 				this.article = null;
-			return await engine.render(this, 'Editor');
-		}
-
-		if (engine.isRendering(this, 'errors')) {
+			o.template = 'Editor';
+		}) || await e.match([this, 'errors'], (i, o) => {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
-			return this.errors;
-		}
-
-		if (engine.isRendering(this, 'tags')) {
+			o.value = this.errors;
+		}) || await e.match([this, 'tags'], (i, o) => {
 			this.tags = new TagsInput();
 			this.tags.selector = () => this.selector().querySelector('button').previousElementSibling;
-			return this.tags;
-		}
-
-		if (engine.isRendering(this, 'tagList')) {
-			return this.article?.tagList;
-		}
+			o.value = this.tags;
+		}) || await e.match([this, 'tagList'], (i, o) => {
+			o.value = this.article?.tagList;
+		});
 	}
 
 	listen = () => {
@@ -111,14 +105,13 @@ class TagsInput {
 	
 	engine;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'TagsInput');
-		}
-
-		if (engine.isRendering(this, 'tagList', true))
-			return await engine.render(engine.target, 'TagsInput-tag');
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'TagsInput';
+		}) || await e.match([this, 'tagList', 'number'], (i, o) => {
+			o.template = 'TagsInput-tag';
+		});
 	}
 
 	listen = () => {

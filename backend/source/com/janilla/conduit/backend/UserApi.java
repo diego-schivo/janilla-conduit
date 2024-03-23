@@ -125,11 +125,13 @@ public class UserApi {
 
 	@Handle(method = "PUT", path = "/api/user")
 	public Object update(Update update, User user) throws IOException {
+		System.out.println("update=" + update);
 		var u = update.user;
 		var v = new Validation();
 		v.setConfiguration(configuration);
 		var c = persistence.getCrud(User.class);
-		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
+//		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
+		if (u.username != null && !u.username.isBlank() && v.isSafe("username", u.username)
 				&& !u.username.equals(user.getUsername())) {
 			var i = c.find("username", u.username);
 			var w = i >= 0 ? c.read(i) : null;

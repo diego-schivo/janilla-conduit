@@ -37,11 +37,11 @@ class FavoriteButton {
 		return `${this.article.favorited ? 'Unfavorite' : 'Favorite'} Article <span class="counter">(${this.article.favoritesCount})</span>`;
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'FavoriteButton');
-		}
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'FavoriteButton';
+		});
 	}
 
 	listen = () => {
@@ -63,7 +63,7 @@ class FavoriteButton {
 			const a = (await s.json()).article;
 			['favorited', 'favoritesCount'].forEach(n => this.article[n] = a[n]);
 
-			this.selector().outerHTML = await this.render(this.engine);
+			this.selector().outerHTML = await this.engine.render();
 			this.listen();
 
 			this.selector().dispatchEvent(new CustomEvent('favoritetoggle', { bubbles: true }));

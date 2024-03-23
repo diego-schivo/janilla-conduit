@@ -35,21 +35,17 @@ class Layout {
 		return this.engine.app.currentPage;
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'Layout');
-		}
-
-		if (engine.isRendering(this, 'header')) {
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Layout';
+		}) || await e.match([this, 'header'], (i, o) => {
 			this.header = new Header();
-			return this.header;
-		}
-
-		if (engine.isRendering(this, 'footer')) {
+			o.value = this.header;
+		}) || await e.match([this, 'footer'], (i, o) => {
 			this.footer = new Footer();
-			return this.footer;
-		}
+			o.value = this.footer;
+		});
 	}
 
 	listen = () => {
@@ -90,9 +86,10 @@ class Header {
 				}];
 	}
 
-	render = async engine => {
+	/*
+	render = async e => {
 		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
+			this.engine = e.clone();
 			return await engine.render(this, 'Header');
 		}
 
@@ -103,13 +100,33 @@ class Header {
 			return await engine.render(i, 'Header-navitem');
 		}
 	}
+	*/
+
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Header';
+		}) || await e.match([this, 'navItems', 'number'], (i, o) => {
+			if (o.value.hash === location.hash)
+				o.value.active = 'active';
+			o.template = 'Header-navitem';
+		});
+	}
 }
 
 class Footer {
 
-	render = async engine => {
+	/*
+	render = async e => {
 		if (engine.isRendering(this))
 			return await engine.render(this, 'Footer');
+	}
+	*/
+
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			o.template = 'Footer';
+		});
 	}
 }
 

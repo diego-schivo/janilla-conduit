@@ -21,31 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
+import RenderEngine from './RenderEngine.js';
+import { TestBench } from './TestBench.js';
 
-import java.io.IOException;
+class ConduitTestingApp {
 
-import com.janilla.frontend.RenderEngine.Entry;
-import com.janilla.http.HttpExchange;
-import com.janilla.web.Error;
-import com.janilla.web.ExceptionHandlerFactory;
-import com.janilla.web.HandlerFactory;
+	testBench;
 
-public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
-
-	protected HandlerFactory mainFactory;
-
-	public void setMainFactory(HandlerFactory mainFactory) {
-		this.mainFactory = mainFactory;
+	run = async () => {
+		const e = new RenderEngine();
+		document.body.innerHTML = await e.render({ value: this });
+		this.listen();
 	}
 
-	@Override
-	protected void handle(Error error, HttpExchange exchange) throws IOException {
-		super.handle(error, exchange);
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			o.template = 'ConduitTestingApp';
+		}) || await e.match([this, 'testBench'], (i, o) => {
+			this.testBench = new TestBench();
+			this.testBench.selector = () => document.body.firstElementChild;
+			o.value = this.testBench;
+		});
+	}
 
-		if (exchange.getException() instanceof ValidationException e) {
-			var o = new Entry(null, e.getErrors(), null);
-			mainFactory.createHandler(o, exchange).accept(exchange);
-		}
+	listen = () => {
+		this.testBench.listen();
 	}
 }
+
+export default ConduitTestingApp;

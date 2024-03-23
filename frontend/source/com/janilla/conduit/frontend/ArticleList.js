@@ -34,11 +34,11 @@ class ArticleList {
 
 	pagination;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'ArticleList');
-		}
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = this.articlePreviews === undefined ? 'ArticleList' : `ArticleList-${this.articlePreviews.length ? 'nonempty' : 'empty'}`;
+		});
 	}
 
 	refresh = async () => {
@@ -47,7 +47,7 @@ class ArticleList {
 			return;
 		delete this.articlePreviews;
 		delete this.pagination;
-		const h = await this.render(this.engine);
+		const h = await this.engine.render();
 		e.outerHTML = h;
 		this.listen();
 		this.handlePageLoad();
@@ -73,7 +73,7 @@ class ArticleList {
 			this.pagination.pageNumber = 1;
 		} else
 			this.pagination = null;
-		const h = await this.engine.render(this, `ArticleList-${c ? 'nonempty' : 'empty'}`);
+		const h = await this.engine.render();
 		const e = this.selector();
 		if (e)
 			e.innerHTML = h;
@@ -86,7 +86,7 @@ class ArticleList {
 
 	handlePageSelect = async () => {
 		await this.fetchArticles();
-		const h = await this.engine.render(this.articlePreviews);
+		const h = await this.engine.render({ value: this.articlePreviews });
 		const e = this.selector();
 		e.querySelectorAll('.article-preview').forEach(p => p.remove());
 		e.insertAdjacentHTML('afterbegin', h);
@@ -124,31 +124,25 @@ class Preview {
 
 	favoriteButton;
 
-	render = async engine => {
-		if (engine.isRendering(this))
-			return await engine.render(this, 'ArticleList-Preview');
-
-		if (engine.isRendering(this, 'meta')) {
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			o.template = 'ArticleList-Preview';
+		}) || await e.match([this, 'meta'], (i, o) => {
 			this.meta = new ArticleMeta();
 			this.meta.selector = () => this.selector().firstElementChild;
-			return this.meta;
-		}
-
-		if (engine.isRendering(this.meta, 'content')) {
+			o.value = this.meta;
+		}) || await e.match([this.meta, 'content'], (i, o) => {
 			this.favoriteButton = new FavoriteButton();
 			this.favoriteButton.article = this.article;
 			this.meta.content = this.favoriteButton;
-			return this.favoriteButton;
-		}
-
-		if (engine.isRendering(this.favoriteButton, 'content'))
-			return this.article.favoritesCount;
-
-		if (engine.isRendering(this.favoriteButton, 'className'))
-			return `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
-
-		if (engine.isRendering(this, 'tagList', true))
-			return await engine.render(engine.target, 'ArticleList-Preview-tag');
+			o.value = this.favoriteButton;
+		}) || await e.match([this.favoriteButton, 'content'], (i, o) => {
+			o.value = this.article.favoritesCount;
+		}) || await e.match([this.favoriteButton, 'className'], (i, o) => {
+			o.value = `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
+		}) || await e.match([this.article, 'tagList', 'number'], (i, o) => {
+			o.template = 'ArticleList-Preview-tag';
+		});
 	}
 
 	listen = () => {
@@ -170,12 +164,13 @@ class Pagination {
 		return i;
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this))
-			return this.pagesCount > 1 ? await engine.render(this, 'ArticleList-Pagination') : null;
-
-		if (engine.isRendering(this, 'items', true))
-			return await engine.render(engine.target, 'ArticleList-Pagination-item');
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			if (this.pagesCount > 1)
+				o.template = 'ArticleList-Pagination';
+		}) || await e.match([this, 'items', 'number'], (i, o) => {
+			o.template = 'ArticleList-Pagination-item';
+		});
 	}
 
 	listen = () => {

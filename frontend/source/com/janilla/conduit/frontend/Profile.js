@@ -55,39 +55,35 @@ class Profile {
 		return i;
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			const a = engine.app.api;
+	render = async e => {
+		return await e.match([this], async (i, o) => {
+			this.engine = e.clone();
+			const a = e.app.api;
 			const s = await fetch(`${a.url}/profiles/${this.username}`, {
 				headers: a.headers
 			});
 			if (s.ok)
 				this.profile = (await s.json()).profile;
-			return await engine.render(this, 'Profile');
-		}
-
-		if (engine.isRendering(this, 'action')) {
+			o.template = 'Profile';
+		}) || await e.match([this, 'action'], (i, o) => {
 			if (this.profile.username === this.engine.app.currentUser?.username)
-				return await engine.render(this, 'Profile-edit');
-			this.followButton = new FollowButton();
-			this.followButton.user = this.profile;
-			this.followButton.selector = () => this.selector().querySelector('p').nextElementSibling;
-			return this.followButton;
-		}
-
-		if (engine.isRendering(this, 'tabs')) {
+				o.template = 'Profile-edit';
+			else {
+				this.followButton = new FollowButton();
+				this.followButton.user = this.profile;
+				this.followButton.selector = () => this.selector().querySelector('p').nextElementSibling;
+				o.value = this.followButton;
+			}
+		}) || await e.match([this, 'tabs'], (i, o) => {
 			this.tabs = new Tabs();
 			this.tabs.selector = () => this.selector().querySelector('.feed-toggle').firstElementChild;
 			this.tabs.items = this.tabItems;
-			return this.tabs;
-		}
-
-		if (engine.isRendering(this, 'articleList')) {
+			o.value = this.tabs;
+		}) || await e.match([this, 'articleList'], (i, o) => {
 			this.articleList = new ArticleList();
 			this.articleList.selector = () => this.selector().querySelector('.feed-toggle').nextElementSibling;
-			return this.articleList;
-		}
+			o.value = this.articleList;
+		});
 	}
 
 	listen = () => {

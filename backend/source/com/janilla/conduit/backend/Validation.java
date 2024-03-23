@@ -100,6 +100,7 @@ public class Validation {
 	boolean orThrow() {
 		if (errors.isEmpty())
 			return true;
+		System.out.println("errors=" + errors);
 		throw new ValidationException(errors);
 	}
 
@@ -110,6 +111,8 @@ public class Validation {
 	static Pattern otherSymbol = Pattern.compile("\\p{So}", Pattern.UNICODE_CHARACTER_CLASS);
 
 	boolean isEmoji(String name, String value) {
+		if (!Boolean.parseBoolean(configuration.getProperty("conduit.live-demo")))
+			return true;
 		if (value == null || value.isEmpty()
 				|| (value.startsWith(emojiPrefix) && value.endsWith(emojiSuffix)
 						&& otherSymbol

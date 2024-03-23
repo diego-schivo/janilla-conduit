@@ -29,18 +29,17 @@ class Tabs {
 
 	items;
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'Tabs');
-		}
-
-		if (engine.isRendering(this, 'items', true))
-			return await engine.render(engine.target, 'Tabs-item');
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'Tabs';
+		}) || await e.match([this, 'items', 'number'], (i, o) => {
+			o.template = 'Tabs-item';
+		});
 	}
 
 	refresh = async () => {
-		const h = await this.render(this.engine);
+		const h = await this.engine.render();
 		const e = this.selector();
 		if (e)
 			e.outerHTML = h;

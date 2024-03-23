@@ -37,11 +37,11 @@ class FollowButton {
 		return `${this.user.following ? 'Unfollow' : 'Follow'} ${this.user.username}`;
 	}
 
-	render = async engine => {
-		if (engine.isRendering(this)) {
-			this.engine = engine.clone();
-			return await engine.render(this, 'FollowButton');
-		}
+	render = async e => {
+		return await e.match([this], (i, o) => {
+			this.engine = e.clone();
+			o.template = 'FollowButton';
+		});
 	}
 
 	listen = () => {
@@ -63,7 +63,7 @@ class FollowButton {
 			const u = (await s.json()).profile;
 			this.user.following = u.following;
 
-			this.selector().outerHTML = await this.render(this.engine);
+			this.selector().outerHTML = await this.engine.render();
 			this.listen();
 
 			this.selector().dispatchEvent(new CustomEvent('followtoggle', { bubbles: true }));

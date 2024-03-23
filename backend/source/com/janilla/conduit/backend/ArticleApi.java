@@ -68,7 +68,9 @@ public class ArticleApi {
 		Reflection.copy(form.article, a);
 		a.setSlug(s);
 		a.setCreatedAt(Instant.now());
+		a.setUpdatedAt(a.getCreatedAt());
 		a.setAuthor(user.getId());
+		a.setTagList(a.getTagList() != null ? a.getTagList().stream().sorted().toList() : Collections.emptyList());
 		persistence.getCrud(Article.class).create(a);
 
 		return Map.of("article", a);
@@ -84,7 +86,7 @@ public class ArticleApi {
 
 	@Handle(method = "PUT", path = "/api/articles/([^/]*)")
 	public Object update(String slug, Form form, User user) throws IOException {
-		var s = toSlug(form.article.title);
+		var s = form.article.title != null ? toSlug(form.article.title) : slug;
 		validate(slug, s, form.article);
 
 		var c = persistence.getCrud(Article.class);
@@ -93,6 +95,7 @@ public class ArticleApi {
 			Reflection.copy(form.article, x);
 			x.setSlug(s);
 			x.setUpdatedAt(Instant.now());
+			x.setTagList(x.getTagList() != null ? x.getTagList().stream().sorted().toList() : Collections.emptyList());
 		}) : null;
 
 		return Collections.singletonMap("article", a);
@@ -108,15 +111,16 @@ public class ArticleApi {
 
 	@Handle(method = "GET", path = "/api/articles")
 	public Object list(Filter filter, Range range) throws IOException {
-		var t = filter.tag != null && !filter.tag.isBlank() ? new Object[] { filter.tag } : new Object[0];
-		var a = filter.author != null && !filter.author.isBlank()
+		var t = filter != null && filter.tag != null && !filter.tag.isBlank() ? new Object[] { filter.tag }
+				: new Object[0];
+		var a = filter != null && filter.author != null && !filter.author.isBlank()
 				? new Object[] { persistence.getCrud(User.class).find("username", filter.author) }
 				: new Object[0];
-		var f = filter.favorited != null && !filter.favorited.isBlank()
+		var f = filter != null && filter.favorited != null && !filter.favorited.isBlank()
 				? new Object[] { persistence.getCrud(User.class).find("username", filter.favorited) }
 				: new Object[0];
 		var p = persistence.getCrud(Article.class).filter(Map.of("tagList", t, "author", a, "favoriteList", f),
-				range.skip, range.limit);
+				range != null ? range.skip : 0, range != null ? range.limit : -1);
 		return Map.of("articles", persistence.getCrud(Article.class).read(p.ids()), "articlesCount", p.total());
 	}
 
@@ -149,6 +153,7 @@ public class ArticleApi {
 		var c = new Comment();
 		Reflection.copy(form.comment, c);
 		c.setCreatedAt(Instant.now());
+		c.setUpdatedAt(c.getCreatedAt());
 		c.setAuthor(user.getId());
 		c.setArticle(a);
 		persistence.getCrud(Comment.class).create(c);
@@ -206,14 +211,15 @@ public class ArticleApi {
 		var v = new Validation();
 		v.setConfiguration(configuration);
 		var c = persistence.getCrud(Article.class);
-		if (v.isNotBlank("title", article.title) && v.isNotTooLong("title", article.title, 100)
-				&& v.isSafe("title", article.title)) {
+		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
+				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {
 			var i = c.filter("slug", slug2);
 			var a = c.read(i).filter(x -> !x.getSlug().equals(slug1)).findFirst().orElse(null);
 			v.isUnique("title", a);
 		}
-		if (v.isNotBlank("description", article.description) && v.isNotTooLong("description", article.description, 200)
-				&& v.isSafe("description", article.description))
+		if ((slug2.equals(slug1) && article.description == null) || (v.isNotBlank("description", article.description)
+				&& v.isNotTooLong("description", article.description, 200)
+				&& v.isSafe("description", article.description)))
 			;
 		if (v.isNotBlank("body", article.body) && v.isNotTooLong("body", article.body, 2000)
 				&& v.isSafe("body", article.body))
