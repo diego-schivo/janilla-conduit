@@ -30,10 +30,10 @@ class Tabs {
 	items;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = 'Tabs';
-		}) || await e.match([this, 'items', 'number'], (i, o) => {
+		}) || await e.match([this, 'items', 'number'], (_, o) => {
 			o.template = 'Tabs-item';
 		});
 	}

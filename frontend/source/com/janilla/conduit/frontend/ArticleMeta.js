@@ -36,17 +36,8 @@ class ArticleMeta {
 		x.selector = () => this.selector().lastElementChild;
 	}
 
-	/*
 	render = async e => {
-		if (engine.isRendering(this))
-			return await engine.render(this, 'ArticleMeta');
-	}
-	*/
-
-	render = async e => {
-		return await e.match([this], (i, o) => {
-			o.template = 'ArticleMeta';
-		});
+		return await e.match([this], (_, o) => o.template = 'ArticleMeta');
 	}
 
 	listen = () => {

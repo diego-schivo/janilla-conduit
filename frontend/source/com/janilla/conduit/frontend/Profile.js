@@ -56,7 +56,7 @@ class Profile {
 	}
 
 	render = async e => {
-		return await e.match([this], async (i, o) => {
+		return await e.match([this], async (_, o) => {
 			this.engine = e.clone();
 			const a = e.app.api;
 			const s = await fetch(`${a.url}/profiles/${this.username}`, {
@@ -65,7 +65,7 @@ class Profile {
 			if (s.ok)
 				this.profile = (await s.json()).profile;
 			o.template = 'Profile';
-		}) || await e.match([this, 'action'], (i, o) => {
+		}) || await e.match([this, 'action'], (_, o) => {
 			if (this.profile.username === this.engine.app.currentUser?.username)
 				o.template = 'Profile-edit';
 			else {
@@ -74,12 +74,12 @@ class Profile {
 				this.followButton.selector = () => this.selector().querySelector('p').nextElementSibling;
 				o.value = this.followButton;
 			}
-		}) || await e.match([this, 'tabs'], (i, o) => {
+		}) || await e.match([this, 'tabs'], (_, o) => {
 			this.tabs = new Tabs();
 			this.tabs.selector = () => this.selector().querySelector('.feed-toggle').firstElementChild;
 			this.tabs.items = this.tabItems;
 			o.value = this.tabs;
-		}) || await e.match([this, 'articleList'], (i, o) => {
+		}) || await e.match([this, 'articleList'], (_, o) => {
 			this.articleList = new ArticleList();
 			this.articleList.selector = () => this.selector().querySelector('.feed-toggle').nextElementSibling;
 			o.value = this.articleList;

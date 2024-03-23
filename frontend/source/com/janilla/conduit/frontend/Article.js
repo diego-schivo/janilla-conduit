@@ -46,7 +46,7 @@ class Article {
 	}
 
 	render = async e => {
-		return await e.match([this], async (i, o) => {
+		return await e.match([this], async (_, o) => {
 			const a = e.app.api;
 			const s = await fetch(`${a.url}/articles/${this.slug}`, {
 				headers: a.headers
@@ -54,24 +54,24 @@ class Article {
 			if (s.ok)
 				this.article = (await s.json()).article;
 			o.template = 'Article';
-		}) || await e.match([this, 'actions1'], (i, o) => {
+		}) || await e.match([this, 'actions1'], (_, o) => {
 			this.actions1 = new Actions();
 			this.actions1.article = this.article;
 			this.actions1.selector = () => this.selector().querySelector('h1').nextElementSibling;
 			o.value = this.actions1;
-		}) || await e.match([this, 'body'], (i, o) => {
+		}) || await e.match([this.article, 'body'], (_, o) => {
 			o.value = formatMarkdownAsHTML(parseMarkdown(this.article.body));
-		}) || await e.match([this, 'actions2'], (i, o) => {
+		}) || await e.match([this, 'actions2'], (_, o) => {
 			this.actions2 = new Actions();
 			this.actions2.article = this.article;
 			this.actions2.selector = () => this.selector().querySelector('.article-actions').firstElementChild;
 			o.value = this.actions2;
-		}) || await e.match([this, 'comments'], (i, o) => {
+		}) || await e.match([this, 'comments'], (_, o) => {
 			this.comments = new Comments();
 			this.comments.article = this.article;
 			this.comments.selector = () => this.selector().querySelector('.article-actions').nextElementSibling;
 			o.value = this.comments;
-		}) || await e.match([this, 'tagList', 'number'], (i, o) => {
+		}) || await e.match([this.article, 'tagList', 'number'], (_, o) => {
 			o.template = 'Article-tag';
 		});
 	}
@@ -111,14 +111,14 @@ class Actions {
 	favoriteButton;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = 'Article-Actions';
-		}) || await e.match([this, 'meta'], (i, o) => {
+		}) || await e.match([this, 'meta'], (_, o) => {
 			this.meta = new ArticleMeta();
 			this.meta.selector = this.selector;
 			o.value = this.meta;
-		}) || await e.match([this.meta, 'content'], (i, o) => {
+		}) || await e.match([this.meta, 'content'], (_, o) => {
 			if (this.article.author.username === this.engine.app.currentUser?.username) {
 				this.meta.content = {
 					listen: () => {
@@ -138,12 +138,12 @@ class Actions {
 				o.template = 'Article-Actions-cannotModify';
 			}
 			o.value = this.meta.content;
-		}) || await e.match([this.meta.content, 'followButton'], (i, o) => {
+		}) || await e.match([this.meta.content, 'followButton'], (_, o) => {
 			this.followButton = new FollowButton();
 			this.followButton.user = this.article.author;
 			this.followButton.selector = () => this.meta.content.selector().firstElementChild;
 			o.value = this.followButton;
-		}) || await e.match([this.meta.content, 'favoriteButton'], (i, o) => {
+		}) || await e.match([this.meta.content, 'favoriteButton'], (_, o) => {
 			this.favoriteButton = new FavoriteButton();
 			this.favoriteButton.article = this.article;
 			this.favoriteButton.selector = () => this.meta.content.selector().lastElementChild;
@@ -193,15 +193,15 @@ class Comments {
 	cards;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = 'Article-Comments';
-		}) || await e.match([this, 'form'], (i, o) => {
+		}) || await e.match([this, 'form'], (_, o) => {
 			this.form = new CommentForm();
 			this.form.article = this.article;
 			this.form.selector = () => this.selector().firstElementChild.firstElementChild;
 			o.value = this.form;
-		}) || await e.match([this, 'cards'], async (i, o) => {
+		}) || await e.match([this, 'cards'], async (_, o) => {
 			const a = e.app.api;
 			const s = await fetch(`${a.url}/articles/${this.article.slug}/comments`, {
 				headers: a.headers
@@ -254,10 +254,10 @@ class CommentCard {
 	comment;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = 'Article-Comments-Card';
-		}) || await e.match([this, 'modOptions'], (i, o) => {
+		}) || await e.match([this, 'modOptions'], (_, o) => {
 			if (e.app.currentUser?.username === this.comment.author.username)
 				o.template = 'Article-Comments-Card-modOptions';
 		});
@@ -296,10 +296,10 @@ class CommentForm {
 	errors;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = `Article-Comments-Form-${this.engine.app.currentUser ? 'authenticated' : 'unauthenticated'}`;
-		}) || await e.match([this, 'errors'], (i, o) => {
+		}) || await e.match([this, 'errors'], (_, o) => {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().firstElementChild;
 			o.value = this.errors;

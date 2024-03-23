@@ -35,7 +35,7 @@ class ArticleList {
 	pagination;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = this.articlePreviews === undefined ? 'ArticleList' : `ArticleList-${this.articlePreviews.length ? 'nonempty' : 'empty'}`;
 		});
@@ -125,22 +125,22 @@ class Preview {
 	favoriteButton;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			o.template = 'ArticleList-Preview';
-		}) || await e.match([this, 'meta'], (i, o) => {
+		}) || await e.match([this, 'meta'], (_, o) => {
 			this.meta = new ArticleMeta();
 			this.meta.selector = () => this.selector().firstElementChild;
 			o.value = this.meta;
-		}) || await e.match([this.meta, 'content'], (i, o) => {
+		}) || await e.match([this.meta, 'content'], (_, o) => {
 			this.favoriteButton = new FavoriteButton();
 			this.favoriteButton.article = this.article;
 			this.meta.content = this.favoriteButton;
 			o.value = this.favoriteButton;
-		}) || await e.match([this.favoriteButton, 'content'], (i, o) => {
+		}) || await e.match([this.favoriteButton, 'content'], (_, o) => {
 			o.value = this.article.favoritesCount;
-		}) || await e.match([this.favoriteButton, 'className'], (i, o) => {
+		}) || await e.match([this.favoriteButton, 'className'], (_, o) => {
 			o.value = `${this.article.favorited ? 'btn-primary' : 'btn-outline-primary'} pull-xs-right`;
-		}) || await e.match([this.article, 'tagList', 'number'], (i, o) => {
+		}) || await e.match([this.article, 'tagList', 'number'], (_, o) => {
 			o.template = 'ArticleList-Preview-tag';
 		});
 	}
@@ -165,10 +165,10 @@ class Pagination {
 	}
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			if (this.pagesCount > 1)
 				o.template = 'ArticleList-Pagination';
-		}) || await e.match([this, 'items', 'number'], (i, o) => {
+		}) || await e.match([this, 'items', 'number'], (_, o) => {
 			o.template = 'ArticleList-Pagination-item';
 		});
 	}

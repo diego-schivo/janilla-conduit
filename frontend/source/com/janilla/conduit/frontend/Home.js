@@ -63,23 +63,23 @@ class Home {
 	}
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			this.activeTab = e.app.currentUser ? 'feed' : 'all';
 			o.template = 'Home';
-		}) || await e.match([this, 'banner'], (i, o) => {
+		}) || await e.match([this, 'banner'], (_, o) => {
 			if (!e.app.currentUser)
 				o.template = 'Home-banner';
-		}) || await e.match([this, 'tabs'], (i, o) => {
+		}) || await e.match([this, 'tabs'], (_, o) => {
 			this.tabs = new Tabs();
 			this.tabs.selector = () => this.selector()?.querySelector('.feed-toggle')?.firstElementChild;
 			this.tabs.items = this.tabItems;
 			o.value = this.tabs;
-		}) || await e.match([this, 'articleList'], (i, o) => {
+		}) || await e.match([this, 'articleList'], (_, o) => {
 			this.articleList = new ArticleList();
 			this.articleList.selector = () => this.selector()?.querySelector('.feed-toggle')?.nextElementSibling;
 			o.value = this.articleList;
-		}) || await e.match([this, 'popularTags'], (i, o) => {
+		}) || await e.match([this, 'popularTags'], (_, o) => {
 			this.popularTags = new PopularTags();
 			this.popularTags.selector = () => this.selector()?.querySelector('.sidebar')?.firstElementChild;
 			o.value = this.popularTags;
@@ -133,10 +133,10 @@ class PopularTags {
 	tags;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = this.tags === undefined ? 'PopularTags' : `PopularTags-${this.tags.length ? 'nonempty' : 'empty'}`;
-		}) || await e.match([this, 'tags', 'number'], (i, o) => {
+		}) || await e.match([this, 'tags', 'number'], (_, o) => {
 			o.template = 'PopularTags-tag';
 		});
 	}

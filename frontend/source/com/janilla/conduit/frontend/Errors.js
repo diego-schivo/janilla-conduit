@@ -36,10 +36,10 @@ class Errors {
 	}
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = 'Errors';
-		}) || await e.match([this, 'messages', 'number'], (i, o) => {
+		}) || await e.match([this, 'messages', 'number'], (_, o) => {
 			o.template = 'Errors-message';
 		});
 	}

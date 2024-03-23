@@ -42,7 +42,7 @@ class Editor {
 	}
 
 	render = async e => {
-		return await e.match([this], async (i, o) => {
+		return await e.match([this], async (_, o) => {
 			this.engine = e.clone();
 			if (this.slug) {
 				const a = e.app.api;
@@ -53,17 +53,15 @@ class Editor {
 			} else
 				this.article = null;
 			o.template = 'Editor';
-		}) || await e.match([this, 'errors'], (i, o) => {
+		}) || await e.match([this, 'errors'], (_, o) => {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
 			o.value = this.errors;
-		}) || await e.match([this, 'tags'], (i, o) => {
+		}) || await e.match([this, 'tags'], (_, o) => {
 			this.tags = new TagsInput();
 			this.tags.selector = () => this.selector().querySelector('button').previousElementSibling;
 			o.value = this.tags;
-		}) || await e.match([this, 'tagList'], (i, o) => {
-			o.value = this.article?.tagList;
-		});
+		}) || await e.match([this.tags, 'tagList'], (_, o) => o.value = this.article?.tagList);
 	}
 
 	listen = () => {
@@ -102,16 +100,15 @@ class Editor {
 class TagsInput {
 
 	selector;
-	
-	engine;
+
+	tagListEngine;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
-			this.engine = e.clone();
-			o.template = 'TagsInput';
-		}) || await e.match([this, 'tagList', 'number'], (i, o) => {
-			o.template = 'TagsInput-tag';
-		});
+		if (await e.match([this, 'tagList'], () => this.tagListEngine = e.clone()))
+			return false;
+
+		return await e.match([this], (_, o) => o.template = 'TagsInput')
+			|| await e.match([this, 'tagList', 'number'], (_, o) => o.template = 'TagsInput-tag');
 	}
 
 	listen = () => {
@@ -135,7 +132,7 @@ class TagsInput {
 		const i = e.currentTarget;
 		const d = i.nextElementSibling;
 		if (!d.querySelector(`[value="${i.value}"]`)) {
-			const h = await this.engine.render(i.value, 'TagsInput-tag');
+			const h = await this.tagListEngine.render({ key: -1, value: i.value });
 			d.insertAdjacentHTML('beforeend', h);
 		}
 		i.value = '';

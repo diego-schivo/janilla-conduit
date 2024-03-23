@@ -38,7 +38,7 @@ class FavoriteButton {
 	}
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = 'FavoriteButton';
 		});

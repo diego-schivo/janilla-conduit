@@ -85,9 +85,9 @@ class ConduitApp {
 	}
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			o.template = 'ConduitApp';
-		}) || await e.match([this, 'layout'], (i, o) => {
+		}) || await e.match([this, 'layout'], (_, o) => {
 			this.layout = new Layout();
 			this.layout.selector = this.selector;
 			o.value = this.layout;

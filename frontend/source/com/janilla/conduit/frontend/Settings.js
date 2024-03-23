@@ -34,10 +34,10 @@ class Settings {
 	errors;
 
 	render = async e => {
-		return await e.match([this], (i, o) => {
+		return await e.match([this], (_, o) => {
 			this.engine = e.clone();
 			o.template = 'Settings';
-		}) || await e.match([this, 'errors'], (i, o) => {
+		}) || await e.match([this, 'errors'], (_, o) => {
 			this.errors = new Errors();
 			this.errors.selector = () => this.selector().querySelector('form').previousElementSibling;
 			o.value = this.errors;
