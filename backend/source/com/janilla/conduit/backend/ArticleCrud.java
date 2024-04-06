@@ -35,7 +35,7 @@ class ArticleCrud extends Crud<Article> {
 	public boolean favorite(Long id, Instant createdAt, Long user) throws IOException {
 		return database.perform((ss, ii) -> {
 			var s = ii.perform("User.favoriteList", i -> i.add(id, user));
-			ii.perform("Article.favoriteList", i -> i.add(user, new Object[] { createdAt, id }));
+			ii.perform("Article.favoriteList", i -> i.add(user, (Object) new Object[] { createdAt, id }));
 			return s;
 		}, true);
 	}
@@ -43,7 +43,7 @@ class ArticleCrud extends Crud<Article> {
 	public boolean unfavorite(Long id, Instant createdAt, Long user) throws IOException {
 		return database.perform((ss, ii) -> {
 			var s = ii.perform("User.favoriteList", i -> i.remove(id, user));
-			ii.perform("Article.favoriteList", i -> i.remove(user, new Object[] { createdAt, id }));
+			ii.perform("Article.favoriteList", i -> i.remove(user, (Object) new Object[] { createdAt, id }));
 			return s;
 		}, true);
 	}

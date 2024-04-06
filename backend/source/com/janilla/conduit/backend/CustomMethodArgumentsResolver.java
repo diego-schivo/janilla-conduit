@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
+import com.janilla.io.IO;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodArgumentsResolver;
 
@@ -34,7 +35,7 @@ public class CustomMethodArgumentsResolver extends MethodArgumentsResolver {
 
 	@Override
 	protected Object resolveArgument(Type type, HttpExchange exchange, Supplier<String[]> values,
-			EntryList<String, String> entries, String body) {
+			EntryList<String, String> entries, IO.Supplier<String> body) {
 		if (type == User.class)
 			return ((ConduitBackendApp.Exchange) exchange).getUser();
 		return super.resolveArgument(type, exchange, values, entries, body);
