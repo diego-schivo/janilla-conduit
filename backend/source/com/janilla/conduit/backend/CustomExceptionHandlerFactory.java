@@ -25,7 +25,7 @@ package com.janilla.conduit.backend;
 
 import java.io.IOException;
 
-import com.janilla.frontend.RenderEngine.Entry;
+import com.janilla.frontend.RenderEngine;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Error;
 import com.janilla.web.ExceptionHandlerFactory;
@@ -44,7 +44,7 @@ public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 		super.handle(error, exchange);
 
 		if (exchange.getException() instanceof ValidationException e) {
-			var o = new Entry(null, e.getErrors(), null);
+			var o = RenderEngine.Entry.of(null, e.getErrors(), null);
 			mainFactory.createHandler(o, exchange).accept(exchange);
 		}
 	}
