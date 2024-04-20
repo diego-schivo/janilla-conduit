@@ -110,10 +110,10 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					default -> true;
 					}).map(k -> {
 //						System.out.println("k=" + k);
-						var g = Reflection.getter(Article.class, k);
+						var g = Reflection.property(Article.class, k);
 						Object v;
 						try {
-							v = g.invoke(a);
+							v = g.get(a);
 						} catch (ReflectiveOperationException f) {
 							throw new RuntimeException(f);
 						}
@@ -136,10 +136,10 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					case "hash", "id", "salt" -> false;
 					default -> true;
 					}).map(k -> {
-						var g = Reflection.getter(User.class, k);
+						var g = Reflection.property(User.class, k);
 						Object w;
 						try {
-							w = g.invoke(u);
+							w = g.get(u);
 						} catch (ReflectiveOperationException h) {
 							throw new RuntimeException(h);
 						}
