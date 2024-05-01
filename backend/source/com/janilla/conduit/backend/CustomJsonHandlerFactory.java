@@ -24,7 +24,6 @@
 package com.janilla.conduit.backend;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -43,23 +42,12 @@ import com.janilla.web.JsonHandlerFactory;
 
 public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 
-	Properties configuration;
+	public Properties configuration;
 
-	Persistence persistence;
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
-
-	public void setPersistence(Persistence persistence) {
-		this.persistence = persistence;
-	}
+	public Persistence persistence;
 
 	@Override
 	protected void render(Object object, HttpExchange exchange) throws IOException {
-//		var o = configuration.getProperty("conduit.api.cors.origin");
-//		exchange.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
-
 		super.render(object, exchange);
 	}
 
@@ -67,97 +55,70 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 	protected Iterator<JsonToken<?>> newJsonIterator(Object object, HttpExchange exchange) {
 		var i = new CustomReflectionJsonIterator();
 		i.setObject(object);
-		i.user = ((ConduitBackendApp.Exchange) exchange).user;
+		i.user = () -> ((ConduitBackendApp.Exchange) exchange).getUser();
 		return i;
 	}
 
-	class CustomReflectionJsonIterator extends ReflectionJsonIterator {
+	protected class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 
-		Supplier<User> user;
+		private Supplier<User> user;
 
 		@Override
 		public Iterator<JsonToken<?>> newValueIterator(Object object) {
 			var o = getStack().peek();
 			if (o instanceof Entry e) {
 				var n = (String) e.getKey();
-				object = switch (n) {
-				case "article" -> {
+				switch (n) {
+				case "article":
 					if (object instanceof Long i)
-						try {
-							object = persistence.getCrud(Article.class).read(i);
-						} catch (IOException f) {
-							throw new UncheckedIOException(f);
-						}
-					yield object;
-				}
-				case "author", "profile" -> {
+						object = persistence.getCrud(Article.class).read(i);
+					break;
+				case "author", "profile":
 					if (object instanceof Long i)
-						try {
-							object = persistence.getCrud(User.class).read(i);
-						} catch (IOException f) {
-							throw new UncheckedIOException(f);
-						}
-					yield object;
+						object = persistence.getCrud(User.class).read(i);
+					break;
 				}
-				default -> object;
-				};
 			}
 			if (object != null)
-				object = switch (object) {
-				case Article a -> {
+				switch (object) {
+				case Article a: {
 					var m = Reflection.properties(Article.class).filter(n -> switch (n) {
 					case "id" -> false;
 					default -> true;
 					}).map(k -> {
 //						System.out.println("k=" + k);
 						var g = Reflection.property(Article.class, k);
-						Object v;
-						try {
-							v = g.get(a);
-						} catch (ReflectiveOperationException f) {
-							throw new RuntimeException(f);
-						}
+						var v = g.get(a);
 						return new SimpleEntry<>(k, v);
 					}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
 					var u = user.get();
-					try {
-						m.put("favorited",
-								u != null && Arrays
-										.stream(persistence.getCrud(Article.class).filter("favoriteList", u.getId()))
-										.anyMatch(x -> x == a.getId()));
-						m.put("favoritesCount", persistence.getCrud(User.class).count("favoriteList", a.getId()));
-					} catch (IOException e) {
-						throw new UncheckedIOException(e);
-					}
-					yield m;
+					m.put("favorited", u != null && a.id() != null
+							&& Arrays.stream(persistence.getCrud(Article.class).filter("favoriteList", u.id()))
+									.anyMatch(x -> x == a.id()));
+					m.put("favoritesCount",
+							a.id() != null ? persistence.getCrud(User.class).count("favoriteList", a.id()) : 0);
+					object = m;
 				}
-				case User u -> {
+					break;
+				case User u: {
 					var m = Reflection.properties(User.class).filter(n -> switch (n) {
 					case "hash", "id", "salt" -> false;
 					default -> true;
 					}).map(k -> {
 						var g = Reflection.property(User.class, k);
-						Object w;
-						try {
-							w = g.get(u);
-						} catch (ReflectiveOperationException h) {
-							throw new RuntimeException(h);
-						}
+						var w = g.get(u);
 						return new SimpleEntry<>(k, w);
 					}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
 					var v = user.get();
-					try {
-						m.put("following",
-								v != null && Arrays
-										.stream(persistence.getCrud(User.class).filter("followList", v.getId()))
-										.anyMatch(x -> x == u.getId()));
-					} catch (IOException e) {
-						throw new UncheckedIOException(e);
-					}
-					yield m;
+					m.put("following",
+							v != null && Arrays.stream(persistence.getCrud(User.class).filter("followList", v.id()))
+									.anyMatch(x -> x == u.id()));
+					object = m;
 				}
-				default -> object;
-				};
+					break;
+				default:
+					break;
+				}
 			return super.newValueIterator(object);
 		}
 	}

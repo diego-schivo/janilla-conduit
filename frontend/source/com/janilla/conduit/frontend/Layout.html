@@ -1,13 +1,13 @@
-<!--${header}-->
-<!--${page}-->
-<!--${footer}-->
+<{header}>
+<{page}>
+<{footer}>
 
 <template id="Header">
 	<nav class="navbar navbar-light">
 		<div class="container">
 			<a class="navbar-brand" href="#/">conduit</a>
 			<ul class="nav navbar-nav pull-xs-right">
-				<!--${navItems}-->
+				<{navItems}>
 			</ul>
 		</div>
 	</nav>
@@ -29,8 +29,8 @@
 
 <template id="Header-navitem">
 	<li class="nav-item">
-		<a class="nav-link ${active}" href="${hash}">
-			<!--${text}-->
+		<a class="nav-link {active}" href="{hash}">
+			<{text}>
 		</a>
 	</li>
 </template>

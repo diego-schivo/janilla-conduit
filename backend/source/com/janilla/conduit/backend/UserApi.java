@@ -42,32 +42,23 @@ import com.janilla.web.Handle;
 
 public class UserApi {
 
-	Persistence persistence;
+	public Persistence persistence;
 
-	Properties configuration;
-
-	public void setPersistence(Persistence persistence) {
-		this.persistence = persistence;
-	}
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
+	public Properties configuration;
 
 	@Handle(method = "GET", path = "/api/user")
 	public Object getCurrent(User user) {
 		var h = Map.of("alg", "HS256", "typ", "JWT");
-		var p = user != null ? Map.of("loggedInAs", user.getEmail()) : null;
+		var p = user != null && user.email() != null ? Map.of("loggedInAs", user.email()) : null;
 		var t = p != null ? Jwt.generateToken(h, p, configuration.getProperty("conduit.jwt.key")) : null;
 		return Collections.singletonMap("user",
-				user != null ? new CurrentUser(user.getEmail(), t, user.getUsername(), user.getBio(), user.getImage())
-						: null);
+				user != null ? new CurrentUser(user.email(), t, user.username(), user.bio(), user.image()) : null);
 	}
 
 	@Handle(method = "POST", path = "/api/users/login")
 	public Object authenticate(Authenticate authenticate) throws IOException {
 		var v = new Validation();
-		v.setConfiguration(configuration);
+		v.configuration = configuration;
 		v.isNotBlank("email", authenticate.user.email);
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
@@ -77,9 +68,9 @@ public class UserApi {
 		{
 			var f = HexFormat.of();
 			var p = authenticate.user.password.toCharArray();
-			var s = u != null ? f.parseHex(u.getSalt()) : null;
+			var s = u != null ? f.parseHex(u.salt()) : null;
 			var h = s != null ? f.formatHex(hash(p, s)) : null;
-			v.isValid("email or password", u != null && h.equals(u.getHash()));
+			v.isValid("email or password", u != null && h.equals(u.hash()));
 			v.orThrow();
 		}
 		return getCurrent(u);
@@ -89,7 +80,7 @@ public class UserApi {
 	public Object register(Register register) throws IOException {
 		var u = register.user;
 		var v = new Validation();
-		v.setConfiguration(configuration);
+		v.configuration = configuration;
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
 			var c = persistence.getCrud(User.class);
 			var i = c.find("username", u.username);
@@ -112,14 +103,14 @@ public class UserApi {
 				throw new ValidationException("existing users", "are too many (" + c + ")");
 		}
 
-		var w = new User();
-		Reflection.copy(u, w);
-		setHashAndSalt(w, u.password);
-		if (w.getImage() == null || w.getImage().isBlank())
-			w.setImage(
+		var w = new User(null, null, null, null, null, null, null);
+		w = Reflection.copy(u, w);
+		w = setHashAndSalt(w, u.password);
+		if (w.image() == null || w.image().isBlank())
+			w = new User(w.id(), w.email(), w.hash(), w.salt(), w.username(), w.bio(),
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600)) + "</text></svg>");
-		persistence.getCrud(User.class).create(w);
+		w = persistence.getCrud(User.class).create(w);
 		return getCurrent(w);
 	}
 
@@ -128,16 +119,16 @@ public class UserApi {
 		System.out.println("update=" + update);
 		var u = update.user;
 		var v = new Validation();
-		v.setConfiguration(configuration);
+		v.configuration = configuration;
 		var c = persistence.getCrud(User.class);
 //		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 		if (u.username != null && !u.username.isBlank() && v.isSafe("username", u.username)
-				&& !u.username.equals(user.getUsername())) {
+				&& !u.username.equals(user.username())) {
 			var i = c.find("username", u.username);
 			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("username", w);
 		}
-		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email) && !u.email.equals(user.getEmail())) {
+		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email) && !u.email.equals(user.email())) {
 			var i = c.find("email", u.email);
 			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("email", w);
@@ -146,24 +137,25 @@ public class UserApi {
 		v.isSafe("bio", u.bio);
 		v.isSafe("password", u.password);
 		v.orThrow();
-		var w = c.update(user.getId(), x -> {
-			Reflection.copy(u, x, n -> !n.equals("id"));
+		var w = c.update(user.id(), x -> {
+			x = Reflection.copy(u, x);
 			if (u.password != null && !u.password.isBlank())
-				setHashAndSalt(x, u.password);
+				x = setHashAndSalt(x, u.password);
+			return x;
 		});
 		return getCurrent(w);
 	}
 
 	static Random random = new SecureRandom();
 
-	static void setHashAndSalt(User user, String password) {
+	static User setHashAndSalt(User user, String password) {
 		var p = password.toCharArray();
 		var s = new byte[16];
 		random.nextBytes(s);
 		var h = hash(p, s);
 		var f = HexFormat.of();
-		user.setHash(f.formatHex(h));
-		user.setSalt(f.formatHex(s));
+		return new User(user.id(), user.email(), f.formatHex(h), f.formatHex(s), user.username(), user.bio(),
+				user.image());
 	}
 
 	static byte[] hash(char[] password, byte[] salt) {

@@ -29,66 +29,6 @@ import com.janilla.persistence.Index;
 import com.janilla.persistence.Store;
 
 @Store
-public class Comment {
-
-	private Long id;
-
-	private Instant createdAt;
-
-	private Instant updatedAt;
-
-	private String body;
-
-	private Long author;
-
-	@Index(sort = "-createdAt")
-	private Long article;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public Instant getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(Instant createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public Instant getUpdatedAt() {
-		return updatedAt;
-	}
-
-	public void setUpdatedAt(Instant updatedAt) {
-		this.updatedAt = updatedAt;
-	}
-
-	public String getBody() {
-		return body;
-	}
-
-	public void setBody(String body) {
-		this.body = body;
-	}
-
-	public Long getAuthor() {
-		return author;
-	}
-
-	public void setAuthor(Long author) {
-		this.author = author;
-	}
-
-	public Long getArticle() {
-		return article;
-	}
-
-	public void setArticle(Long article) {
-		this.article = article;
-	}
+public record Comment(Long id, Instant createdAt, Instant updatedAt, String body, Long author,
+		@Index(sort = "-createdAt") Long article) {
 }

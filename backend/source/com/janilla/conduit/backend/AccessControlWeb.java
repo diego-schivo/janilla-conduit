@@ -34,17 +34,9 @@ import com.janilla.web.Handle;
 
 public class AccessControlWeb {
 
-	Properties configuration;
+	public Properties configuration;
 
-	AnnotationDrivenToMethodInvocation toInvocation;
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
-
-	public void setToInvocation(AnnotationDrivenToMethodInvocation toInvocation) {
-		this.toInvocation = toInvocation;
-	}
+	public AnnotationDrivenToMethodInvocation toInvocation;
 
 	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {

@@ -45,27 +45,27 @@ public class ConduitFullstackApp {
 			try (var s = a.getClass().getResourceAsStream("configuration.properties")) {
 				c.load(s);
 			}
-			a.setConfiguration(c);
+			a.configuration = c;
 		}
 		a.getBackend().getPersistence();
 
 		var s = a.new Server();
-		s.setPort(Integer.parseInt(a.getConfiguration().getProperty("conduit.fullstack.server.port")));
+		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port")));
 		s.setHandler(a.getHandler());
 		s.run();
 	}
 
-	Properties configuration;
+	public Properties configuration;
 
 	Supplier<ConduitBackendApp> backend = Lazy.of(() -> {
 		var a = new ConduitBackendApp();
-		a.setConfiguration(configuration);
+		a.configuration = configuration;
 		return a;
 	});
 
 	Supplier<ConduitFrontendApp> frontend = Lazy.of(() -> {
 		var a = new ConduitFrontendApp();
-		a.setConfiguration(configuration);
+		a.configuration = configuration;
 		return a;
 	});
 
@@ -91,14 +91,6 @@ public class ConduitFullstackApp {
 		};
 	});
 
-	public Properties getConfiguration() {
-		return configuration;
-	}
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
-
 	public ConduitBackendApp getBackend() {
 		return backend.get();
 	}
@@ -111,7 +103,7 @@ public class ConduitFullstackApp {
 		return handler.get();
 	}
 
-	class Server extends HttpServer {
+	public class Server extends HttpServer {
 
 		@Override
 		protected HttpExchange newExchange(HttpRequest request) {

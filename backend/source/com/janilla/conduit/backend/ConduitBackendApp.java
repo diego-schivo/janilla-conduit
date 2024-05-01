@@ -24,7 +24,6 @@
 package com.janilla.conduit.backend;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -49,19 +48,21 @@ public class ConduitBackendApp {
 			try (var s = a.getClass().getResourceAsStream("configuration.properties")) {
 				c.load(s);
 			}
-			a.setConfiguration(c);
+			a.configuration = c;
 		}
 		a.getPersistence();
 
 		var s = a.new Server();
-		s.setPort(Integer.parseInt(a.getConfiguration().getProperty("conduit.backend.server.port")));
+		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.backend.server.port")));
 		s.setHandler(a.getHandler());
 		s.run();
 	}
 
-	Properties configuration;
+	public Properties configuration;
 
-	IO.Supplier<Persistence> persistence = IO.Lazy.of(() -> {
+	public AnnotationDrivenToMethodInvocation toInvocation;
+
+	private Supplier<Persistence> persistence = Lazy.of(() -> {
 		var b = new CustomPersistenceBuilder();
 		{
 			var p = configuration.getProperty("conduit.database.file");
@@ -73,38 +74,17 @@ public class ConduitBackendApp {
 		return b.build();
 	});
 
-	AnnotationDrivenToMethodInvocation toInvocation;
-
-	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
-		var b = new HandlerBuilder();
-		return b.build();
-	});
-
-	public Properties getConfiguration() {
-		return configuration;
-	}
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
+	private Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> new HandlerBuilder().build());
 
 	public Persistence getPersistence() {
-		try {
-			return persistence.get();
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
-
-	public AnnotationDrivenToMethodInvocation getToInvocation() {
-		return toInvocation;
+		return persistence.get();
 	}
 
 	public IO.Consumer<HttpExchange> getHandler() {
 		return handler.get();
 	}
 
-	class Server extends HttpServer {
+	public class Server extends HttpServer {
 
 		@Override
 		protected HttpExchange newExchange(HttpRequest request) {
@@ -114,19 +94,15 @@ public class ConduitBackendApp {
 
 	public class Exchange extends HttpExchange {
 
-		Supplier<User> user = Lazy.of(() -> {
+		private Supplier<User> user = Lazy.of(() -> {
 			var a = getRequest().getHeaders().get("Authorization");
 			var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
-			var p = t != null ? Jwt.verifyToken(t, getConfiguration().getProperty("conduit.jwt.key")) : null;
+			var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
 			var e = p != null ? (String) p.get("loggedInAs") : null;
-			try {
-				var c = getPersistence().getCrud(User.class);
-				var i = e != null ? c.find("email", e) : -1;
-				var u = i >= 0 ? c.read(i) : null;
-				return u;
-			} catch (IOException f) {
-				throw new UncheckedIOException(f);
-			}
+			var c = getPersistence().getCrud(User.class);
+			var i = e != null ? c.find("email", e) : -1;
+			var u = i >= 0 ? c.read(i) : null;
+			return u;
 		});
 
 		public User getUser() {
@@ -134,8 +110,7 @@ public class ConduitBackendApp {
 		}
 	}
 
-	class HandlerBuilder extends ApplicationHandlerBuilder {
-
+	public class HandlerBuilder extends ApplicationHandlerBuilder {
 		{
 			application = ConduitBackendApp.this;
 		}

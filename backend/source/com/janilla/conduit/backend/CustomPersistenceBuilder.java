@@ -23,7 +23,6 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -41,11 +40,18 @@ import com.janilla.util.Util;
 class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
 	@Override
-	public Persistence build() throws IOException {
+	public Persistence build() {
 		var a = (ConduitBackendApp) application;
-		var s = Boolean.parseBoolean(a.getConfiguration().getProperty("conduit.database.seed"));
+		var s = Boolean.parseBoolean(a.configuration.getProperty("conduit.database.seed"));
 		var e = Files.exists(file);
 		var p = super.build();
+		p.setTypeResolver(x -> {
+			try {
+				return Class.forName("com.janilla.conduit.backend." + x.replace('.', '$'));
+			} catch (ClassNotFoundException f) {
+				throw new RuntimeException(f);
+			}
+		});
 		if (s && !e)
 			populate(p);
 		return p;
@@ -53,32 +59,25 @@ class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
 	static List<String> w = new ArrayList<>(Validation.safeWords);
 
-	void populate(Persistence p) throws IOException {
+	void populate(Persistence p) {
 		if (p.getCrud(Article.class).count() > 0)
 			return;
 		var r = ThreadLocalRandom.current();
 		var tags = Randomize.elements(5, 15, w).distinct().toList();
 		for (var i = r.nextInt(6, 11); i > 0; i--) {
-			var u = new User();
 			var n = Randomize.phrase(2, 2, () -> Util.capitalizeFirstChar(Randomize.element(w)));
-			u.setUsername(n);
-			u.setEmail(n.toLowerCase().replace(' ', '.') + "@lorem.ipsum");
-			UserApi.setHashAndSalt(u, n.toLowerCase().substring(0, n.indexOf(' ')));
-			u.setImage(
+			var u = new User(null, n.toLowerCase().replace(' ', '.') + "@lorem.ipsum", null, null, n, null,
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600 + r.nextInt(0x50))) + "</text></svg>");
-			p.getCrud(User.class).create(u);
+			u = UserApi.setHashAndSalt(u, n.toLowerCase().substring(0, n.indexOf(' ')));
+			u = p.getCrud(User.class).create(u);
 			for (var j = r.nextInt(0, 5); j > 0; j--) {
-				var a = new Article();
-				a.setAuthor(u.getId());
-				a.setTitle(Util.capitalizeFirstChar(Randomize.phrase(2, 6, () -> Randomize.element(w))));
-				a.setSlug(a.getTitle().toLowerCase().replace(' ', '-'));
-				a.setDescription(Randomize.sentence(3, 10, () -> Randomize.element(w)));
-				a.setBody(nextBody());
-				a.setTagList(Randomize.elements(1, 5, tags).distinct().toList());
-				a.setCreatedAt(Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
-						OffsetDateTime.now(ZoneOffset.UTC).toInstant()));
-				a.setUpdatedAt(a.getCreatedAt());
+				var t = Util.capitalizeFirstChar(Randomize.phrase(2, 6, () -> Randomize.element(w)));
+				var c = Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
+						OffsetDateTime.now(ZoneOffset.UTC).toInstant());
+				var a = new Article(null, t.toLowerCase().replace(' ', '-'), t,
+						Randomize.sentence(3, 10, () -> Randomize.element(w)), nextBody(),
+						Randomize.elements(1, 5, tags).distinct().toList(), c, c, u.id());
 				p.getCrud(Article.class).create(a);
 			}
 		}
@@ -87,17 +86,15 @@ class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 			var a = p.getCrud(Article.class).read(1 + r.nextLong(p.getCrud(Article.class).count()));
 			var j = r.nextInt(1, 8);
 			if ((j & 1) != 0) {
-				var c = new Comment();
-				c.setCreatedAt(Randomize.instant(a.getCreatedAt(), OffsetDateTime.now(ZoneOffset.UTC).toInstant()));
-				c.setBody(Randomize.sentence(3, 10, () -> Randomize.element(w)));
-				c.setAuthor(u.getId());
-				c.setArticle(a.getId());
-				p.getCrud(Comment.class).create(c);
+				var d = Randomize.instant(a.createdAt(), OffsetDateTime.now(ZoneOffset.UTC).toInstant());
+				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(w)), u.id(),
+						a.id());
+				c = p.getCrud(Comment.class).create(c);
 			}
 			if ((j & 2) != 0)
-				((ArticleCrud) p.getCrud(Article.class)).favorite(a.getId(), a.getCreatedAt(), u.getId());
+				((ArticleCrud) p.getCrud(Article.class)).favorite(a.id(), a.createdAt(), u.id());
 			if ((j & 4) != 0)
-				((UserCrud) p.getCrud(User.class)).follow(a.getAuthor(), u.getId());
+				((UserCrud) p.getCrud(User.class)).follow(a.author(), u.id());
 		}
 	}
 

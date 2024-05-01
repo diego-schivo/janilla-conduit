@@ -30,11 +30,7 @@ import com.janilla.web.Handle;
 
 public class TagApi {
 
-	Persistence persistence;
-
-	public void setPersistence(Persistence persistence) {
-		this.persistence = persistence;
-	}
+	public Persistence persistence;
 
 	@Handle(method = "GET", path = "/api/tags")
 	public Tags tags() throws IOException {

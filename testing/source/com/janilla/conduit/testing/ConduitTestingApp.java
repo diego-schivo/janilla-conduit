@@ -46,16 +46,16 @@ public class ConduitTestingApp {
 			try (var s = a.getClass().getResourceAsStream("configuration.properties")) {
 				c.load(s);
 			}
-			a.setConfiguration(c);
+			a.configuration = c;
 		}
 
 		var s = a.new Server();
-		s.setPort(Integer.parseInt(a.getConfiguration().getProperty("conduit.testing.server.port")));
+		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port")));
 		s.setHandler(a.getHandler());
 		s.run();
 	}
 
-	Properties configuration;
+	public Properties configuration;
 
 	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
 		var b = new ApplicationHandlerBuilder();
@@ -76,14 +76,6 @@ public class ConduitTestingApp {
 		};
 	});
 
-	public Properties getConfiguration() {
-		return configuration;
-	}
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
-
 	public IO.Consumer<HttpExchange> getHandler() {
 		return handler.get();
 	}
@@ -93,7 +85,7 @@ public class ConduitTestingApp {
 		return new Object();
 	}
 
-	class Server extends HttpServer {
+	public class Server extends HttpServer {
 
 		@Override
 		protected HttpExchange newExchange(HttpRequest request) {

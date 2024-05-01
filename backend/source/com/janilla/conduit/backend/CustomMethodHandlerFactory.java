@@ -32,11 +32,7 @@ import com.janilla.web.MethodInvocation;
 
 public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
-	Properties configuration;
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
+	public Properties configuration;
 
 	@Override
 	protected void handle(MethodInvocation invocation, HttpExchange exchange) throws IOException {

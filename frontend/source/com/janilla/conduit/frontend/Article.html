@@ -1,30 +1,30 @@
 <div class="article-page">
 	<div class="banner">
 		<div class="container">
-			<h1>${article.title}</h1>
-			<!--${actions1}-->
+			<h1>{article.title}</h1>
+			<{actions1}>
 		</div>
 	</div>
 	<div class="container page">
 		<div class="row article-content">
 			<div class="col-md-12">
-				<p>${article.description}</p>
-				<!--${article.body}-->
+				<p>{article.description}</p>
+				<{article.body}>
 				<ul class="tag-list">
-					<!--${article.tagList}-->
+					<{article.tagList}>
 				</ul>
 			</div>
 		</div>
 		<hr />
 		<div class="article-actions">
-			<!--${actions2}-->
+			<{actions2}>
 		</div>
-		<!--${comments}-->
+		<{comments}>
 	</div>
 </div>
 
 <template id="Article-Actions">
-	<!--${meta}-->
+	<{meta}>
 </template>
 
 <template id="Article-Actions-canModify">
@@ -40,20 +40,20 @@
 
 <template id="Article-Actions-cannotModify">
 	<span>
-		<!--${followButton}-->
-		<!--${favoriteButton}-->
+		<{followButton}>
+		<{favoriteButton}>
 	</span>
 </template>
 
 <template id="Article-tag">
-	<li class="tag-default tag-pill tag-outline">${}</li>
+	<li class="tag-default tag-pill tag-outline">{}</li>
 </template>
 
 <template id="Article-Comments">
 	<div class="row">
 		<div class="col-xs-12 col-md-8 offset-md-2">
-			<!--${form}-->
-			<!--${cards}-->
+			<{form}>
+			<{cards}>
 		</div>
 	</div>
 </template>
@@ -61,16 +61,16 @@
 <template id="Article-Comments-Card">
 	<div class="card">
 		<div class="card-block">
-			<p class="card-text">${comment.body}</p>
+			<p class="card-text">{comment.body}</p>
 		</div>
 		<div class="card-footer">
-			<a href="#/@${comment.author.username}" class="comment-author">
-				<img src="<!--${comment.author.image}-->" class="comment-author-img" />
+			<a href="#/@{comment.author.username}" class="comment-author">
+				<img src="<{comment.author.image}>" class="comment-author-img" />
 			</a>
 			&nbsp;
-			<a href="#/@${comment.author.username}" class="comment-author">${comment.author.username}</a>
-			<span class="date-posted">${comment.createdAt}</span>
-			<!--${modOptions}-->
+			<a href="#/@{comment.author.username}" class="comment-author">{comment.author.username}</a>
+			<span class="date-posted">{comment.createdAt}</span>
+			<{modOptions}>
 		</div>
 	</div>
 </template>
@@ -83,13 +83,13 @@
 
 <template id="Article-Comments-Form-authenticated">
 	<div>
-		<!--${errors}-->
+		<{errors}>
 		<form class="card comment-form">
 			<div class="card-block">
 				<textarea class="form-control" placeholder="Write a comment..." rows="3" name="body"></textarea>
 			</div>
 			<div class="card-footer">
-				<img src="<!--${currentUser.image}-->" class="comment-author-img" />
+				<img src="<{currentUser.image}>" class="comment-author-img" />
 				<button class="btn btn-sm btn-primary">Post Comment</button>
 			</div>
 		</form>

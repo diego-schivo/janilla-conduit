@@ -33,18 +33,14 @@ import com.janilla.web.HandlerFactory;
 
 public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 
-	protected HandlerFactory mainFactory;
-
-	public void setMainFactory(HandlerFactory mainFactory) {
-		this.mainFactory = mainFactory;
-	}
+	public HandlerFactory mainFactory;
 
 	@Override
 	protected void handle(Error error, HttpExchange exchange) throws IOException {
 		super.handle(error, exchange);
 
 		if (exchange.getException() instanceof ValidationException e) {
-			var o = RenderEngine.Entry.of(null, e.getErrors(), null);
+			var o = RenderEngine.Entry.of(null, e.errors, null);
 			mainFactory.createHandler(o, exchange).accept(exchange);
 		}
 	}

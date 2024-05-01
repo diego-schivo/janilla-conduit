@@ -23,81 +23,10 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.persistence.Store;
 import com.janilla.persistence.Index;
+import com.janilla.persistence.Store;
 
 @Store
-public class User {
-
-	private Long id;
-
-	@Index
-	private String email;
-
-	private String hash;
-
-	private String salt;
-
-	@Index
-	private String username;
-
-	private String bio;
-
-	private String image;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getHash() {
-		return hash;
-	}
-
-	public void setHash(String hash) {
-		this.hash = hash;
-	}
-
-	public String getSalt() {
-		return salt;
-	}
-
-	public void setSalt(String salt) {
-		this.salt = salt;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getBio() {
-		return bio;
-	}
-
-	public void setBio(String bio) {
-		this.bio = bio;
-	}
-
-	public String getImage() {
-		return image;
-	}
-
-	public void setImage(String image) {
-		this.image = image;
-	}
+public record User(Long id, @Index String email, String hash, String salt, @Index String username, String bio,
+		String image) {
 }

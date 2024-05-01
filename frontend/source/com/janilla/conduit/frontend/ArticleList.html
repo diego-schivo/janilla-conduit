@@ -7,36 +7,36 @@
 </template>
 
 <template id="ArticleList-nonempty">
-	<!--${articlePreviews}-->
-	<!--${pagination}-->
+	<{articlePreviews}>
+	<{pagination}>
 </template>
 
 <template id="ArticleList-Preview">
 	<div class="article-preview">
-		<!--${meta}-->
-		<a href="#/article/${article.slug}" class="preview-link">
-			<h1>${article.title}</h1>
-			<p>${article.description}</p>
+		<{meta}>
+		<a href="#/article/{article.slug}" class="preview-link">
+			<h1>{article.title}</h1>
+			<p>{article.description}</p>
 			<span>Read more...</span>
 			<ul class="tag-list">
-				<!--${article.tagList}-->
+				<{article.tagList}>
 			</ul>
 		</a>
 	</div>
 </template>
 
 <template id="ArticleList-Preview-tag">
-	<li class="tag-default tag-pill tag-outline">${}</li>
+	<li class="tag-default tag-pill tag-outline">{}</li>
 </template>
 
 <template id="ArticleList-Pagination">
 	<ul class="pagination">
-		<!--${items}-->
+		<{items}>
 	</ul>
 </template>
 
 <template id="ArticleList-Pagination-item">
-	<li class="page-item ${active}">
-		<a class="page-link" href="">${number}</a>
+	<li class="page-item {active}">
+		<a class="page-link" href="">{number}</a>
 	</li>
 </template>

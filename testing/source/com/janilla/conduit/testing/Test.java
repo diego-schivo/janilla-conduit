@@ -36,18 +36,14 @@ public class Test {
 
 	static ConduitFullstackApp fullstack;
 
-	Properties configuration;
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
+	public Properties configuration;
 
 	@Handle(method = "POST", path = "/test/start")
 	public void start() throws IOException {
 		if (fullstack != null)
 			throw new RuntimeException();
 		fullstack = new ConduitFullstackApp();
-		fullstack.setConfiguration(configuration);
+		fullstack.configuration = configuration;
 		{
 			var p = configuration.getProperty("conduit.database.file");
 			if (p.startsWith("~"))

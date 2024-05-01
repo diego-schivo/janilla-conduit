@@ -41,17 +41,9 @@ import com.janilla.web.Handle;
 
 public class ArticleApi {
 
-	Properties configuration;
+	public Properties configuration;
 
-	Persistence persistence;
-
-	public void setConfiguration(Properties configuration) {
-		this.configuration = configuration;
-	}
-
-	public void setPersistence(Persistence persistence) {
-		this.persistence = persistence;
-	}
+	public Persistence persistence;
 
 	@Handle(method = "POST", path = "/api/articles")
 	public Object create(Form form, User user) throws IOException {
@@ -64,14 +56,14 @@ public class ArticleApi {
 				throw new ValidationException("existing articles", "are too many (" + c + ")");
 		}
 
-		var a = new Article();
-		Reflection.copy(form.article, a);
-		a.setSlug(s);
-		a.setCreatedAt(Instant.now());
-		a.setUpdatedAt(a.getCreatedAt());
-		a.setAuthor(user.getId());
-		a.setTagList(a.getTagList() != null ? a.getTagList().stream().sorted().toList() : Collections.emptyList());
-		persistence.getCrud(Article.class).create(a);
+		var n = Instant.now();
+		var a = new Article(null, s, null, null, null,
+				form.article.tagList() != null ? form.article.tagList().stream().sorted().toList()
+						: Collections.emptyList(),
+				n, n, user.id());
+		a = Reflection.copy(form.article, a, x -> !x.equals("id") && !x.equals("slug") && !x.equals("tagList")
+				&& !x.equals("createdAt") && !x.equals("updatedAt") && !x.equals("author"));
+		a = persistence.getCrud(Article.class).create(a);
 
 		return Map.of("article", a);
 	}
@@ -92,10 +84,12 @@ public class ArticleApi {
 		var c = persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
 		var a = i > 0 ? c.update(i, x -> {
-			Reflection.copy(form.article, x);
-			x.setSlug(s);
-			x.setUpdatedAt(Instant.now());
-			x.setTagList(x.getTagList() != null ? x.getTagList().stream().sorted().toList() : Collections.emptyList());
+			x = new Article(x.id(), s, null, null, null,
+					form.article.tagList() != null ? form.article.tagList().stream().sorted().toList()
+							: Collections.emptyList(),
+					x.createdAt(), Instant.now(), x.author());
+			return Reflection.copy(form.article, x, y -> !y.equals("slug") && !y.equals("tagList")
+					&& !y.equals("createdAt") && !y.equals("updatedAt") && !y.equals("author"));
 		}) : null;
 
 		return Collections.singletonMap("article", a);
@@ -126,7 +120,7 @@ public class ArticleApi {
 
 	@Handle(method = "GET", path = "/api/articles/feed")
 	public Object listFeed(Range range, User user) throws IOException {
-		var u = persistence.getCrud(User.class).filter("followList", user.getId());
+		var u = persistence.getCrud(User.class).filter("followList", user.id());
 		var p = u.length > 0 ? persistence.getCrud(Article.class).filter("author", range.skip, range.limit,
 				Arrays.stream(u).boxed().toArray()) : Page.empty();
 		return Map.of("articles", persistence.getCrud(Article.class).read(p.ids()), "articlesCount", p.total());
@@ -135,7 +129,7 @@ public class ArticleApi {
 	@Handle(method = "POST", path = "/api/articles/([^/]*)/comments")
 	public Object createComment(String slug, CommentForm form, User user) throws IOException {
 		var v = new Validation();
-		v.setConfiguration(configuration);
+		v.configuration = configuration;
 		if (v.isNotBlank("body", form.comment.body))
 			v.isSafe("body", form.comment.body);
 		v.orThrow();
@@ -150,13 +144,10 @@ public class ArticleApi {
 		if (a <= 0)
 			throw new RuntimeException();
 
-		var c = new Comment();
-		Reflection.copy(form.comment, c);
-		c.setCreatedAt(Instant.now());
-		c.setUpdatedAt(c.getCreatedAt());
-		c.setAuthor(user.getId());
-		c.setArticle(a);
-		persistence.getCrud(Comment.class).create(c);
+		var n = Instant.now();
+		var c = new Comment(null, n, n, null, user.id(), a);
+		c = Reflection.copy(form.comment, c, x -> x.equals("body"));
+		c = persistence.getCrud(Comment.class).create(c);
 
 		return Map.of("comment", c);
 	}
@@ -165,7 +156,7 @@ public class ArticleApi {
 	public void deleteComment(String slug, Long id, User user) throws IOException {
 		var c = persistence.getCrud(Comment.class);
 		var d = c.read(id);
-		if (d.getAuthor().equals(user.getId()))
+		if (d.author().equals(user.id()))
 			c.delete(id);
 		else
 			throw new ForbiddenException();
@@ -186,7 +177,7 @@ public class ArticleApi {
 		var c = (ArticleCrud) persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
 		var a = i > 0 ? c.read(i) : null;
-		c.favorite(a.getId(), a.getCreatedAt(), user.getId());
+		c.favorite(a.id(), a.createdAt(), user.id());
 		return Map.of("article", i);
 	}
 
@@ -197,7 +188,7 @@ public class ArticleApi {
 		var c = (ArticleCrud) persistence.getCrud(Article.class);
 		var i = c.find("slug", slug);
 		var a = i > 0 ? c.read(i) : null;
-		c.unfavorite(a.getId(), a.getCreatedAt(), user.getId());
+		c.unfavorite(a.id(), a.createdAt(), user.id());
 		return Map.of("article", i);
 	}
 
@@ -209,12 +200,12 @@ public class ArticleApi {
 
 	protected void validate(String slug1, String slug2, Form.Article article) throws IOException {
 		var v = new Validation();
-		v.setConfiguration(configuration);
+		v.configuration = configuration;
 		var c = persistence.getCrud(Article.class);
 		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
 				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {
 			var i = c.filter("slug", slug2);
-			var a = c.read(i).filter(x -> !x.getSlug().equals(slug1)).findFirst().orElse(null);
+			var a = c.read(i).filter(x -> !x.slug().equals(slug1)).findFirst().orElse(null);
 			v.isUnique("title", a);
 		}
 		if ((slug2.equals(slug1) && article.description == null) || (v.isNotBlank("description", article.description)

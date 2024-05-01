@@ -24,6 +24,7 @@
 package com.janilla.conduit.backend;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,20 +33,28 @@ import com.janilla.persistence.Crud;
 
 class ArticleCrud extends Crud<Article> {
 
-	public boolean favorite(Long id, Instant createdAt, Long user) throws IOException {
-		return database.perform((ss, ii) -> {
-			var s = ii.perform("User.favoriteList", i -> i.add(id, user));
-			ii.perform("Article.favoriteList", i -> i.add(user, (Object) new Object[] { createdAt, id }));
-			return s;
-		}, true);
+	public boolean favorite(Long id, Instant createdAt, Long user) {
+		try {
+			return database.perform((ss, ii) -> {
+				var s = ii.perform("User.favoriteList", i -> i.add(id, user));
+				ii.perform("Article.favoriteList", i -> i.add(user, (Object) new Object[] { createdAt, id }));
+				return s;
+			}, true);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
-	public boolean unfavorite(Long id, Instant createdAt, Long user) throws IOException {
-		return database.perform((ss, ii) -> {
-			var s = ii.perform("User.favoriteList", i -> i.remove(id, user));
-			ii.perform("Article.favoriteList", i -> i.remove(user, (Object) new Object[] { createdAt, id }));
-			return s;
-		}, true);
+	public boolean unfavorite(Long id, Instant createdAt, Long user) {
+		try {
+			return database.perform((ss, ii) -> {
+				var s = ii.perform("User.favoriteList", i -> i.remove(id, user));
+				ii.perform("Article.favoriteList", i -> i.remove(user, (Object) new Object[] { createdAt, id }));
+				return s;
+			}, true);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	@Override

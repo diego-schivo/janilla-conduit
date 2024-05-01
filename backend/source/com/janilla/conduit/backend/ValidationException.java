@@ -34,7 +34,7 @@ public class ValidationException extends RuntimeException {
 
 	private static final long serialVersionUID = 8218650972982689848L;
 
-	private Map<String, Collection<String>> errors;
+	public Map<String, Collection<String>> errors;
 
 	public ValidationException(Map<String, Collection<String>> errors) {
 		this.errors = errors;
@@ -42,9 +42,5 @@ public class ValidationException extends RuntimeException {
 
 	public ValidationException(String name, String value) {
 		this(Map.of(name, List.of(value)));
-	}
-
-	public Map<String, Collection<String>> getErrors() {
-		return errors;
 	}
 }

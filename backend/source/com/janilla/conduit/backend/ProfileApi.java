@@ -32,11 +32,7 @@ import com.janilla.web.Handle;
 
 public class ProfileApi {
 
-	Persistence persistence;
-
-	public void setPersistence(Persistence persistence) {
-		this.persistence = persistence;
-	}
+	public Persistence persistence;
 
 	@Handle(method = "GET", path = "/api/profiles/([^/]*)")
 	public Object read(String username) throws IOException {
@@ -51,8 +47,8 @@ public class ProfileApi {
 		var c = (UserCrud) persistence.getCrud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
-		c.follow(u.getId(), user.getId());
-		return Map.of("profile", u.getId());
+		c.follow(u.id(), user.id());
+		return Map.of("profile", u.id());
 	}
 
 	@Handle(method = "DELETE", path = "/api/profiles/([^/]*)/follow")
@@ -60,7 +56,7 @@ public class ProfileApi {
 		var c = (UserCrud) persistence.getCrud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
-		c.unfollow(u.getId(), user.getId());
-		return Map.of("profile", u.getId());
+		c.unfollow(u.id(), user.id());
+		return Map.of("profile", u.id());
 	}
 }
