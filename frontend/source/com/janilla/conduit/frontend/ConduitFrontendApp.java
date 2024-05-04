@@ -26,11 +26,15 @@ package com.janilla.conduit.frontend;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpServer;
 import com.janilla.io.IO;
+import com.janilla.reflect.Factory;
+import com.janilla.reflect.Reflection;
 import com.janilla.util.Lazy;
+import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
@@ -55,11 +59,28 @@ public class ConduitFrontendApp {
 
 	public Properties configuration;
 
+	private Supplier<Factory> factory = Lazy.of(() -> {
+		var f = new Factory();
+		f.setTypes(Stream.concat(Util.getPackageClasses("com.janilla.store.backend"),
+				Util.getPackageClasses(getClass().getPackageName())).toList());
+		f.setEnclosing(this);
+		return f;
+	});
+
 	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
-		var b = new ApplicationHandlerBuilder();
-		b.setApplication(this);
+//		var b = new ApplicationHandlerBuilder();
+//		b.setApplication(this);
+		var f = getFactory();
+		var b = f.newInstance(ApplicationHandlerBuilder.class);
+		var p = Reflection.property(b.getClass(), "application");
+		if (p != null)
+			p.set(b, f.getEnclosing());
 		return b.build();
 	});
+
+	public Factory getFactory() {
+		return factory.get();
+	}
 
 	public IO.Consumer<HttpExchange> getHandler() {
 		return handler.get();
@@ -71,7 +92,7 @@ public class ConduitFrontendApp {
 		return new App(u);
 	}
 
-	@Render(template = "app.html")
+	@Render("app.html")
 	public record App(String apiUrl) {
 	}
 }

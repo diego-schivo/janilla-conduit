@@ -33,8 +33,12 @@ import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
 import com.janilla.io.IO;
 import com.janilla.json.Jwt;
+import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
+import com.janilla.reflect.Factory;
+import com.janilla.reflect.Reflection;
 import com.janilla.util.Lazy;
+import com.janilla.util.Util;
 import com.janilla.web.AnnotationDrivenToMethodInvocation;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.MethodHandlerFactory;
@@ -62,19 +66,40 @@ public class ConduitBackendApp {
 
 	public AnnotationDrivenToMethodInvocation toInvocation;
 
+	private Supplier<Factory> factory = Lazy.of(() -> {
+		var f = new Factory();
+		f.setTypes(
+				Util.getPackageClasses(getClass().getPackageName()).toList());
+		f.setEnclosing(this);
+		return f;
+	});
+
 	private Supplier<Persistence> persistence = Lazy.of(() -> {
-		var b = new CustomPersistenceBuilder();
+//		var b = new CustomPersistenceBuilder();
+		var f = getFactory();
+		var b = f.newInstance(ApplicationPersistenceBuilder.class);
 		{
 			var p = configuration.getProperty("conduit.database.file");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
 			b.setFile(Path.of(p));
 		}
-		b.setApplication(this);
+//		b.setApplication(this);
 		return b.build();
 	});
 
-	private Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> new HandlerBuilder().build());
+	private Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
+		var f = getFactory();
+		var b = f.newInstance(ApplicationHandlerBuilder.class);
+		var p = Reflection.property(b.getClass(), "application");
+		if (p != null)
+			p.set(b, f.getEnclosing());
+		return b.build();
+	});
+
+	public Factory getFactory() {
+		return factory.get();
+	}
 
 	public Persistence getPersistence() {
 		return persistence.get();
@@ -111,9 +136,9 @@ public class ConduitBackendApp {
 	}
 
 	public class HandlerBuilder extends ApplicationHandlerBuilder {
-		{
-			application = ConduitBackendApp.this;
-		}
+//		{
+//			application = ConduitBackendApp.this;
+//		}
 
 		@Override
 		protected MethodHandlerFactory buildMethodHandlerFactory() {

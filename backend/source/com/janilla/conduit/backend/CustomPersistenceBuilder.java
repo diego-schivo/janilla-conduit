@@ -37,11 +37,11 @@ import com.janilla.persistence.Persistence;
 import com.janilla.util.Randomize;
 import com.janilla.util.Util;
 
-class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
+public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
 	@Override
 	public Persistence build() {
-		var a = (ConduitBackendApp) application;
+		var a = (ConduitBackendApp) factory.getEnclosing();
 		var s = Boolean.parseBoolean(a.configuration.getProperty("conduit.database.seed"));
 		var e = Files.exists(file);
 		var p = super.build();
