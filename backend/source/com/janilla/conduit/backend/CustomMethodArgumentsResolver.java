@@ -25,9 +25,10 @@ package com.janilla.conduit.backend;
 
 import java.lang.reflect.Type;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import com.janilla.http.HttpExchange;
-import com.janilla.io.IO;
+import com.janilla.json.Converter;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodArgumentsResolver;
 
@@ -35,10 +36,11 @@ public class CustomMethodArgumentsResolver extends MethodArgumentsResolver {
 
 	@Override
 	protected Object resolveArgument(Type type, HttpExchange exchange, Supplier<String[]> values,
-			EntryList<String, String> entries, IO.Supplier<String> body) {
+			EntryList<String, String> entries, Supplier<String> body,
+			Supplier<UnaryOperator<Converter.MapType>> resolver) {
 		if (type == User.class)
 			return ((ConduitBackendApp.Exchange) exchange).getUser();
-		return super.resolveArgument(type, exchange, values, entries, body);
+		return super.resolveArgument(type, exchange, values, entries, body, resolver);
 	}
 
 }

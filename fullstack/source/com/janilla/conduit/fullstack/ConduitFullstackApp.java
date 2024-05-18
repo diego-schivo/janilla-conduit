@@ -106,7 +106,7 @@ public class ConduitFullstackApp {
 	public class Server extends HttpServer {
 
 		@Override
-		protected HttpExchange newExchange(HttpRequest request) {
+		protected HttpExchange createExchange(HttpRequest request) {
 			URI u;
 			try {
 				u = request.getURI();
@@ -114,7 +114,7 @@ public class ConduitFullstackApp {
 				u = null;
 			}
 			return u != null && u.getPath().startsWith("/api/") ? getBackend().new Exchange()
-					: super.newExchange(request);
+					: super.createExchange(request);
 		}
 	}
 }
