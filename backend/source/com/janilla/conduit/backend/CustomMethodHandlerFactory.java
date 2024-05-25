@@ -23,7 +23,6 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
 import java.util.Properties;
 
 import com.janilla.http.HttpExchange;
@@ -35,7 +34,7 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 	public Properties configuration;
 
 	@Override
-	protected void handle(MethodInvocation invocation, HttpExchange exchange) throws IOException {
+	protected void handle(MethodInvocation invocation, HttpExchange exchange) {
 		var o = configuration.getProperty("conduit.api.cors.origin");
 		exchange.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
 

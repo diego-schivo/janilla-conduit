@@ -23,22 +23,19 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
+import com.janilla.web.AnnotationDrivenToMethodInvocation;
+import com.janilla.web.ApplicationHandlerBuilder;
+import com.janilla.web.MethodHandlerFactory;
 
-import com.janilla.persistence.Persistence;
-import com.janilla.web.Handle;
+public class CustomHandlerBuilder extends ApplicationHandlerBuilder {
+	
+	public ConduitBackendApp application;
 
-public class TagApi {
-
-	public Persistence persistence;
-
-	@Handle(method = "GET", path = "/api/tags")
-	public Tags tags() throws IOException {
-		var l = persistence.database().perform(
-				(ss, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
-		return new Tags(l);
-	}
-
-	public record Tags(Iterable<String> tags) {
+	@Override
+	protected MethodHandlerFactory buildMethodHandlerFactory() {
+		var f = super.buildMethodHandlerFactory();
+		f.setArgumentsResolver(new CustomMethodArgumentsResolver());
+		application.toInvocation = (AnnotationDrivenToMethodInvocation) f.getToInvocation();
+		return f;
 	}
 }

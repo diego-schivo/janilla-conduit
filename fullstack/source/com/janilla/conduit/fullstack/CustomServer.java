@@ -21,24 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
+package com.janilla.conduit.fullstack;
 
-import java.io.IOException;
+import java.net.URI;
 
-import com.janilla.persistence.Persistence;
-import com.janilla.web.Handle;
+import com.janilla.conduit.backend.ConduitBackendApp;
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpResponse;
+import com.janilla.http.HttpServer;
 
-public class TagApi {
+public class CustomServer extends HttpServer {
 
-	public Persistence persistence;
+	public ConduitBackendApp backend;
 
-	@Handle(method = "GET", path = "/api/tags")
-	public Tags tags() throws IOException {
-		var l = persistence.database().perform(
-				(ss, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
-		return new Tags(l);
-	}
-
-	public record Tags(Iterable<String> tags) {
+	@Override
+	protected HttpExchange buildExchange(HttpRequest request, HttpResponse response) {
+		URI u;
+		try {
+			u = request.getURI();
+		} catch (NullPointerException e) {
+			u = null;
+		}
+		if (u != null && u.getPath().startsWith("/api/")) {
+			var e = backend.getFactory().create(HttpExchange.class);
+			e.setRequest(request);
+			e.setResponse(response);
+			return e;
+		}
+		return super.buildExchange(request, response);
 	}
 }

@@ -39,7 +39,7 @@ public class CustomMethodArgumentsResolver extends MethodArgumentsResolver {
 			EntryList<String, String> entries, Supplier<String> body,
 			Supplier<UnaryOperator<Converter.MapType>> resolver) {
 		if (type == User.class)
-			return ((ConduitBackendApp.Exchange) exchange).getUser();
+			return ((CustomExchange) exchange).getUser();
 		return super.resolveArgument(type, exchange, values, entries, body, resolver);
 	}
 

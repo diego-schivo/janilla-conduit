@@ -23,26 +23,22 @@
  */
 package com.janilla.conduit.testing;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import com.janilla.http.HttpExchange;
-import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
-import com.janilla.io.IO;
 import com.janilla.reflect.Factory;
-import com.janilla.reflect.Reflection;
 import com.janilla.util.Lazy;
 import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
+import com.janilla.web.WebHandler;
 
 public class ConduitTestingApp {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		var a = new ConduitTestingApp();
 		{
 			var c = new Properties();
@@ -52,7 +48,7 @@ public class ConduitTestingApp {
 			a.configuration = c;
 		}
 
-		var s = a.new Server();
+		var s = a.getFactory().create(HttpServer.class);
 		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port")));
 		s.setHandler(a.getHandler());
 		s.run();
@@ -62,20 +58,13 @@ public class ConduitTestingApp {
 
 	private Supplier<Factory> factory = Lazy.of(() -> {
 		var f = new Factory();
-		f.setTypes(
-				Util.getPackageClasses(getClass().getPackageName()).toList());
-		f.setEnclosing(this);
+		f.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
+		f.setSource(this);
 		return f;
 	});
 
-	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
-//		var b = new ApplicationHandlerBuilder();
-//		b.setApplication(this);
-		var f = getFactory();
-		var b = f.newInstance(ApplicationHandlerBuilder.class);
-		var p = Reflection.property(b.getClass(), "application");
-		if (p != null)
-			p.set(b, f.getEnclosing());
+	Supplier<WebHandler> handler = Lazy.of(() -> {
+		var b = getFactory().create(ApplicationHandlerBuilder.class);
 		var h1 = b.build();
 
 		return c -> {
@@ -88,36 +77,24 @@ public class ConduitTestingApp {
 			var h = Test.fullstack != null && !(u != null && u.getPath().startsWith("/test/"))
 					? Test.fullstack.getHandler()
 					: h1;
-			h.accept(c);
+			h.handle(c);
 		};
 	});
+
+	public ConduitTestingApp getApplication() {
+		return this;
+	}
 
 	public Factory getFactory() {
 		return factory.get();
 	}
 
-	public IO.Consumer<HttpExchange> getHandler() {
+	public WebHandler getHandler() {
 		return handler.get();
 	}
 
 	@Handle(method = "GET", path = "/")
 	public @Render("app.html") Object getApp() {
 		return new Object();
-	}
-
-	public class Server extends HttpServer {
-
-		@Override
-		protected HttpExchange createExchange(HttpRequest request) {
-			URI u;
-			try {
-				u = request.getURI();
-			} catch (NullPointerException e) {
-				u = null;
-			}
-			return Test.fullstack != null && u != null && u.getPath().startsWith("/api/")
-					? Test.fullstack.getBackend().new Exchange()
-					: super.createExchange(request);
-		}
 	}
 }

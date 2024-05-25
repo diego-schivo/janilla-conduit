@@ -62,7 +62,7 @@ public class UserApi {
 		v.isNotBlank("email", authenticate.user.email);
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
-		var c = persistence.getCrud(User.class);
+		var c = persistence.crud(User.class);
 		var i = c.find("email", authenticate.user.email);
 		var u = i >= 0 ? c.read(i) : null;
 		{
@@ -82,13 +82,13 @@ public class UserApi {
 		var v = new Validation();
 		v.configuration = configuration;
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
-			var c = persistence.getCrud(User.class);
+			var c = persistence.crud(User.class);
 			var i = c.find("username", u.username);
 			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("username", w);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email)) {
-			var c = persistence.getCrud(User.class);
+			var c = persistence.crud(User.class);
 			var i = c.find("email", u.email);
 			var w = i >= 0 ? c.read(i) : null;
 			v.hasNotBeenTaken("email", w);
@@ -98,7 +98,7 @@ public class UserApi {
 		v.orThrow();
 
 		if (Boolean.parseBoolean(configuration.getProperty("conduit.live-demo"))) {
-			var c = persistence.getCrud(User.class).count();
+			var c = persistence.crud(User.class).count();
 			if (c >= 1000)
 				throw new ValidationException("existing users", "are too many (" + c + ")");
 		}
@@ -110,17 +110,17 @@ public class UserApi {
 			w = new User(w.id(), w.email(), w.hash(), w.salt(), w.username(), w.bio(),
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600)) + "</text></svg>");
-		w = persistence.getCrud(User.class).create(w);
+		w = persistence.crud(User.class).create(w);
 		return getCurrent(w);
 	}
 
 	@Handle(method = "PUT", path = "/api/user")
 	public Object update(Update update, User user) throws IOException {
-		System.out.println("update=" + update);
+//		System.out.println("update=" + update);
 		var u = update.user;
 		var v = new Validation();
 		v.configuration = configuration;
-		var c = persistence.getCrud(User.class);
+		var c = persistence.crud(User.class);
 //		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 		if (u.username != null && !u.username.isBlank() && v.isSafe("username", u.username)
 				&& !u.username.equals(user.username())) {

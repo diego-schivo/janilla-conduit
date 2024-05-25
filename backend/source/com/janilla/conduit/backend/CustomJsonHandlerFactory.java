@@ -23,8 +23,7 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -47,15 +46,15 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 	public Persistence persistence;
 
 	@Override
-	protected void render(Object object, HttpExchange exchange) throws IOException {
+	protected void render(Object object, HttpExchange exchange) {
 		super.render(object, exchange);
 	}
 
 	@Override
-	protected Iterator<JsonToken<?>> newJsonIterator(Object object, HttpExchange exchange) {
+	protected Iterator<JsonToken<?>> buildJsonIterator(Object object, HttpExchange exchange) {
 		var i = new CustomReflectionJsonIterator();
 		i.setObject(object);
-		i.user = () -> ((ConduitBackendApp.Exchange) exchange).getUser();
+		i.user = () -> ((CustomExchange) exchange).getUser();
 		return i;
 	}
 
@@ -64,18 +63,18 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 		private Supplier<User> user;
 
 		@Override
-		public Iterator<JsonToken<?>> newValueIterator(Object object) {
+		public Iterator<JsonToken<?>> buildValueIterator(Object object) {
 			var o = getStack().peek();
 			if (o instanceof Entry e) {
 				var n = (String) e.getKey();
 				switch (n) {
 				case "article":
 					if (object instanceof Long i)
-						object = persistence.getCrud(Article.class).read(i);
+						object = persistence.crud(Article.class).read(i);
 					break;
 				case "author", "profile":
 					if (object instanceof Long i)
-						object = persistence.getCrud(User.class).read(i);
+						object = persistence.crud(User.class).read(i);
 					break;
 				}
 			}
@@ -89,14 +88,15 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 //						System.out.println("k=" + k);
 						var g = Reflection.property(Article.class, k);
 						var v = g.get(a);
-						return new SimpleEntry<>(k, v);
+						return new AbstractMap.SimpleEntry<>(k, v);
 					}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
 					var u = user.get();
-					m.put("favorited", u != null && a.id() != null
-							&& Arrays.stream(persistence.getCrud(Article.class).filter("favoriteList", u.id()))
-									.anyMatch(x -> x == a.id()));
+					m.put("favorited",
+							u != null && a.id() != null
+									&& Arrays.stream(persistence.crud(Article.class).filter("favoriteList", u.id()))
+											.anyMatch(x -> x == a.id()));
 					m.put("favoritesCount",
-							a.id() != null ? persistence.getCrud(User.class).count("favoriteList", a.id()) : 0);
+							a.id() != null ? persistence.crud(User.class).count("favoriteList", a.id()) : 0);
 					object = m;
 				}
 					break;
@@ -107,11 +107,11 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					}).map(k -> {
 						var g = Reflection.property(User.class, k);
 						var w = g.get(u);
-						return new SimpleEntry<>(k, w);
+						return new AbstractMap.SimpleEntry<>(k, w);
 					}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
 					var v = user.get();
 					m.put("following",
-							v != null && Arrays.stream(persistence.getCrud(User.class).filter("followList", v.id()))
+							v != null && Arrays.stream(persistence.crud(User.class).filter("followList", v.id()))
 									.anyMatch(x -> x == u.id()));
 					object = m;
 				}
@@ -119,7 +119,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 				default:
 					break;
 				}
-			return super.newValueIterator(object);
+			return super.buildValueIterator(object);
 		}
 	}
 }

@@ -41,7 +41,7 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
 	@Override
 	public Persistence build() {
-		var a = (ConduitBackendApp) factory.getEnclosing();
+		var a = (ConduitBackendApp) factory.getSource();
 		var s = Boolean.parseBoolean(a.configuration.getProperty("conduit.database.seed"));
 		var e = Files.exists(file);
 		var p = super.build();
@@ -60,7 +60,7 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 	static List<String> w = new ArrayList<>(Validation.safeWords);
 
 	void populate(Persistence p) {
-		if (p.getCrud(Article.class).count() > 0)
+		if (p.crud(Article.class).count() > 0)
 			return;
 		var r = ThreadLocalRandom.current();
 		var tags = Randomize.elements(5, 15, w).distinct().toList();
@@ -70,7 +70,7 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600 + r.nextInt(0x50))) + "</text></svg>");
 			u = UserApi.setHashAndSalt(u, n.toLowerCase().substring(0, n.indexOf(' ')));
-			u = p.getCrud(User.class).create(u);
+			u = p.crud(User.class).create(u);
 			for (var j = r.nextInt(0, 5); j > 0; j--) {
 				var t = Util.capitalizeFirstChar(Randomize.phrase(2, 6, () -> Randomize.element(w)));
 				var c = Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
@@ -78,23 +78,23 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 				var a = new Article(null, t.toLowerCase().replace(' ', '-'), t,
 						Randomize.sentence(3, 10, () -> Randomize.element(w)), nextBody(),
 						Randomize.elements(1, 5, tags).distinct().toList(), c, c, u.id());
-				p.getCrud(Article.class).create(a);
+				p.crud(Article.class).create(a);
 			}
 		}
 		for (var i = r.nextInt(20, 31); i > 0; i--) {
-			var u = p.getCrud(User.class).read(1 + r.nextLong(p.getCrud(User.class).count()));
-			var a = p.getCrud(Article.class).read(1 + r.nextLong(p.getCrud(Article.class).count()));
+			var u = p.crud(User.class).read(1 + r.nextLong(p.crud(User.class).count()));
+			var a = p.crud(Article.class).read(1 + r.nextLong(p.crud(Article.class).count()));
 			var j = r.nextInt(1, 8);
 			if ((j & 1) != 0) {
 				var d = Randomize.instant(a.createdAt(), OffsetDateTime.now(ZoneOffset.UTC).toInstant());
 				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(w)), u.id(),
 						a.id());
-				c = p.getCrud(Comment.class).create(c);
+				c = p.crud(Comment.class).create(c);
 			}
 			if ((j & 2) != 0)
-				((ArticleCrud) p.getCrud(Article.class)).favorite(a.id(), a.createdAt(), u.id());
+				((ArticleCrud) p.crud(Article.class)).favorite(a.id(), a.createdAt(), u.id());
 			if ((j & 4) != 0)
-				((UserCrud) p.getCrud(User.class)).follow(a.author(), u.id());
+				((UserCrud) p.crud(User.class)).follow(a.author(), u.id());
 		}
 	}
 

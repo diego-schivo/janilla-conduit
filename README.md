@@ -61,7 +61,7 @@ If you want to change the API URL, simply edit the `configuration.properties` fi
 So far the project has been developed with [Eclipse IDE](https://eclipseide.org/):
 
 1. download the [Eclipse Installer](https://www.eclipse.org/downloads/packages/installer)
-2. install the package for Enterprise Java and Web Developers with JRE 21.0.1
+2. install the package for Enterprise Java and Web Developers with JRE 21
 3. launch the IDE and choose Import projects from Git (with smart import)
 4. select GitHub as the repository source, then search for `janilla-conduit fork:true` and complete the wizard
 5. select a project (eg: `janilla-conduit-fullstack`) and launch Debug as Java Application

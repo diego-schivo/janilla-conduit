@@ -23,22 +23,21 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpResponse;
+import com.janilla.http.HttpServer;
+import com.janilla.reflect.Factory;
 
-import com.janilla.persistence.Persistence;
-import com.janilla.web.Handle;
+public class CustomServer extends HttpServer {
 
-public class TagApi {
+	public Factory factory;
 
-	public Persistence persistence;
-
-	@Handle(method = "GET", path = "/api/tags")
-	public Tags tags() throws IOException {
-		var l = persistence.database().perform(
-				(ss, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
-		return new Tags(l);
-	}
-
-	public record Tags(Iterable<String> tags) {
+	@Override
+	protected HttpExchange buildExchange(HttpRequest request, HttpResponse response) {
+		var e = factory.create(HttpExchange.class);
+		e.setRequest(request);
+		e.setResponse(response);
+		return e;
 	}
 }

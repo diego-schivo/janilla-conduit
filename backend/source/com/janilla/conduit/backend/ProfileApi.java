@@ -36,7 +36,7 @@ public class ProfileApi {
 
 	@Handle(method = "GET", path = "/api/profiles/([^/]*)")
 	public Object read(String username) throws IOException {
-		var c = persistence.getCrud(User.class);
+		var c = persistence.crud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
 		return Collections.singletonMap("profile", u);
@@ -44,7 +44,7 @@ public class ProfileApi {
 
 	@Handle(method = "POST", path = "/api/profiles/([^/]*)/follow")
 	public Object follow(String username, User user) throws IOException {
-		var c = (UserCrud) persistence.getCrud(User.class);
+		var c = (UserCrud) persistence.crud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
 		c.follow(u.id(), user.id());
@@ -53,7 +53,7 @@ public class ProfileApi {
 
 	@Handle(method = "DELETE", path = "/api/profiles/([^/]*)/follow")
 	public Object unfollow(String username, User user) throws IOException {
-		var c = (UserCrud) persistence.getCrud(User.class);
+		var c = (UserCrud) persistence.crud(User.class);
 		var i = c.find("username", username);
 		var u = i >= 0 ? c.read(i) : null;
 		c.unfollow(u.id(), user.id());

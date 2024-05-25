@@ -23,8 +23,6 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
-
 import com.janilla.database.Index;
 import com.janilla.io.ElementHelper;
 import com.janilla.io.ElementHelper.SortOrder;
@@ -65,7 +63,7 @@ public class CustomPersistence extends Persistence {
 	}
 
 	@Override
-	protected void createStoresAndIndexes() throws IOException {
+	protected void createStoresAndIndexes() {
 		super.createStoresAndIndexes();
 		for (var n : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
 			database.perform((ss, ii) -> {
@@ -75,7 +73,7 @@ public class CustomPersistence extends Persistence {
 	}
 
 	@Override
-	protected <E> Crud<E> newCrud(Class<E> type) {
+	protected <E> Crud<E> createCrud(Class<E> type) {
 		if (type == Article.class) {
 			@SuppressWarnings("unchecked")
 			var c = (Crud<E>) new ArticleCrud();
@@ -88,6 +86,6 @@ public class CustomPersistence extends Persistence {
 			return c;
 		}
 
-		return super.newCrud(type);
+		return super.createCrud(type);
 	}
 }

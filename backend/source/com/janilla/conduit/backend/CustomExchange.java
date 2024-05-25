@@ -23,22 +23,32 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
+import java.util.Properties;
+import java.util.function.Supplier;
 
+import com.janilla.http.HttpExchange;
+import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
-import com.janilla.web.Handle;
+import com.janilla.util.Lazy;
 
-public class TagApi {
-
+public class CustomExchange extends HttpExchange {
+	
+	public Properties configuration;
+	
 	public Persistence persistence;
 
-	@Handle(method = "GET", path = "/api/tags")
-	public Tags tags() throws IOException {
-		var l = persistence.database().perform(
-				(ss, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
-		return new Tags(l);
-	}
+	private Supplier<User> user = Lazy.of(() -> {
+		var a = getRequest().getHeaders().get("Authorization");
+		var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
+		var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
+		var e = p != null ? (String) p.get("loggedInAs") : null;
+		var c = persistence.crud(User.class);
+		var i = e != null ? c.find("email", e) : -1;
+		var u = i >= 0 ? c.read(i) : null;
+		return u;
+	});
 
-	public record Tags(Iterable<String> tags) {
+	public User getUser() {
+		return user.get();
 	}
 }

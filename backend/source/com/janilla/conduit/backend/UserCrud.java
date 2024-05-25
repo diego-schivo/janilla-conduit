@@ -23,26 +23,15 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-
 import com.janilla.persistence.Crud;
 
 public class UserCrud extends Crud<User> {
 
 	public boolean follow(Long profile, Long user) {
-		try {
-			return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.add(user, profile)), true);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.add(user, profile)), true);
 	}
 
 	public boolean unfollow(Long profile, Long user) {
-		try {
-			return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.remove(user, profile)), true);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.remove(user, profile)), true);
 	}
 }

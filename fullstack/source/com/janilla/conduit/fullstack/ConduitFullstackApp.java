@@ -23,22 +23,22 @@
  */
 package com.janilla.conduit.fullstack;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Properties;
 import java.util.function.Supplier;
 
 import com.janilla.conduit.backend.ConduitBackendApp;
 import com.janilla.conduit.frontend.ConduitFrontendApp;
-import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
-import com.janilla.io.IO;
+import com.janilla.reflect.Factory;
 import com.janilla.util.Lazy;
+import com.janilla.util.Util;
+import com.janilla.web.WebHandler;
 
 public class ConduitFullstackApp {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		var a = new ConduitFullstackApp();
 		{
 			var c = new Properties();
@@ -49,13 +49,20 @@ public class ConduitFullstackApp {
 		}
 		a.getBackend().getPersistence();
 
-		var s = a.new Server();
+		var s = a.getFactory().create(HttpServer.class);
 		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port")));
 		s.setHandler(a.getHandler());
 		s.run();
 	}
 
 	public Properties configuration;
+
+	private Supplier<Factory> factory = Lazy.of(() -> {
+		var f = new Factory();
+		f.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
+		f.setSource(this);
+		return f;
+	});
 
 	Supplier<ConduitBackendApp> backend = Lazy.of(() -> {
 		var a = new ConduitBackendApp();
@@ -69,7 +76,7 @@ public class ConduitFullstackApp {
 		return a;
 	});
 
-	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
+	Supplier<WebHandler> handler = Lazy.of(() -> {
 		return c -> {
 			var o = c.getException() != null ? c.getException() : c.getRequest();
 			var h = switch (o) {
@@ -87,9 +94,17 @@ public class ConduitFullstackApp {
 			case Exception e -> backend.get().getHandler();
 			default -> null;
 			};
-			h.accept(c);
+			h.handle(c);
 		};
 	});
+
+	public ConduitFullstackApp getApplication() {
+		return this;
+	}
+
+	public Factory getFactory() {
+		return factory.get();
+	}
 
 	public ConduitBackendApp getBackend() {
 		return backend.get();
@@ -99,22 +114,7 @@ public class ConduitFullstackApp {
 		return frontend.get();
 	}
 
-	public IO.Consumer<HttpExchange> getHandler() {
+	public WebHandler getHandler() {
 		return handler.get();
-	}
-
-	public class Server extends HttpServer {
-
-		@Override
-		protected HttpExchange createExchange(HttpRequest request) {
-			URI u;
-			try {
-				u = request.getURI();
-			} catch (NullPointerException e) {
-				u = null;
-			}
-			return u != null && u.getPath().startsWith("/api/") ? getBackend().new Exchange()
-					: super.createExchange(request);
-		}
 	}
 }

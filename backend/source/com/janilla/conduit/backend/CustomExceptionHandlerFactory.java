@@ -23,25 +23,23 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
-
 import com.janilla.frontend.RenderEngine;
 import com.janilla.http.HttpExchange;
 import com.janilla.web.Error;
 import com.janilla.web.ExceptionHandlerFactory;
-import com.janilla.web.HandlerFactory;
+import com.janilla.web.WebHandlerFactory;
 
 public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 
-	public HandlerFactory mainFactory;
+	public WebHandlerFactory mainFactory;
 
 	@Override
-	protected void handle(Error error, HttpExchange exchange) throws IOException {
+	protected void handle(Error error, HttpExchange exchange) {
 		super.handle(error, exchange);
 
 		if (exchange.getException() instanceof ValidationException e) {
 			var o = RenderEngine.Entry.of(null, e.errors, null);
-			mainFactory.createHandler(o, exchange).accept(exchange);
+			mainFactory.createHandler(o, exchange).handle(exchange);
 		}
 	}
 }

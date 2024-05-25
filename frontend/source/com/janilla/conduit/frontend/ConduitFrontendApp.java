@@ -23,25 +23,22 @@
  */
 package com.janilla.conduit.frontend;
 
-import java.io.IOException;
 import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpServer;
-import com.janilla.io.IO;
 import com.janilla.reflect.Factory;
-import com.janilla.reflect.Reflection;
 import com.janilla.util.Lazy;
 import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
+import com.janilla.web.WebHandler;
 
 public class ConduitFrontendApp {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		var a = new ConduitFrontendApp();
 		{
 			var c = new Properties();
@@ -51,7 +48,7 @@ public class ConduitFrontendApp {
 			a.configuration = c;
 		}
 
-		var s = new HttpServer();
+		var s = a.getFactory().create(HttpServer.class);
 		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.frontend.server.port")));
 		s.setHandler(a.getHandler());
 		s.run();
@@ -61,28 +58,26 @@ public class ConduitFrontendApp {
 
 	private Supplier<Factory> factory = Lazy.of(() -> {
 		var f = new Factory();
-		f.setTypes(Stream.concat(Util.getPackageClasses("com.janilla.store.backend"),
+		f.setTypes(Stream.concat(Util.getPackageClasses("com.janilla.mystore.backend"),
 				Util.getPackageClasses(getClass().getPackageName())).toList());
-		f.setEnclosing(this);
+		f.setSource(this);
 		return f;
 	});
 
-	Supplier<IO.Consumer<HttpExchange>> handler = Lazy.of(() -> {
-//		var b = new ApplicationHandlerBuilder();
-//		b.setApplication(this);
-		var f = getFactory();
-		var b = f.newInstance(ApplicationHandlerBuilder.class);
-		var p = Reflection.property(b.getClass(), "application");
-		if (p != null)
-			p.set(b, f.getEnclosing());
+	Supplier<WebHandler> handler = Lazy.of(() -> {
+		var b = getFactory().create(ApplicationHandlerBuilder.class);
 		return b.build();
 	});
+
+	public ConduitFrontendApp getApplication() {
+		return this;
+	}
 
 	public Factory getFactory() {
 		return factory.get();
 	}
 
-	public IO.Consumer<HttpExchange> getHandler() {
+	public WebHandler getHandler() {
 		return handler.get();
 	}
 
