@@ -33,8 +33,8 @@ import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Lazy;
 import com.janilla.util.Util;
-import com.janilla.web.AnnotationDrivenToMethodInvocation;
 import com.janilla.web.ApplicationHandlerBuilder;
+import com.janilla.web.MethodHandlerFactory;
 import com.janilla.web.WebHandler;
 
 public class ConduitBackendApp {
@@ -58,7 +58,7 @@ public class ConduitBackendApp {
 
 	public Properties configuration;
 
-	public AnnotationDrivenToMethodInvocation toInvocation;
+	public MethodHandlerFactory methodHandlerFactory;
 
 	private Supplier<Factory> factory = Lazy.of(() -> {
 		var f = new Factory();

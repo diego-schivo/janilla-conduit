@@ -23,21 +23,33 @@
  */
 package com.janilla.conduit.backend;
 
+import java.lang.reflect.Type;
 import java.util.Properties;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import com.janilla.http.HttpExchange;
+import com.janilla.json.Converter.MapType;
+import com.janilla.util.EntryList;
 import com.janilla.web.MethodHandlerFactory;
-import com.janilla.web.MethodInvocation;
 
 public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	public Properties configuration;
 
 	@Override
-	protected void handle(MethodInvocation invocation, HttpExchange exchange) {
+	protected void handle(Invocation invocation, HttpExchange exchange) {
 		var o = configuration.getProperty("conduit.api.cors.origin");
 		exchange.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
 
 		super.handle(invocation, exchange);
+	}
+
+	@Override
+	protected Object resolveArgument(Type type, HttpExchange exchange, Supplier<String[]> values,
+			EntryList<String, String> entries, Supplier<String> body, Supplier<UnaryOperator<MapType>> resolver) {
+		if (type == User.class)
+			return ((CustomExchange) exchange).getUser();
+		return super.resolveArgument(type, exchange, values, entries, body, resolver);
 	}
 }
