@@ -26,14 +26,15 @@ package com.janilla.conduit.backend;
 import com.janilla.web.AnnotationDrivenToMethodInvocation;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.MethodHandlerFactory;
+import com.janilla.web.WebHandlerFactory;
 
 public class CustomHandlerBuilder extends ApplicationHandlerBuilder {
-	
+
 	public ConduitBackendApp application;
 
 	@Override
-	protected MethodHandlerFactory buildMethodHandlerFactory() {
-		var f = super.buildMethodHandlerFactory();
+	protected WebHandlerFactory buildMethodHandlerFactory() {
+		var f = (MethodHandlerFactory) super.buildMethodHandlerFactory();
 		f.setArgumentsResolver(new CustomMethodArgumentsResolver());
 		application.toInvocation = (AnnotationDrivenToMethodInvocation) f.getToInvocation();
 		return f;
