@@ -41,7 +41,8 @@ public class AccessControlWeb {
 	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
 		var o = configuration.getProperty("conduit.api.cors.origin");
-		var m = methodHandlerFactory.getValueAndGroupsStream(request).flatMap(w -> w.value().methods().stream())
+		var m = methodHandlerFactory.resolveInvocables(request)
+				.flatMap(w -> w.getKey().methodHandles().keySet().stream())
 				.map(x -> x.getAnnotation(Handle.class).method()).collect(Collectors.toSet());
 		var h = configuration.getProperty("conduit.api.cors.headers");
 
