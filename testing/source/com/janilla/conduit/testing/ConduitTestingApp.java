@@ -34,7 +34,6 @@ import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
-import com.janilla.web.WebHandler;
 
 public class ConduitTestingApp {
 
@@ -63,21 +62,21 @@ public class ConduitTestingApp {
 		return f;
 	});
 
-	Supplier<WebHandler> handler = Lazy.of(() -> {
+	Supplier<HttpServer.Handler> handler = Lazy.of(() -> {
 		var b = getFactory().create(ApplicationHandlerBuilder.class);
 		var h1 = b.build();
 
 		return c -> {
 			URI u;
 			try {
-				u = c.getRequest().getURI();
+				u = c.getRequest().getUri();
 			} catch (NullPointerException e) {
 				u = null;
 			}
 			var h = Test.fullstack != null && !(u != null && u.getPath().startsWith("/test/"))
 					? Test.fullstack.getHandler()
 					: h1;
-			h.handle(c);
+			return h.handle(c);
 		};
 	});
 
@@ -89,7 +88,7 @@ public class ConduitTestingApp {
 		return factory.get();
 	}
 
-	public WebHandler getHandler() {
+	public HttpServer.Handler getHandler() {
 		return handler.get();
 	}
 

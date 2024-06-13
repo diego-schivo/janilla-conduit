@@ -28,7 +28,6 @@ import java.net.URI;
 import com.janilla.conduit.backend.ConduitBackendApp;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpResponse;
 import com.janilla.http.HttpServer;
 
 public class CustomServer extends HttpServer {
@@ -36,19 +35,14 @@ public class CustomServer extends HttpServer {
 	public ConduitBackendApp backend;
 
 	@Override
-	protected HttpExchange buildExchange(HttpRequest request, HttpResponse response) {
+	protected HttpExchange createExchange(HttpRequest request) {
 		URI u;
 		try {
-			u = request.getURI();
+			u = request.getUri();
 		} catch (NullPointerException e) {
 			u = null;
 		}
-		if (u != null && u.getPath().startsWith("/api/")) {
-			var e = backend.getFactory().create(HttpExchange.class);
-			e.setRequest(request);
-			e.setResponse(response);
-			return e;
-		}
-		return super.buildExchange(request, response);
+		return u != null && u.getPath().startsWith("/api/") ? backend.getFactory().create(HttpExchange.class)
+				: super.createExchange(request);
 	}
 }

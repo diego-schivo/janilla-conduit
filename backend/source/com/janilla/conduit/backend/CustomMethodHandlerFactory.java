@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHeader;
 import com.janilla.json.Converter.MapType;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodHandlerFactory;
@@ -40,7 +41,7 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 	@Override
 	protected void handle(Invocation invocation, HttpExchange exchange) {
 		var o = configuration.getProperty("conduit.api.cors.origin");
-		exchange.getResponse().getHeaders().set("Access-Control-Allow-Origin", o);
+		exchange.getResponse().getHeaders().add(new HttpHeader("Access-Control-Allow-Origin", o));
 
 		super.handle(invocation, exchange);
 	}

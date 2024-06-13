@@ -34,7 +34,6 @@ import com.janilla.http.HttpServer;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Lazy;
 import com.janilla.util.Util;
-import com.janilla.web.WebHandler;
 
 public class ConduitFullstackApp {
 
@@ -76,14 +75,14 @@ public class ConduitFullstackApp {
 		return a;
 	});
 
-	Supplier<WebHandler> handler = Lazy.of(() -> {
+	Supplier<HttpServer.Handler> handler = Lazy.of(() -> {
 		return c -> {
 			var o = c.getException() != null ? c.getException() : c.getRequest();
 			var h = switch (o) {
 			case HttpRequest q -> {
 				URI u;
 				try {
-					u = q.getURI();
+					u = q.getUri();
 				} catch (NullPointerException e) {
 					u = null;
 				}
@@ -94,7 +93,7 @@ public class ConduitFullstackApp {
 			case Exception e -> backend.get().getHandler();
 			default -> null;
 			};
-			h.handle(c);
+			return h.handle(c);
 		};
 	});
 
@@ -114,7 +113,7 @@ public class ConduitFullstackApp {
 		return frontend.get();
 	}
 
-	public WebHandler getHandler() {
+	public HttpServer.Handler getHandler() {
 		return handler.get();
 	}
 }

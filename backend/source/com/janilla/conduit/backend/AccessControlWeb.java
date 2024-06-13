@@ -26,9 +26,9 @@ package com.janilla.conduit.backend;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import com.janilla.http.HttpHeader;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
-import com.janilla.http.HttpResponse.Status;
 import com.janilla.web.Handle;
 import com.janilla.web.MethodHandlerFactory;
 
@@ -46,10 +46,11 @@ public class AccessControlWeb {
 				.map(x -> x.getAnnotation(Handle.class).method()).collect(Collectors.toSet());
 		var h = configuration.getProperty("conduit.api.cors.headers");
 
-		response.setStatus(new Status(204, "No Content"));
-		response.getHeaders().set("Access-Control-Allow-Origin", o);
-		response.getHeaders().set("Access-Control-Allow-Methods",
-				m.contains(null) ? "*" : m.stream().collect(Collectors.joining(", ")));
-		response.getHeaders().set("Access-Control-Allow-Headers", h);
+		response.setStatus(HttpResponse.Status.of(204));
+		var hh = response.getHeaders();
+		hh.add(new HttpHeader("Access-Control-Allow-Origin", o));
+		hh.add(new HttpHeader("Access-Control-Allow-Methods",
+				m.contains(null) ? "*" : m.stream().collect(Collectors.joining(", "))));
+		hh.add(new HttpHeader("Access-Control-Allow-Headers", h));
 	}
 }

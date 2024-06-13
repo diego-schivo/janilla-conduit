@@ -34,12 +34,12 @@ public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 	public WebHandlerFactory mainFactory;
 
 	@Override
-	protected void handle(Error error, HttpExchange exchange) {
+	protected boolean handle(Error error, HttpExchange exchange) {
 		super.handle(error, exchange);
-
 		if (exchange.getException() instanceof ValidationException e) {
 			var o = RenderEngine.Entry.of(null, e.errors, null);
 			mainFactory.createHandler(o, exchange).handle(exchange);
 		}
+		return true;
 	}
 }

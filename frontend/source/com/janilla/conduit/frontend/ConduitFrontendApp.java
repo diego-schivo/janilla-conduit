@@ -34,7 +34,6 @@ import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
-import com.janilla.web.WebHandler;
 
 public class ConduitFrontendApp {
 
@@ -64,7 +63,7 @@ public class ConduitFrontendApp {
 		return f;
 	});
 
-	Supplier<WebHandler> handler = Lazy.of(() -> {
+	Supplier<HttpServer.Handler> handler = Lazy.of(() -> {
 		var b = getFactory().create(ApplicationHandlerBuilder.class);
 		return b.build();
 	});
@@ -77,7 +76,7 @@ public class ConduitFrontendApp {
 		return factory.get();
 	}
 
-	public WebHandler getHandler() {
+	public HttpServer.Handler getHandler() {
 		return handler.get();
 	}
 
