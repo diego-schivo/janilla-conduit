@@ -23,11 +23,13 @@
  */
 package com.janilla.conduit.testing;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import com.janilla.http.HttpServer;
+import com.janilla.http.HttpExchange;
+import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Lazy;
 import com.janilla.util.Util;
@@ -47,10 +49,11 @@ public class ConduitTestingApp {
 			a.configuration = c;
 		}
 
-		var s = a.getFactory().create(HttpServer.class);
-		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port")));
+		var s = a.getFactory().create(Server.class);
+		s.setAddress(
+				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"))));
 		s.setHandler(a.getHandler());
-		s.run();
+		s.serve();
 	}
 
 	public Properties configuration;
@@ -62,21 +65,22 @@ public class ConduitTestingApp {
 		return f;
 	});
 
-	Supplier<HttpServer.Handler> handler = Lazy.of(() -> {
+	Supplier<Server.Handler> handler = Lazy.of(() -> {
 		var b = getFactory().create(ApplicationHandlerBuilder.class);
 		var h1 = b.build();
 
-		return c -> {
+		return x -> {
+			var ex = (HttpExchange) x;
 			URI u;
 			try {
-				u = c.getRequest().getUri();
+				u = ex.getRequest().getUri();
 			} catch (NullPointerException e) {
 				u = null;
 			}
 			var h = Test.fullstack != null && !(u != null && u.getPath().startsWith("/test/"))
 					? Test.fullstack.getHandler()
 					: h1;
-			return h.handle(c);
+			return h.handle(ex);
 		};
 	});
 
@@ -88,7 +92,7 @@ public class ConduitTestingApp {
 		return factory.get();
 	}
 
-	public HttpServer.Handler getHandler() {
+	public Server.Handler getHandler() {
 		return handler.get();
 	}
 

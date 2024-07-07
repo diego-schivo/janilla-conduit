@@ -23,14 +23,16 @@
  */
 package com.janilla.conduit.fullstack;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Properties;
 import java.util.function.Supplier;
 
 import com.janilla.conduit.backend.ConduitBackendApp;
 import com.janilla.conduit.frontend.ConduitFrontendApp;
+import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpServer;
+import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Lazy;
 import com.janilla.util.Util;
@@ -48,10 +50,11 @@ public class ConduitFullstackApp {
 		}
 		a.getBackend().getPersistence();
 
-		var s = a.getFactory().create(HttpServer.class);
-		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port")));
+		var s = a.getFactory().create(Server.class);
+		s.setAddress(
+				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"))));
 		s.setHandler(a.getHandler());
-		s.run();
+		s.serve();
 	}
 
 	public Properties configuration;
@@ -75,9 +78,11 @@ public class ConduitFullstackApp {
 		return a;
 	});
 
-	Supplier<HttpServer.Handler> handler = Lazy.of(() -> {
+	Supplier<Server.Handler> handler = Lazy.of(() -> {
 		return c -> {
-			var o = c.getException() != null ? c.getException() : c.getRequest();
+			// TODO
+//			var o = c.getException() != null ? c.getException() : c.getRequest();
+			var o = (Object) ((HttpExchange) c).getRequest();
 			var h = switch (o) {
 			case HttpRequest q -> {
 				URI u;
@@ -113,7 +118,7 @@ public class ConduitFullstackApp {
 		return frontend.get();
 	}
 
-	public HttpServer.Handler getHandler() {
+	public Server.Handler getHandler() {
 		return handler.get();
 	}
 }

@@ -23,11 +23,12 @@
  */
 package com.janilla.conduit.backend;
 
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import com.janilla.http.HttpServer;
+import com.janilla.net.Server;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Factory;
@@ -49,10 +50,11 @@ public class ConduitBackendApp {
 		}
 		a.getPersistence();
 
-		var s = a.getFactory().create(HttpServer.class);
-		s.setPort(Integer.parseInt(a.configuration.getProperty("conduit.backend.server.port")));
+		var s = a.getFactory().create(Server.class);
+		s.setAddress(
+				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.backend.server.port"))));
 		s.setHandler(a.getHandler());
-		s.run();
+		s.serve();
 	}
 
 	public Properties configuration;
@@ -77,7 +79,7 @@ public class ConduitBackendApp {
 		return b.build();
 	});
 
-	private Supplier<HttpServer.Handler> handler = Lazy.of(() -> {
+	private Supplier<Server.Handler> handler = Lazy.of(() -> {
 		var b = getFactory().create(ApplicationHandlerBuilder.class);
 		return b.build();
 	});
@@ -94,7 +96,7 @@ public class ConduitBackendApp {
 		return persistence.get();
 	}
 
-	public HttpServer.Handler getHandler() {
+	public Server.Handler getHandler() {
 		return handler.get();
 	}
 }

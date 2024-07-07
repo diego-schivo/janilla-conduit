@@ -23,35 +23,17 @@
  */
 package com.janilla.conduit.backend;
 
-import java.util.Properties;
-import java.util.stream.Collectors;
-
-import com.janilla.media.HeaderField;
 import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpResponse;
-import com.janilla.web.Handle;
-import com.janilla.web.MethodHandlerFactory;
+import com.janilla.http2.Http2Exchange;
+import com.janilla.http2.Http2Protocol;
+import com.janilla.reflect.Factory;
 
-public class AccessControlWeb {
+public class CustomHttp2Protocol extends Http2Protocol {
 
-	public Properties configuration;
+	public Factory factory;
 
-	public MethodHandlerFactory methodHandlerFactory;
-
-	@Handle(method = "OPTIONS", path = "/api/(.*)")
-	public void allow(HttpRequest request, HttpResponse response) {
-		var o = configuration.getProperty("conduit.api.cors.origin");
-		var m = methodHandlerFactory.resolveInvocables(request)
-				.flatMap(w -> w.getKey().methodHandles().keySet().stream())
-				.map(x -> x.getAnnotation(Handle.class).method()).collect(Collectors.toSet());
-		var h = configuration.getProperty("conduit.api.cors.headers");
-
-//		response.setStatus(HttpResponse.Status.of(204));
-		response.setStatus(204);
-		var hh = response.getHeaders();
-		hh.add(new HeaderField("Access-Control-Allow-Origin", o));
-		hh.add(new HeaderField("Access-Control-Allow-Methods",
-				m.contains(null) ? "*" : m.stream().collect(Collectors.joining(", "))));
-		hh.add(new HeaderField("Access-Control-Allow-Headers", h));
+	@Override
+	protected Http2Exchange createExchange(HttpRequest request) {
+		return factory.create(Http2Exchange.class);
 	}
 }
