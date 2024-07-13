@@ -25,8 +25,6 @@ package com.janilla.conduit.backend;
 
 import com.janilla.database.Index;
 import com.janilla.io.ElementHelper;
-import com.janilla.io.ElementHelper.SortOrder;
-import com.janilla.io.ElementHelper.TypeAndOrder;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
 
@@ -47,7 +45,7 @@ public class CustomPersistence extends Persistence {
 		case "Tag.count" -> {
 			@SuppressWarnings("unchecked")
 			var i = (Index<Object[], String>) index;
-			i.setKeyHelper(ElementHelper.of(new TypeAndOrder(Long.class, SortOrder.DESCENDING)));
+			i.setKeyHelper(ElementHelper.of(new ElementHelper.TypeAndOrder(Long.class, ElementHelper.SortOrder.DESCENDING)));
 			i.setValueHelper(ElementHelper.STRING);
 			yield true;
 		}

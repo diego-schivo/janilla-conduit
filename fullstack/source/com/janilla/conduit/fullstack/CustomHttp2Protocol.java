@@ -27,7 +27,7 @@ import java.net.URI;
 
 import com.janilla.conduit.backend.ConduitBackendApp;
 import com.janilla.http.HttpRequest;
-import com.janilla.http2.Http2Exchange;
+import com.janilla.http.HttpExchange;
 import com.janilla.http2.Http2Protocol;
 
 public class CustomHttp2Protocol extends Http2Protocol {
@@ -35,14 +35,14 @@ public class CustomHttp2Protocol extends Http2Protocol {
 	public ConduitBackendApp backend;
 
 	@Override
-	protected Http2Exchange createExchange(HttpRequest request) {
+	protected HttpExchange createExchange(HttpRequest request) {
 		URI u;
 		try {
 			u = request.getUri();
 		} catch (NullPointerException e) {
 			u = null;
 		}
-		return u != null && u.getPath().startsWith("/api/") ? backend.getFactory().create(Http2Exchange.class)
+		return u != null && u.getPath().startsWith("/api/") ? backend.getFactory().create(HttpExchange.class)
 				: super.createExchange(request);
 	}
 }

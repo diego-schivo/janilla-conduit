@@ -26,13 +26,13 @@ package com.janilla.conduit.testing;
 import java.net.URI;
 
 import com.janilla.http.HttpRequest;
-import com.janilla.http2.Http2Exchange;
+import com.janilla.http.HttpExchange;
 import com.janilla.http2.Http2Protocol;
 
 public class CustomHttp2Protocol extends Http2Protocol {
 
 	@Override
-	protected Http2Exchange createExchange(HttpRequest request) {
+	protected HttpExchange createExchange(HttpRequest request) {
 		URI u;
 		try {
 			u = request.getUri();
@@ -40,7 +40,7 @@ public class CustomHttp2Protocol extends Http2Protocol {
 			u = null;
 		}
 		return Test.fullstack != null && u != null && u.getPath().startsWith("/api/")
-				? Test.fullstack.getBackend().getFactory().create(Http2Exchange.class)
+				? Test.fullstack.getBackend().getFactory().create(HttpExchange.class)
 				: super.createExchange(request);
 	}
 }

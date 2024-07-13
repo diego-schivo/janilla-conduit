@@ -31,6 +31,7 @@ import java.util.function.Supplier;
 import com.janilla.conduit.backend.ConduitBackendApp;
 import com.janilla.conduit.frontend.ConduitFrontendApp;
 import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
 import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
@@ -53,7 +54,7 @@ public class ConduitFullstackApp {
 		var s = a.getFactory().create(Server.class);
 		s.setAddress(
 				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"))));
-		s.setHandler(a.getHandler());
+//		// s.setHandler(a.getHandler());
 		s.serve();
 	}
 
@@ -78,11 +79,10 @@ public class ConduitFullstackApp {
 		return a;
 	});
 
-	Supplier<Server.Handler> handler = Lazy.of(() -> {
-		return c -> {
-			// TODO
-//			var o = c.getException() != null ? c.getException() : c.getRequest();
-			var o = (Object) ((HttpExchange) c).getRequest();
+	Supplier<HttpHandler> handler = Lazy.of(() -> {
+		return x -> {
+			var ex = (HttpExchange) x;
+			var o = ex.getException() != null ? ex.getException() : ex.getRequest();
 			var h = switch (o) {
 			case HttpRequest q -> {
 				URI u;
@@ -98,7 +98,7 @@ public class ConduitFullstackApp {
 			case Exception e -> backend.get().getHandler();
 			default -> null;
 			};
-			return h.handle(c);
+			return h.handle(ex);
 		};
 	});
 
@@ -118,7 +118,7 @@ public class ConduitFullstackApp {
 		return frontend.get();
 	}
 
-	public Server.Handler getHandler() {
+	public HttpHandler getHandler() {
 		return handler.get();
 	}
 }

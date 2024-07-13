@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.janilla.http.HttpHandler;
 import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Lazy;
@@ -51,7 +52,7 @@ public class ConduitFrontendApp {
 		var s = a.getFactory().create(Server.class);
 		s.setAddress(
 				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.frontend.server.port"))));
-		s.setHandler(a.getHandler());
+//		// s.setHandler(a.getHandler());
 		s.serve();
 	}
 
@@ -65,7 +66,7 @@ public class ConduitFrontendApp {
 		return f;
 	});
 
-	Supplier<Server.Handler> handler = Lazy.of(() -> {
+	Supplier<HttpHandler> handler = Lazy.of(() -> {
 		var b = getFactory().create(ApplicationHandlerBuilder.class);
 		return b.build();
 	});
@@ -78,7 +79,7 @@ public class ConduitFrontendApp {
 		return factory.get();
 	}
 
-	public Server.Handler getHandler() {
+	public HttpHandler getHandler() {
 		return handler.get();
 	}
 

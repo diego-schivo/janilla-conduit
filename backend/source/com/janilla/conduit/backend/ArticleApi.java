@@ -33,7 +33,7 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.janilla.persistence.Crud.Page;
+import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.ForbiddenException;
@@ -122,7 +122,7 @@ public class ArticleApi {
 	public Object listFeed(Range range, User user) throws IOException {
 		var u = persistence.crud(User.class).filter("followList", user.id());
 		var p = u.length > 0 ? persistence.crud(Article.class).filter("author", range.skip, range.limit,
-				Arrays.stream(u).boxed().toArray()) : Page.empty();
+				Arrays.stream(u).boxed().toArray()) : Crud.Page.empty();
 		return Map.of("articles", persistence.crud(Article.class).read(p.ids()), "articlesCount", p.total());
 	}
 

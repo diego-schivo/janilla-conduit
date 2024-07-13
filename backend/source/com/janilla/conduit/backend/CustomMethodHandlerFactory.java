@@ -29,8 +29,8 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 import com.janilla.http.HttpExchange;
+import com.janilla.json.Converter;
 import com.janilla.media.HeaderField;
-import com.janilla.json.Converter.MapType;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodHandlerFactory;
 
@@ -48,7 +48,7 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	@Override
 	protected Object resolveArgument(Type type, HttpExchange exchange, Supplier<String[]> values,
-			EntryList<String, String> entries, Supplier<String> body, Supplier<UnaryOperator<MapType>> resolver) {
+			EntryList<String, String> entries, Supplier<String> body, Supplier<UnaryOperator<Converter.MapType>> resolver) {
 		if (type == User.class)
 			return ((CustomExchange) exchange).getUser();
 		return super.resolveArgument(type, exchange, values, entries, body, resolver);

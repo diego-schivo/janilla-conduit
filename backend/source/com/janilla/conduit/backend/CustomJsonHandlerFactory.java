@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -65,7 +64,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 		@Override
 		public Iterator<JsonToken<?>> buildValueIterator(Object object) {
 			var o = getStack().peek();
-			if (o instanceof Entry e) {
+			if (o instanceof Map.Entry e) {
 				var n = (String) e.getKey();
 				switch (n) {
 				case "article":
