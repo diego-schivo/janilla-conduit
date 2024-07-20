@@ -24,6 +24,7 @@
 package com.janilla.conduit.backend;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -40,15 +41,19 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	@Override
 	protected void handle(Invocation invocation, HttpExchange exchange) {
-		var o = configuration.getProperty("conduit.api.cors.origin");
-		exchange.getResponse().getHeaders().add(new HeaderField("Access-Control-Allow-Origin", o));
+		var rs = exchange.getResponse();
+		if (rs.getHeaders() == null)
+			rs.setHeaders(new ArrayList<>());
+		rs.getHeaders().add(
+				new HeaderField("access-control-allow-origin", configuration.getProperty("conduit.api.cors.origin")));
 
 		super.handle(invocation, exchange);
 	}
 
 	@Override
 	protected Object resolveArgument(Type type, HttpExchange exchange, Supplier<String[]> values,
-			EntryList<String, String> entries, Supplier<String> body, Supplier<UnaryOperator<Converter.MapType>> resolver) {
+			EntryList<String, String> entries, Supplier<String> body,
+			Supplier<UnaryOperator<Converter.MapType>> resolver) {
 		if (type == User.class)
 			return ((CustomExchange) exchange).getUser();
 		return super.resolveArgument(type, exchange, values, entries, body, resolver);

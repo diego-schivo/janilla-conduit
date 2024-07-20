@@ -23,6 +23,8 @@
  */
 package com.janilla.conduit.fullstack;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Properties;
@@ -33,6 +35,8 @@ import com.janilla.conduit.frontend.ConduitFrontendApp;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
+import com.janilla.http2.Http2Protocol;
+import com.janilla.net.Net;
 import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Lazy;
@@ -51,10 +55,19 @@ public class ConduitFullstackApp {
 		}
 		a.getBackend().getPersistence();
 
-		var s = a.getFactory().create(Server.class);
+		var s = new Server();
 		s.setAddress(
 				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"))));
-//		// s.setHandler(a.getHandler());
+		{
+			var p = a.getFactory().create(Http2Protocol.class);
+			try (var is = Net.class.getResourceAsStream("testkeys")) {
+				p.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+			p.setHandler(a.getHandler());
+			s.setProtocol(p);
+		}
 		s.serve();
 	}
 

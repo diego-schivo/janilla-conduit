@@ -49,9 +49,9 @@ public class AccessControlWeb {
 //		response.setStatus(HttpResponse.Status.of(204));
 		response.setStatus(204);
 		var hh = response.getHeaders();
-		hh.add(new HeaderField("Access-Control-Allow-Origin", o));
-		hh.add(new HeaderField("Access-Control-Allow-Methods",
+		hh.add(new HeaderField("access-control-allow-origin", o));
+		hh.add(new HeaderField("access-control-allow-methods",
 				m.contains(null) ? "*" : m.stream().collect(Collectors.joining(", "))));
-		hh.add(new HeaderField("Access-Control-Allow-Headers", h));
+		hh.add(new HeaderField("access-control-allow-headers", h));
 	}
 }
