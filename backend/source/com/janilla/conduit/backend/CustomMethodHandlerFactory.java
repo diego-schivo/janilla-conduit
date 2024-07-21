@@ -29,9 +29,9 @@ import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
+import com.janilla.http.HeaderField;
 import com.janilla.http.HttpExchange;
 import com.janilla.json.Converter;
-import com.janilla.media.HeaderField;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodHandlerFactory;
 

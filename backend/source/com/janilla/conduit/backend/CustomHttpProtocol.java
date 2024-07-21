@@ -21,26 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.testing;
-
-import java.net.URI;
+package com.janilla.conduit.backend;
 
 import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpExchange;
-import com.janilla.http2.Http2Protocol;
+import com.janilla.reflect.Factory;
 
-public class CustomHttp2Protocol extends Http2Protocol {
+public class CustomHttpProtocol extends HttpProtocol {
+
+	public Factory factory;
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request) {
-		URI u;
-		try {
-			u = request.getUri();
-		} catch (NullPointerException e) {
-			u = null;
-		}
-		return Test.fullstack != null && u != null && u.getPath().startsWith("/api/")
-				? Test.fullstack.getBackend().getFactory().create(HttpExchange.class)
-				: super.createExchange(request);
+		return factory.create(HttpExchange.class);
 	}
 }

@@ -23,12 +23,16 @@
  */
 package com.janilla.conduit.backend;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Supplier;
 
 import com.janilla.http.HttpHandler;
+import com.janilla.http.HttpProtocol;
+import com.janilla.net.Net;
 import com.janilla.net.Server;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
@@ -51,10 +55,19 @@ public class ConduitBackendApp {
 		}
 		a.getPersistence();
 
-		var s = a.getFactory().create(Server.class);
+		var s = new Server();
 		s.setAddress(
 				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.backend.server.port"))));
-//		// s.setHandler(a.getHandler());
+		{
+			var p = a.getFactory().create(HttpProtocol.class);
+			try (var is = Net.class.getResourceAsStream("testkeys")) {
+				p.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+			p.setHandler(a.getHandler());
+			s.setProtocol(p);
+		}
 		s.serve();
 	}
 

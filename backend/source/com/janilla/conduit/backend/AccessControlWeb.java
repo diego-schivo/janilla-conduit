@@ -26,7 +26,7 @@ package com.janilla.conduit.backend;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-import com.janilla.media.HeaderField;
+import com.janilla.http.HeaderField;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.web.Handle;

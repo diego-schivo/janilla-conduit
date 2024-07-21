@@ -27,10 +27,10 @@ import java.net.URI;
 
 import com.janilla.conduit.backend.ConduitBackendApp;
 import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpExchange;
-import com.janilla.http2.Http2Protocol;
 
-public class CustomHttp2Protocol extends Http2Protocol {
+public class CustomHttpProtocol extends HttpProtocol {
 
 	public ConduitBackendApp backend;
 
