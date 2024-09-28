@@ -39,7 +39,7 @@ public class CustomExchange extends HttpExchange {
 	public Persistence persistence;
 
 	private Supplier<User> user = Lazy.of(() -> {
-		var a = getRequest().getHeaders().stream().filter(x -> x.name().equals("Authorization")).map(HeaderField::value)
+		var a = getRequest().getHeaders().stream().filter(x -> x.name().equals("authorization")).map(HeaderField::value)
 				.findFirst().orElse(null);
 		var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
 		var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
