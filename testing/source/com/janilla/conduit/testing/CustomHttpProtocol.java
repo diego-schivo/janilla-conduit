@@ -23,24 +23,16 @@
  */
 package com.janilla.conduit.testing;
 
-import java.net.URI;
-
-import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpProtocol;
+import com.janilla.http.HttpRequest;
 
 public class CustomHttpProtocol extends HttpProtocol {
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request) {
-		URI u;
-		try {
-			u = request.getUri();
-		} catch (NullPointerException e) {
-			u = null;
-		}
-		return Test.fullstack != null && u != null && u.getPath().startsWith("/api/")
-				? Test.fullstack.getBackend().getFactory().create(HttpExchange.class)
+		return Test.fullstack != null && request.getPath().startsWith("/api/")
+				? Test.fullstack.backend.factory.create(HttpExchange.class)
 				: super.createExchange(request);
 	}
 }

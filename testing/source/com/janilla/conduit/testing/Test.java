@@ -42,8 +42,7 @@ public class Test {
 	public void start() throws IOException {
 		if (fullstack != null)
 			throw new RuntimeException();
-		fullstack = new ConduitFullstackApp();
-		fullstack.configuration = configuration;
+		fullstack = new ConduitFullstackApp(configuration);
 		{
 			var p = configuration.getProperty("conduit.database.file");
 			if (p.startsWith("~"))

@@ -24,7 +24,6 @@
 package com.janilla.conduit.backend;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -41,10 +40,7 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	@Override
 	protected void handle(Invocation invocation, HttpExchange exchange) {
-		var rs = exchange.getResponse();
-		if (rs.getHeaders() == null)
-			rs.setHeaders(new ArrayList<>());
-		rs.getHeaders().add(
+		exchange.getResponse().getHeaders().add(
 				new HeaderField("access-control-allow-origin", configuration.getProperty("conduit.api.cors.origin")));
 
 		super.handle(invocation, exchange);

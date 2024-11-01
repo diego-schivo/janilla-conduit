@@ -26,9 +26,9 @@ package com.janilla.conduit.testing;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
-import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
@@ -36,7 +36,6 @@ import com.janilla.http.HttpProtocol;
 import com.janilla.net.Net;
 import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
-import com.janilla.util.Lazy;
 import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
@@ -45,69 +44,63 @@ import com.janilla.web.Render;
 public class ConduitTestingApp {
 
 	public static void main(String[] args) throws Exception {
-		var a = new ConduitTestingApp();
-		{
-			var c = new Properties();
-			try (var s = a.getClass().getResourceAsStream("configuration.properties")) {
-				c.load(s);
+		var pp = new Properties();
+		try (var is = ConduitTestingApp.class.getResourceAsStream("configuration.properties")) {
+			pp.load(is);
+			if (args.length > 0) {
+				var p = args[0];
+				if (p.startsWith("~"))
+					p = System.getProperty("user.home") + p.substring(1);
+				pp.load(Files.newInputStream(Path.of(p)));
 			}
-			a.configuration = c;
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
+		var a = new ConduitTestingApp(pp);
+
+		var hp = a.factory.create(HttpProtocol.class);
+		try (var is = Net.class.getResourceAsStream("testkeys")) {
+			hp.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+		hp.setHandler(a.handler);
 
 		var s = new Server();
 		s.setAddress(
 				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"))));
-		{
-			var p = a.getFactory().create(HttpProtocol.class);
-			try (var is = Net.class.getResourceAsStream("testkeys")) {
-				p.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-			p.setHandler(a.getHandler());
-			s.setProtocol(p);
-		}
+		s.setProtocol(hp);
 		s.serve();
 	}
 
 	public Properties configuration;
 
-	private Supplier<Factory> factory = Lazy.of(() -> {
-		var f = new Factory();
-		f.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
-		f.setSource(this);
-		return f;
-	});
+	public Factory factory;
 
-	Supplier<HttpHandler> handler = Lazy.of(() -> {
-		var b = getFactory().create(ApplicationHandlerBuilder.class);
-		var h1 = b.build();
+	public HttpHandler handler;
 
-		return x -> {
-			var ex = (HttpExchange) x;
-			URI u;
-			try {
-				u = ex.getRequest().getUri();
-			} catch (NullPointerException e) {
-				u = null;
-			}
-			var h = Test.fullstack != null && !(u != null && u.getPath().startsWith("/test/"))
-					? Test.fullstack.getHandler()
-					: h1;
-			return h.handle(ex);
-		};
-	});
+	public ConduitTestingApp(Properties configuration) {
+		this.configuration = configuration;
+
+		factory = new Factory();
+		factory.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
+		factory.setSource(this);
+
+		{
+			var hb = factory.create(ApplicationHandlerBuilder.class);
+			var h = hb.build();
+			handler = x -> {
+				var he = (HttpExchange) x;
+				var fh = Test.fullstack != null && !(he.getRequest().getPath().startsWith("/test/"))
+						? Test.fullstack.handler
+						: h;
+				return fh.handle(he);
+			};
+		}
+	}
 
 	public ConduitTestingApp getApplication() {
 		return this;
-	}
-
-	public Factory getFactory() {
-		return factory.get();
-	}
-
-	public HttpHandler getHandler() {
-		return handler.get();
 	}
 
 	@Handle(method = "GET", path = "/")

@@ -26,112 +26,86 @@ package com.janilla.conduit.fullstack;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
-import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 import com.janilla.conduit.backend.ConduitBackendApp;
 import com.janilla.conduit.frontend.ConduitFrontendApp;
-import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
+import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
 import com.janilla.net.Net;
 import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
-import com.janilla.util.Lazy;
 import com.janilla.util.Util;
 
 public class ConduitFullstackApp {
 
 	public static void main(String[] args) throws Exception {
-		var a = new ConduitFullstackApp();
-		{
-			var c = new Properties();
-			try (var s = a.getClass().getResourceAsStream("configuration.properties")) {
-				c.load(s);
+		var pp = new Properties();
+		try (var is = ConduitFullstackApp.class.getResourceAsStream("configuration.properties")) {
+			pp.load(is);
+			if (args.length > 0) {
+				var p = args[0];
+				if (p.startsWith("~"))
+					p = System.getProperty("user.home") + p.substring(1);
+				pp.load(Files.newInputStream(Path.of(p)));
 			}
-			a.configuration = c;
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
-		a.getBackend().getPersistence();
+		var a = new ConduitFullstackApp(pp);
+
+		var hp = a.factory.create(HttpProtocol.class);
+		try (var is = Net.class.getResourceAsStream("testkeys")) {
+			hp.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+		hp.setHandler(a.handler);
 
 		var s = new Server();
 		s.setAddress(
 				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"))));
-		{
-			var p = a.getFactory().create(HttpProtocol.class);
-			try (var is = Net.class.getResourceAsStream("testkeys")) {
-				p.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-			p.setHandler(a.getHandler());
-			s.setProtocol(p);
-		}
+		s.setProtocol(hp);
 		s.serve();
 	}
 
 	public Properties configuration;
 
-	private Supplier<Factory> factory = Lazy.of(() -> {
-		var f = new Factory();
-		f.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
-		f.setSource(this);
-		return f;
-	});
+	public Factory factory;
 
-	Supplier<ConduitBackendApp> backend = Lazy.of(() -> {
-		var a = new ConduitBackendApp();
-		a.configuration = configuration;
-		return a;
-	});
+	public HttpHandler handler;
 
-	Supplier<ConduitFrontendApp> frontend = Lazy.of(() -> {
-		var a = new ConduitFrontendApp();
-		a.configuration = configuration;
-		return a;
-	});
+	public ConduitBackendApp backend;
 
-	Supplier<HttpHandler> handler = Lazy.of(() -> {
-		return x -> {
-			var ex = (HttpExchange) x;
-			var o = ex.getException() != null ? ex.getException() : ex.getRequest();
+	public ConduitFrontendApp frontend;
+
+	public ConduitFullstackApp(Properties configuration) {
+		this.configuration = configuration;
+
+		factory = new Factory();
+		factory.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
+		factory.setSource(this);
+
+		handler = x -> {
+			var he = (HttpExchange) x;
+			var o = he.getException() != null ? he.getException() : he.getRequest();
 			var h = switch (o) {
-			case HttpRequest q -> {
-				URI u;
-				try {
-					u = q.getUri();
-				} catch (NullPointerException e) {
-					u = null;
-				}
-//				System.out.println("u=" + u);
-				yield u != null && u.getPath().startsWith("/api/") ? backend.get().getHandler()
-						: frontend.get().getHandler();
-			}
-			case Exception e -> backend.get().getHandler();
+			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;
+			case Exception e -> backend.handler;
 			default -> null;
 			};
-			return h.handle(ex);
+			return h.handle(he);
 		};
-	});
+
+		backend = new ConduitBackendApp(configuration);
+		frontend = new ConduitFrontendApp(configuration);
+	}
 
 	public ConduitFullstackApp getApplication() {
 		return this;
-	}
-
-	public Factory getFactory() {
-		return factory.get();
-	}
-
-	public ConduitBackendApp getBackend() {
-		return backend.get();
-	}
-
-	public ConduitFrontendApp getFrontend() {
-		return frontend.get();
-	}
-
-	public HttpHandler getHandler() {
-		return handler.get();
 	}
 }

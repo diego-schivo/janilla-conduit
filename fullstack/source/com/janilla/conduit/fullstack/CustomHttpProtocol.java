@@ -23,12 +23,10 @@
  */
 package com.janilla.conduit.fullstack;
 
-import java.net.URI;
-
 import com.janilla.conduit.backend.ConduitBackendApp;
-import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpProtocol;
+import com.janilla.http.HttpRequest;
 
 public class CustomHttpProtocol extends HttpProtocol {
 
@@ -36,13 +34,7 @@ public class CustomHttpProtocol extends HttpProtocol {
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request) {
-		URI u;
-		try {
-			u = request.getUri();
-		} catch (NullPointerException e) {
-			u = null;
-		}
-		return u != null && u.getPath().startsWith("/api/") ? backend.getFactory().create(HttpExchange.class)
+		return request.getPath().startsWith("/api/") ? backend.factory.create(HttpExchange.class)
 				: super.createExchange(request);
 	}
 }
