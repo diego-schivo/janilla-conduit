@@ -72,8 +72,8 @@ export default class LoginPage extends SlottableElement {
 		}
 	}
 
-	render() {
-		// console.log("LoginPage.render");
+	renderState() {
+		// console.log("LoginPage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
 		this.content ??= this.createInterpolateDom(1);
 		this.appendChild(this.interpolate({

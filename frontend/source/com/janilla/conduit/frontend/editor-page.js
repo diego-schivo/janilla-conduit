@@ -92,8 +92,8 @@ export default class EditorPage extends SlottableElement {
 		return j.article;
 	}
 
-	render() {
-		// console.log("EditorPage.render");
+	renderState() {
+		// console.log("EditorPage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
 		this.content ??= this.createInterpolateDom(1);
 		this.appendChild(this.interpolate({

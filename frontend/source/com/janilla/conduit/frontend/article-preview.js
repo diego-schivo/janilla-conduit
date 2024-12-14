@@ -62,9 +62,9 @@ export default class ArticlePreview extends FlexibleElement {
 		this.requestUpdate();
 	}
 
-	async update() {
-		// console.log("ArticlePreview.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("ArticlePreview.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.content ??= this.createInterpolateDom(1);
 		const a = this.article;

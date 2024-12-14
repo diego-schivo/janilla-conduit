@@ -122,9 +122,9 @@ export default class ConduitApp extends FlexibleElement {
 		this.apiHeaders["Authorization"] = this.currentUser ? `Token ${this.currentUser.token}` : "";
 	}
 
-	async update() {
-		// console.log("ConduitApp.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("ConduitApp.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.header ??= this.createInterpolateDom("header");
 		const nii = this.navItems;

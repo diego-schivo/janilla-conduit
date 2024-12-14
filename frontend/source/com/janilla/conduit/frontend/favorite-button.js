@@ -71,9 +71,9 @@ export default class FavoriteButton extends FlexibleElement {
 		}
 	}
 
-	async update() {
-		// console.log("FavoriteButton.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("FavoriteButton.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.previewContent ??= this.createInterpolateDom(1);
 		this.content ??= this.createInterpolateDom(2);

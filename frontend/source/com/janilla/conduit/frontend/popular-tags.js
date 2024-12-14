@@ -56,9 +56,9 @@ export default class PopularTags extends FlexibleElement {
 		}));
 	}
 
-	async update() {
-		// console.log("PopularTags.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("PopularTags.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.loadingContent ??= this.createInterpolateDom(1);
 		this.emptyContent ??= this.createInterpolateDom(2);

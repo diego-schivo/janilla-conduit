@@ -61,9 +61,9 @@ export default class PaginationNav extends FlexibleElement {
 		}));
 	}
 
-	async update() {
-		// console.log("PaginationNav.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("PaginationNav.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		const pc = this.dataset.pagesCount ? parseInt(this.dataset.pagesCount) : 0;
 		if (this.items?.length !== pc)

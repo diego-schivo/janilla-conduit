@@ -122,8 +122,8 @@ export default class ArticlePage extends SlottableElement {
 		return { article, comments };
 	}
 
-	render() {
-		// console.log("ArticlePage.render");
+	renderState() {
+		// console.log("ArticlePage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
 		this.content ??= this.createInterpolateDom(1);
 		this.meta ??= Array.from({ length: 2 }, _ => this.createInterpolateDom(2));

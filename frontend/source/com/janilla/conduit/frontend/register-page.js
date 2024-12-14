@@ -72,8 +72,8 @@ export default class RegisterPage extends SlottableElement {
 		}
 	}
 
-	render() {
-		// console.log("RegisterPage.render");
+	renderState() {
+		// console.log("RegisterPage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
 		this.content ??= this.createInterpolateDom(1);
 		this.appendChild(this.interpolate({

@@ -71,9 +71,9 @@ export default class FollowButton extends FlexibleElement {
 		}
 	}
 
-	async update() {
-		// console.log("FollowButton.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("FollowButton.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.appendChild(this.interpolate({
 			...this.dataset,

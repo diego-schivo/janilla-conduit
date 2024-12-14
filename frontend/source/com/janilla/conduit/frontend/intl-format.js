@@ -43,8 +43,8 @@ export default class IntlFormat extends UpdatableElement {
 		super();
 	}
 
-	async update() {
-		// console.log("IntlFormat.update");
+	async updateDisplay() {
+		// console.log("IntlFormat.updateDisplay");
 		if (!this.dataset.value) {
 			this.textContent = "";
 			return;

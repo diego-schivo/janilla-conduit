@@ -1,20 +1,22 @@
-<div>
-	<!--${content}-->
-</div>
+<slot name="content"></slot>
 
-<template>
-	<div class="article-preview">Loading articles...</div>
+<template id="content">
+	<div slot="${loadingSlot}">
+		<div class="article-preview">Loading articles...</div>
+	</div>
+	<div slot="${emptySlot}">
+		<div class="article-preview">No articles are here... yet.</div>
+	</div>
+	<div slot="${nonemptySlot}">
+		<!--${previews}-->
+		<!--${pagination}-->
+	</div>
 </template>
 
-<template>
-	<div class="article-preview">No articles are here... yet.</div>
-</template>
-
-<template>
-	<!--${previews}-->
-	<pagination-nav data-pages-count="${pagesCount}" data-page-number="${pageNumber}"></pagination-nav>
-</template>
-
-<template>
+<template id="preview">
 	<article-preview data-index="${index}"></article-preview>
+</template>
+
+<template id="pagination">
+	<pagination-nav data-pages-count="${pagesCount}" data-page-number="${pageNumber}"></pagination-nav>
 </template>

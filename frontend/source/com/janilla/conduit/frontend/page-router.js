@@ -49,9 +49,9 @@ export default class PageRouter extends FlexibleElement {
 		this.attachShadow({ mode: "open" });
 	}
 
-	async update() {
-		// console.log("PageRouter.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("PageRouter.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.shadowRoot.appendChild(this.interpolate());
 		const nn = this.dataset.path.split("/");

@@ -38,9 +38,9 @@ export default class NavLink extends FlexibleElement {
 		this.attachShadow({ mode: "open" });
 	}
 
-	async update() {
-		// console.log("NavLink.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("NavLink.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.icon ??= this.createInterpolateDom(1);
 		this.image ??= this.createInterpolateDom(2);

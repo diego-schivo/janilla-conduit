@@ -90,8 +90,8 @@ export default class HomePage extends SlottableElement {
 		this.requestUpdate();
 	}
 
-	render() {
-		// console.log("HomePage.render");
+	renderState() {
+		// console.log("HomePage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
 		this.content ??= this.createInterpolateDom(1);
 		this.banner ??= this.createInterpolateDom(2);

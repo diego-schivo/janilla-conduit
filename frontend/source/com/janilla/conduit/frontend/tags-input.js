@@ -80,9 +80,9 @@ export default class TagsInput extends FlexibleElement {
 		el.value = "";
 	}
 
-	async update() {
-		// console.log("TagsInput.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("TagsInput.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		const vv = this.values;
 		if (this.tags?.length !== vv.length)

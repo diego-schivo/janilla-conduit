@@ -87,8 +87,8 @@ export default class ProfilePage extends SlottableElement {
 		return j.profile;
 	}
 
-	render() {
-		// console.log("ProfilePage.render");
+	renderState() {
+		// console.log("ProfilePage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
 		this.content ??= this.createInterpolateDom(1);
 		this.settingsAction ??= this.createInterpolateDom(2);

@@ -35,6 +35,7 @@ export default class ArticleList extends FlexibleElement {
 
 	constructor() {
 		super();
+		this.attachShadow({ mode: "open" });
 	}
 
 	connectedCallback() {
@@ -54,40 +55,42 @@ export default class ArticleList extends FlexibleElement {
 		this.requestUpdate();
 	}
 
-	async update() {
-		// console.log("ArticleList.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("ArticleList.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
-		this.loadingContent ??= this.createInterpolateDom(1);
-		this.emptyContent ??= this.createInterpolateDom(2);
-		this.nonemptyContent ??= this.createInterpolateDom(3);
-		this.appendChild(this.interpolate({ content: this.loadingContent() }));
+		this.shadowRoot.appendChild(this.interpolate());
+		this.interpolateContent ??= this.createInterpolateDom("content");
+		this.appendChild(this.interpolateContent({ loadingSlot: "content" }));
 		if (this.dataset.href) {
 			const u = new URL(this.dataset.href);
 			u.searchParams.append("skip", ((this.pageNumber ?? 1) - 1) * 10);
 			u.searchParams.append("limit", 10);
 			const j = await (await fetch(u, { headers: this.closest("conduit-app").apiHeaders })).json();
-			// console.log("ArticleList.update", j);
+			// console.log("ArticleList.updateDisplay", j);
 			this.articles = j.articles;
 			this.articlesCount = j.articlesCount;
-			this.pageNumber = 1;
 		} else {
-			this.articles = null;
-			this.articlesCount = null;
-			this.pageNumber = null;
+			this.articles = [];
+			this.articlesCount = 0;
 		}
-		this.appendChild(this.interpolate({
-			content: this.articles?.length
-				? this.nonemptyContent({
-					previews: (() => {
-						if (this.previews?.length !== this.articles.length)
-							this.previews = this.articles.map(_ => this.createInterpolateDom(4));
-						return this.previews.map((x, i) => x({ index: i }));
-					})(),
-					pagesCount: this.articlesCount != null ? Math.ceil(this.articlesCount / 10) : null,
+		this.pageNumber = 1;
+		this.appendChild(this.interpolateContent({
+			emptySlot: this.articles.length ? null : "content",
+			nonemptySlot: this.articles.length ? "content" : null,
+			previews: (() => {
+				if (this.previews?.length !== this.articles.length)
+					this.previews = this.articles.map(_ => this.createInterpolateDom("preview"));
+				return this.previews.map((x, i) => x({ index: i }));
+			})(),
+			pagination: (() => {
+				this.interpolatePagination ??= this.createInterpolateDom("pagination");
+				const pc = Math.ceil(this.articlesCount / 10);
+				return pc > 1 ? this.interpolatePagination({
+					pagesCount: pc,
 					pageNumber: this.pageNumber
-				})
-				: this.emptyContent()
+				}) : null;
+			})()
 		}));
 	}
 }

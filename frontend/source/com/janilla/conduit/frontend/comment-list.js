@@ -94,9 +94,9 @@ export default class CommentList extends FlexibleElement {
 		}
 	}
 
-	async update() {
-		// console.log("CommentList.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("CommentList.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		this.authenticated ??= this.createInterpolateDom(1);
 		this.unauthenticated ??= this.createInterpolateDom(2);

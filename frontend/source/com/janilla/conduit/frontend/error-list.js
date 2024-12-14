@@ -45,9 +45,9 @@ export default class ErrorList extends FlexibleElement {
 		this.dataset.messages = x.join();
 	}
 
-	async update() {
-		// console.log("ErrorList.update");
-		await super.update();
+	async updateDisplay() {
+		// console.log("ErrorList.updateDisplay");
+		await super.updateDisplay();
 		this.interpolate ??= this.createInterpolateDom();
 		const mm = this.messages;
 		if (this.items?.length !== mm.length)
