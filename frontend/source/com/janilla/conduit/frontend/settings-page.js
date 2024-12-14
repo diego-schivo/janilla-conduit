@@ -59,7 +59,7 @@ export default class SettingsPage extends SlottableElement {
 			bubbles: true,
 			detail: { user: null }
 		}));
-		location.hash = '#/';
+		location.hash = "#/";
 	}
 
 	handleSubmit = async event => {

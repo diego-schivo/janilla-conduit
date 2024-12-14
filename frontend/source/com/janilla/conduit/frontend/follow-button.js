@@ -78,7 +78,7 @@ export default class FollowButton extends FlexibleElement {
 		this.appendChild(this.interpolate({
 			...this.dataset,
 			class: `btn btn-sm action-btn ${this.dataset.active === "true" ? "btn-secondary" : "btn-outline-secondary"}`,
-			text: `${this.dataset.active === "true" ? 'Unfollow' : 'Follow'} ${this.dataset.username}`
+			text: `${this.dataset.active === "true" ? "Unfollow" : "Follow"} ${this.dataset.username}`
 		}));
 	}
 }

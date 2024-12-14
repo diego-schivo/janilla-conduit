@@ -83,7 +83,7 @@ export default class FavoriteButton extends FlexibleElement {
 			content: this.dataset.preview === "true"
 				? this.previewContent(this.dataset)
 				: this.content({
-					text: `${this.dataset.active === "true" ? 'Unfavorite' : 'Favorite'} Article`,
+					text: `${this.dataset.active === "true" ? "Unfavorite" : "Favorite"} Article`,
 					count: `(${this.dataset.count})`
 				})
 		}));

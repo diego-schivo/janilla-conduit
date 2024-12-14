@@ -126,11 +126,11 @@ export default class ConduitApp extends FlexibleElement {
 		// console.log("ConduitApp.update");
 		await super.update();
 		this.interpolate ??= this.createInterpolateDom();
-		this.header ??= this.createInterpolateDom(1);
+		this.header ??= this.createInterpolateDom("header");
 		const nii = this.navItems;
 		if (this.headerNavItems?.length !== nii.length)
-			this.headerNavItems = nii.map(_ => this.createInterpolateDom(2));
-		this.footer ??= this.createInterpolateDom(3);
+			this.headerNavItems = nii.map(_ => this.createInterpolateDom("nav-item"));
+		this.footer ??= this.createInterpolateDom("footer");
 		this.appendChild(this.interpolate({
 			header: this.header({
 				navItems: nii.map((x, i) => this.headerNavItems[i]({

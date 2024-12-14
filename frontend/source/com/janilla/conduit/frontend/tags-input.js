@@ -60,7 +60,7 @@ export default class TagsInput extends FlexibleElement {
 
 	handleClick = event => {
 		// console.log("TagsInput.handleClick", event);
-		const el = event.target.closest('.ion-close-round');
+		const el = event.target.closest(".ion-close-round");
 		if (!el)
 			return;
 		event.preventDefault();
@@ -71,13 +71,13 @@ export default class TagsInput extends FlexibleElement {
 
 	handleKeyDown = event => {
 		// console.log("TagsInput.handleKeyDown", event);
-		if (event.key !== 'Enter')
+		if (event.key !== "Enter")
 			return;
 		event.preventDefault();
 		const el = event.target;
 		if (!this.values.includes(el.value))
 			this.values = [...this.values, el.value];
-		el.value = '';
+		el.value = "";
 	}
 
 	async update() {

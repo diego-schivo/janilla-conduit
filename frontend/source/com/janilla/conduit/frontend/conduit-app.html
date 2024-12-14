@@ -10,7 +10,7 @@
 </page-router>
 <!--${footer}-->
 
-<template>
+<template id="header">
 	<nav class="navbar navbar-light">
 		<div class="container">
 			<a class="navbar-brand" href="#/">conduit</a>
@@ -21,13 +21,13 @@
 	</nav>
 </template>
 
-<template>
+<template id="nav-item">
 	<li class="nav-item">
 		<nav-link class="${class}" data-href="${href}" data-icon="${icon}" data-image="${image}">${text}</nav-link>
 	</li>
 </template>
 
-<template>
+<template id="footer">
 	<footer>
 		<div class="container">
 			<a href="#/" class="logo-font">conduit</a>

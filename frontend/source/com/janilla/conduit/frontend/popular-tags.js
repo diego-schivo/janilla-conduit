@@ -47,10 +47,10 @@ export default class PopularTags extends FlexibleElement {
 	handleClick = event => {
 		// console.log("PopularTags.handleClick", event);
 		event.preventDefault();
-		const el = event.target.closest('.tag-default');
+		const el = event.target.closest(".tag-default");
 		if (!el)
 			return;
-		this.dispatchEvent(new CustomEvent('select-tag', {
+		this.dispatchEvent(new CustomEvent("select-tag", {
 			bubbles: true,
 			detail: { tag: el.textContent.trim() }
 		}));

@@ -64,8 +64,8 @@ export default class ArticleList extends FlexibleElement {
 		this.appendChild(this.interpolate({ content: this.loadingContent() }));
 		if (this.dataset.href) {
 			const u = new URL(this.dataset.href);
-			u.searchParams.append('skip', ((this.pageNumber ?? 1) - 1) * 10);
-			u.searchParams.append('limit', 10);
+			u.searchParams.append("skip", ((this.pageNumber ?? 1) - 1) * 10);
+			u.searchParams.append("limit", 10);
 			const j = await (await fetch(u, { headers: this.closest("conduit-app").apiHeaders })).json();
 			// console.log("ArticleList.update", j);
 			this.articles = j.articles;
