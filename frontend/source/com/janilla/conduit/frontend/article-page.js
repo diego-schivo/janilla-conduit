@@ -1,4 +1,27 @@
-import { SlottableElement } from "./web-components.js";
+/*
+ * MIT License
+ *
+ * Copyright (c) 2024 Diego Schivo
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+import { SlottableElement } from "./slottable-element.js";
 import { formatMarkdownAsHTML, parseMarkdown } from "./markdown.js";
 
 export default class ArticlePage extends SlottableElement {
@@ -85,7 +108,7 @@ export default class ArticlePage extends SlottableElement {
 	}
 
 	async computeState() {
-		console.log("ArticlePage.computeState");
+		// console.log("ArticlePage.computeState");
 		const ca = this.closest("conduit-app");
 		const uu = Array.from({ length: 2 }, _ => new URL(ca.dataset.apiUrl));
 		uu[0].pathname += `/articles/${this.dataset.slug}`;
@@ -101,14 +124,14 @@ export default class ArticlePage extends SlottableElement {
 
 	render() {
 		// console.log("ArticlePage.render");
-		this.interpolator ??= this.interpolatorBuilders[0]();
-		this.content ??= this.interpolatorBuilders[1]();
-		this.meta ??= Array.from({ length: 2 }, _ => this.interpolatorBuilders[2]());
-		this.canModify ??= Array.from({ length: 2 }, _ => this.interpolatorBuilders[3]());
-		this.cannotModify ??= Array.from({ length: 2 }, _ => this.interpolatorBuilders[4]());
+		this.interpolate ??= this.createInterpolateDom();
+		this.content ??= this.createInterpolateDom(1);
+		this.meta ??= Array.from({ length: 2 }, _ => this.createInterpolateDom(2));
+		this.canModify ??= Array.from({ length: 2 }, _ => this.createInterpolateDom(3));
+		this.cannotModify ??= Array.from({ length: 2 }, _ => this.createInterpolateDom(4));
 		const a = this.state?.article;
 		const ca = this.closest("conduit-app");
-		this.appendChild(this.interpolator({
+		this.appendChild(this.interpolate({
 			content: this.slot && a ? this.content({
 				...a,
 				meta1: this.meta[0]({
@@ -117,7 +140,7 @@ export default class ArticlePage extends SlottableElement {
 				}),
 				tags: (() => {
 					if (this.tags?.length !== a.tagList.length)
-						this.tags = a.tagList.map(_ => this.interpolatorBuilders[5]());
+						this.tags = a.tagList.map(_ => this.createInterpolateDom(5));
 					return this.tags.map((x, i) => x(a.tagList[i]));
 				})(),
 				meta2: this.meta[1]({

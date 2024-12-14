@@ -1,6 +1,29 @@
-import { UpdatableElement } from "./web-components.js";
+/*
+ * MIT License
+ *
+ * Copyright (c) 2024 Diego Schivo
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+import { FlexibleElement } from "./flexible-element.js";
 
-export default class CommentList extends UpdatableElement {
+export default class CommentList extends FlexibleElement {
 
 	static get templateName() {
 		return "comment-list";
@@ -74,16 +97,16 @@ export default class CommentList extends UpdatableElement {
 	async update() {
 		// console.log("CommentList.update");
 		await super.update();
-		this.interpolator ??= this.interpolatorBuilders[0]();
-		this.authenticated ??= this.interpolatorBuilders[1]();
-		this.unauthenticated ??= this.interpolatorBuilders[2]();
+		this.interpolate ??= this.createInterpolateDom();
+		this.authenticated ??= this.createInterpolateDom(1);
+		this.unauthenticated ??= this.createInterpolateDom(2);
 		const ca = this.closest("conduit-app");
 		const ap = this.closest("article-page");
 		if (this.cards?.length !== ap.state.comments.length) {
-			this.cards = ap.state.comments.map(_ => this.interpolatorBuilders[3]());
-			this.modOptions = this.cards.map(_ => this.interpolatorBuilders[4]());
+			this.cards = ap.state.comments.map(_ => this.createInterpolateDom(3));
+			this.modOptions = this.cards.map(_ => this.createInterpolateDom(4));
 		}
-		this.appendChild(this.interpolator({
+		this.appendChild(this.interpolate({
 			form: ca.currentUser ? this.authenticated({
 				...ca.currentUser,
 				errorMessages: this.errorMessages

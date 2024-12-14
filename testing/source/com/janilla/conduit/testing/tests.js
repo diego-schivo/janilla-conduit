@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { matchNode } from "./dom.js";
+import { matchNode } from "./dom-utils.js";
 
 const delay = () => new Promise(x => setTimeout(x, 10));
 

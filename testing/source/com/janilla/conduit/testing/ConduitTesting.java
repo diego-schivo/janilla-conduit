@@ -101,7 +101,7 @@ public class ConduitTesting {
 	}
 
 	@Handle(method = "GET", path = "/")
-	public ConduitTesting getApplication() {
+	public ConduitTesting application() {
 		return this;
 	}
 }

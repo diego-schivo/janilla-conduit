@@ -29,12 +29,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 
-import com.janilla.conduit.fullstack.ConduitFullstackApp;
+import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.web.Handle;
 
 public class Test {
 
-	static ConduitFullstackApp fullstack;
+	static ConduitFullstack fullstack;
 
 	public Properties configuration;
 
@@ -42,7 +42,7 @@ public class Test {
 	public void start() throws IOException {
 		if (fullstack != null)
 			throw new RuntimeException();
-		fullstack = new ConduitFullstackApp(configuration);
+		fullstack = new ConduitFullstack(configuration);
 		{
 			var p = configuration.getProperty("conduit.database.file");
 			if (p.startsWith("~"))

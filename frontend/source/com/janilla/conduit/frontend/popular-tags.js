@@ -1,6 +1,29 @@
-import { UpdatableElement } from "./web-components.js";
+/*
+ * MIT License
+ *
+ * Copyright (c) 2024 Diego Schivo
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+import { FlexibleElement } from "./flexible-element.js";
 
-export default class PopularTags extends UpdatableElement {
+export default class PopularTags extends FlexibleElement {
 
 	static get templateName() {
 		return "popular-tags";
@@ -36,24 +59,24 @@ export default class PopularTags extends UpdatableElement {
 	async update() {
 		// console.log("PopularTags.update");
 		await super.update();
-		this.interpolator ??= this.interpolatorBuilders[0]();
-		this.loadingContent ??= this.interpolatorBuilders[1]();
-		this.emptyContent ??= this.interpolatorBuilders[2]();
-		this.nonemptyContent ??= this.interpolatorBuilders[3]();
+		this.interpolate ??= this.createInterpolateDom();
+		this.loadingContent ??= this.createInterpolateDom(1);
+		this.emptyContent ??= this.createInterpolateDom(2);
+		this.nonemptyContent ??= this.createInterpolateDom(3);
 		this.tags ??= await (async () => {
-			this.appendChild(this.interpolator({ content: this.loadingContent() }));
+			this.appendChild(this.interpolate({ content: this.loadingContent() }));
 			const ca = this.closest("conduit-app");
 			const u = new URL(ca.dataset.apiUrl);
 			u.pathname += "/tags";
 			const j = await (await fetch(u, { headers: ca.apiHeaders })).json();
 			return j.tags;
 		})();
-		this.appendChild(this.interpolator({
+		this.appendChild(this.interpolate({
 			content: this.tags.length
 				? this.nonemptyContent({
 					items: (() => {
 						if (this.items?.length !== this.tags.length)
-							this.items = this.tags.map(_ => this.interpolatorBuilders[4]());
+							this.items = this.tags.map(_ => this.createInterpolateDom(4));
 						return this.tags.map((x, i) => this.items[i](x));
 					})()
 				})

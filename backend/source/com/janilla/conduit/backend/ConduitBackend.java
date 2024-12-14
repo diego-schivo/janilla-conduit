@@ -102,7 +102,7 @@ public class ConduitBackend {
 		}
 	}
 
-	public ConduitBackend getApplication() {
+	public ConduitBackend application() {
 		return this;
 	}
 }

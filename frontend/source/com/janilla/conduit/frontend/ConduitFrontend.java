@@ -90,7 +90,7 @@ public class ConduitFrontend {
 	}
 
 	@Handle(method = "GET", path = "/")
-	public ConduitFrontend getApplication() {
+	public ConduitFrontend application() {
 		return this;
 	}
 

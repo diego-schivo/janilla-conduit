@@ -41,11 +41,11 @@ import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Util;
 
-public class ConduitFullstackApp {
+public class ConduitFullstack {
 
 	public static void main(String[] args) throws Exception {
 		var pp = new Properties();
-		try (var is = ConduitFullstackApp.class.getResourceAsStream("configuration.properties")) {
+		try (var is = ConduitFullstack.class.getResourceAsStream("configuration.properties")) {
 			pp.load(is);
 			if (args.length > 0) {
 				var p = args[0];
@@ -56,7 +56,7 @@ public class ConduitFullstackApp {
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-		var a = new ConduitFullstackApp(pp);
+		var a = new ConduitFullstack(pp);
 
 		var hp = a.factory.create(HttpProtocol.class);
 		try (var is = Net.class.getResourceAsStream("testkeys")) {
@@ -83,7 +83,7 @@ public class ConduitFullstackApp {
 
 	public ConduitFrontend frontend;
 
-	public ConduitFullstackApp(Properties configuration) {
+	public ConduitFullstack(Properties configuration) {
 		this.configuration = configuration;
 
 		factory = new Factory();
@@ -105,7 +105,7 @@ public class ConduitFullstackApp {
 		frontend = new ConduitFrontend(configuration);
 	}
 
-	public ConduitFullstackApp getApplication() {
+	public ConduitFullstack application() {
 		return this;
 	}
 }

@@ -1,8 +1,31 @@
-import { UpdatableElement } from "./web-components.js";
+/*
+ * MIT License
+ *
+ * Copyright (c) 2024 Diego Schivo
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+import { FlexibleElement } from "./flexible-element.js";
 
 function updateElement(element, active, more) {
 	if (active) {
-		console.log("PageRouter.updateElement", element);
+		// console.log("PageRouter.updateElement", element);
 		element.setAttribute("slot", "content");
 	} else
 		element.removeAttribute("slot");
@@ -11,7 +34,7 @@ function updateElement(element, active, more) {
 		more(element, active);
 }
 
-export default class PageRouter extends UpdatableElement {
+export default class PageRouter extends FlexibleElement {
 
 	static get observedAttributes() {
 		return ["data-path"];
@@ -29,8 +52,8 @@ export default class PageRouter extends UpdatableElement {
 	async update() {
 		// console.log("PageRouter.update");
 		await super.update();
-		this.interpolator ??= this.interpolatorBuilders[0]();
-		this.shadowRoot.appendChild(this.interpolator());
+		this.interpolate ??= this.createInterpolateDom();
+		this.shadowRoot.appendChild(this.interpolate());
 		const nn = this.dataset.path.split("/");
 		updateElement(this.querySelector("article-page"), nn[1] === "article", (el, a) => {
 			if (a)
