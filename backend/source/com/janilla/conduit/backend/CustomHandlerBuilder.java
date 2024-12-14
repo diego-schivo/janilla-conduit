@@ -29,7 +29,7 @@ import com.janilla.web.WebHandlerFactory;
 
 public class CustomHandlerBuilder extends ApplicationHandlerBuilder {
 
-	public ConduitBackendApp application;
+	public ConduitBackend application;
 
 	@Override
 	protected WebHandlerFactory buildMethodHandlerFactory() {

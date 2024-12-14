@@ -28,10 +28,12 @@ import com.janilla.persistence.Crud;
 public class UserCrud extends Crud<User> {
 
 	public boolean follow(Long profile, Long user) {
-		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.add(user, profile)), true);
+		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.add(user, new Long[] { profile })),
+				true);
 	}
 
 	public boolean unfollow(Long profile, Long user) {
-		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.remove(user, profile)), true);
+		return database.perform((ss, ii) -> ii.perform("User.followList", i -> i.remove(user, new Long[] { profile })),
+				true);
 	}
 }

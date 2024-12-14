@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.fullstack;
+package com.janilla.conduit.testing;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -30,22 +30,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import com.janilla.conduit.backend.ConduitBackend;
-import com.janilla.conduit.frontend.ConduitFrontend;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpProtocol;
-import com.janilla.http.HttpRequest;
 import com.janilla.net.Net;
 import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Util;
+import com.janilla.web.ApplicationHandlerBuilder;
+import com.janilla.web.Handle;
+import com.janilla.web.Render;
 
-public class ConduitFullstackApp {
+@Render("index.html")
+public class ConduitTesting {
 
 	public static void main(String[] args) throws Exception {
 		var pp = new Properties();
-		try (var is = ConduitFullstackApp.class.getResourceAsStream("configuration.properties")) {
+		try (var is = ConduitTesting.class.getResourceAsStream("configuration.properties")) {
 			pp.load(is);
 			if (args.length > 0) {
 				var p = args[0];
@@ -56,7 +57,7 @@ public class ConduitFullstackApp {
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-		var a = new ConduitFullstackApp(pp);
+		var a = new ConduitTesting(pp);
 
 		var hp = a.factory.create(HttpProtocol.class);
 		try (var is = Net.class.getResourceAsStream("testkeys")) {
@@ -68,7 +69,7 @@ public class ConduitFullstackApp {
 
 		var s = new Server();
 		s.setAddress(
-				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"))));
+				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"))));
 		s.setProtocol(hp);
 		s.serve();
 	}
@@ -79,33 +80,28 @@ public class ConduitFullstackApp {
 
 	public HttpHandler handler;
 
-	public ConduitBackend backend;
-
-	public ConduitFrontend frontend;
-
-	public ConduitFullstackApp(Properties configuration) {
+	public ConduitTesting(Properties configuration) {
 		this.configuration = configuration;
 
 		factory = new Factory();
 		factory.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
 		factory.setSource(this);
 
-		handler = x -> {
-			var he = (HttpExchange) x;
-			var o = he.getException() != null ? he.getException() : he.getRequest();
-			var h = switch (o) {
-			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;
-			case Exception e -> backend.handler;
-			default -> null;
+		{
+			var hb = factory.create(ApplicationHandlerBuilder.class);
+			var h = hb.build();
+			handler = x -> {
+				var he = (HttpExchange) x;
+				var fh = Test.fullstack != null && !(he.getRequest().getPath().startsWith("/test/"))
+						? Test.fullstack.handler
+						: h;
+				return fh.handle(he);
 			};
-			return h.handle(he);
-		};
-
-		backend = new ConduitBackend(configuration);
-		frontend = new ConduitFrontend(configuration);
+		}
 	}
 
-	public ConduitFullstackApp getApplication() {
+	@Handle(method = "GET", path = "/")
+	public ConduitTesting getApplication() {
 		return this;
 	}
 }

@@ -1,0 +1,8 @@
+@import 'base.css';
+
+a,
+a:focus,
+a:hover {
+	color: inherit;
+	text-decoration: inherit;
+}

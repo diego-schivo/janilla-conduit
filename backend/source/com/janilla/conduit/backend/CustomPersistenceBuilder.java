@@ -41,7 +41,7 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
 	@Override
 	public Persistence build() {
-		var a = (ConduitBackendApp) factory.getSource();
+		var a = (ConduitBackend) factory.getSource();
 		var s = Boolean.parseBoolean(a.configuration.getProperty("conduit.database.seed"));
 		var e = Files.exists(file);
 		var p = super.build();

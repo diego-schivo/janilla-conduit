@@ -1,0 +1,65 @@
+<!--${content}-->
+
+<template>
+	<div class="article-page">
+		<div class="banner">
+			<div class="container">
+				<h1>${title}</h1>
+				<!--${meta1}-->
+			</div>
+		</div>
+		<div class="container page">
+			<div class="row article-content">
+				<div class="col-md-12">
+					<p>${description}</p>
+					<!--${bodyHtml}-->
+					<ul class="tag-list">
+						<!--${tags}-->
+					</ul>
+				</div>
+			</div>
+			<hr />
+			<div class="article-actions">
+				<!--${meta2}-->
+			</div>
+			<comment-list></comment-list>
+		</div>
+	</div>
+</template>
+
+<template>
+	<div class="article-meta">
+		<a href="${authorHref}">
+			<img src="${author.image}" />
+		</a>
+		<div class="info">
+			<a href="${authorHref}" class="author">${author.username}</a>
+			<span class="date">
+				<intl-format data-type="date" data-value="${createdAt}"></intl-format>
+			</span>
+		</div>
+		<!--${content}-->
+	</div>
+</template>
+
+<template>
+	<span>
+		<a class="btn btn-sm btn-outline-secondary">
+			<i class="ion-edit"></i>
+			<span>Edit Article</span>
+		</a>
+		<button class="btn btn-sm btn-outline-danger">
+			<i class="ion-trash-a"></i>
+			<span>Delete Article</span>
+		</button>
+	</span>
+</template>
+
+<template>
+	<follow-button data-username="${author.username}" data-active="${author.following}"></follow-button>
+	<favorite-button data-slug="${slug}" data-active="${favorited}" data-count="${favoritesCount}"></favorite-button>
+</template>
+
+<template>
+	<li class="tag-default tag-pill tag-outline">${}</li>
+</template>

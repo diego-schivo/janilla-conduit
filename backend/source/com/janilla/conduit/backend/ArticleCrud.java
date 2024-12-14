@@ -33,16 +33,16 @@ class ArticleCrud extends Crud<Article> {
 
 	public boolean favorite(Long id, Instant createdAt, Long user) {
 		return database.perform((ss, ii) -> {
-			var s = ii.perform("User.favoriteList", i -> i.add(id, user));
-			ii.perform("Article.favoriteList", i -> i.add(user, (Object) new Object[] { createdAt, id }));
+			var s = ii.perform("User.favoriteList", i -> i.add(id, new Long[] { user }));
+			ii.perform("Article.favoriteList", i -> i.add(user, new Object[][] { { createdAt, id } }));
 			return s;
 		}, true);
 	}
 
 	public boolean unfavorite(Long id, Instant createdAt, Long user) {
 		return database.perform((ss, ii) -> {
-			var s = ii.perform("User.favoriteList", i -> i.remove(id, user));
-			ii.perform("Article.favoriteList", i -> i.remove(user, (Object) new Object[] { createdAt, id }));
+			var s = ii.perform("User.favoriteList", i -> i.remove(id, new Long[] { user }));
+			ii.perform("Article.favoriteList", i -> i.remove(user, new Object[][] { { createdAt, id } }));
 			return s;
 		}, true);
 	}
@@ -73,9 +73,9 @@ class ArticleCrud extends Crud<Article> {
 							var t = e.getKey();
 							var c = e.getValue();
 							if (c[0] > 0)
-								i.remove(new Object[] { c[0] }, t);
+								i.remove(new Object[] { c[0] }, new String[] { t });
 							if (c[1] > 0)
-								i.add(new Object[] { c[1] }, t);
+								i.add(new Object[] { c[1] }, new String[] { t });
 						}
 						return null;
 					});

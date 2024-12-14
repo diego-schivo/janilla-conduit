@@ -23,14 +23,14 @@
  */
 package com.janilla.conduit.fullstack;
 
-import com.janilla.conduit.backend.ConduitBackendApp;
+import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
 
 public class CustomHttpProtocol extends HttpProtocol {
 
-	public ConduitBackendApp backend;
+	public ConduitBackend backend;
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request) {

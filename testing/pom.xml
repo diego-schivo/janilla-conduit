@@ -20,7 +20,7 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>com.janilla.conduit.testing.ConduitTestingApp</mainClass>
+					<mainClass>com.janilla.conduit.testing.ConduitTesting</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>

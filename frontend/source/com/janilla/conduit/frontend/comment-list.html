@@ -1,0 +1,50 @@
+<div class="row">
+	<div class="col-xs-12 col-md-8 offset-md-2">
+		<!--${form}-->
+		<!--${cards}-->
+	</div>
+</div>
+
+<template>
+	<div>
+		<error-list data-messages="${errorMessages}"></error-list>
+		<form class="card comment-form">
+			<div class="card-block">
+				<textarea class="form-control" placeholder="Write a comment..." rows="3" name="body"></textarea>
+			</div>
+			<div class="card-footer">
+				<img src="${image}" class="comment-author-img" />
+				<button class="btn btn-sm btn-primary">Post Comment</button>
+			</div>
+		</form>
+	</div>
+</template>
+
+<template>
+	<a href="#/login">Sign in</a> or <a href="#/register">sign up</a> to add comments on this article.
+</template>
+
+<template>
+	<div class="card">
+		<div class="card-block">
+			<p class="card-text">${body}</p>
+		</div>
+		<div class="card-footer">
+			<a href="#/@${author.username}" class="comment-author">
+				<img src="${author.image}" class="comment-author-img" />
+			</a>
+			&nbsp;
+			<a href="#/@${author.username}" class="comment-author">${author.username}</a>
+			<span class="date-posted">
+				<intl-format data-type="date" data-value="${createdAt}"></intl-format>
+			</span>
+			<!--${modOptions}-->
+		</div>
+	</div>
+</template>
+
+<template>
+	<span class="mod-options">
+		<i class="ion-trash-a"></i>
+	</span>
+</template>

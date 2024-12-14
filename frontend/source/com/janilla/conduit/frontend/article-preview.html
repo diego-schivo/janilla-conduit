@@ -1,0 +1,30 @@
+<!--${content}-->
+
+<template>
+	<div class="article-preview">
+		<div class="article-meta">
+			<a href="${authorHref}">
+				<img src="${author.image}" />
+			</a>
+			<div class="info">
+				<a href="${authorHref}" class="author">${author.username}</a>
+				<span class="date">
+					<intl-format data-type="date" data-value="${createdAt}"></intl-format>
+				</span>
+			</div>
+			<favorite-button data-preview="true" data-slug="${slug}" data-active="${favorited}" data-count="${favoritesCount}"></favorite-button>
+		</div>
+		<a href="${href}" class="preview-link">
+			<h1>${title}</h1>
+			<p>${description}</p>
+			<span>Read more...</span>
+			<ul class="tag-list">
+				<!--${tags}-->
+			</ul>
+		</a>
+	</div>
+</template>
+
+<template>
+	<li class="tag-default tag-pill tag-outline">${}</li>
+</template>

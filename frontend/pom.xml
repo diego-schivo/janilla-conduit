@@ -14,7 +14,7 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>com.janilla.conduit.frontend.ConduitFrontendApp</mainClass>
+					<mainClass>com.janilla.conduit.frontend.ConduitFrontend</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
