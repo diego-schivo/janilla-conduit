@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpProtocol;
@@ -78,6 +79,8 @@ public class ConduitTesting {
 
 	public Factory factory;
 
+	public ConduitFullstack fullstack;
+
 	public HttpHandler handler;
 
 	public ConduitTesting(Properties configuration) {
@@ -87,14 +90,14 @@ public class ConduitTesting {
 		factory.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
 		factory.setSource(this);
 
+		fullstack = new ConduitFullstack(configuration);
+
 		{
 			var hb = factory.create(ApplicationHandlerBuilder.class);
 			var h = hb.build();
 			handler = x -> {
 				var he = (HttpExchange) x;
-				var fh = Test.fullstack != null && !(he.getRequest().getPath().startsWith("/test/"))
-						? Test.fullstack.handler
-						: h;
+				var fh = Test.ongoing.get() && !he.getRequest().getPath().startsWith("/test/") ? fullstack.handler : h;
 				return fh.handle(he);
 			};
 		}

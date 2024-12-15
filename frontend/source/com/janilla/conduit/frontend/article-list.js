@@ -61,11 +61,14 @@ export default class ArticleList extends FlexibleElement {
 		this.interpolate ??= this.createInterpolateDom();
 		this.shadowRoot.appendChild(this.interpolate());
 		this.interpolateContent ??= this.createInterpolateDom("content");
-		this.appendChild(this.interpolateContent({ loadingSlot: "content" }));
 		if (this.dataset.href) {
 			const u = new URL(this.dataset.href);
 			u.searchParams.append("skip", ((this.pageNumber ?? 1) - 1) * 10);
 			u.searchParams.append("limit", 10);
+			if (u.href === this.url?.href)
+				return;
+			this.url = u;
+			this.appendChild(this.interpolateContent({ loadingSlot: "content" }));
 			const j = await (await fetch(u, { headers: this.closest("conduit-app").apiHeaders })).json();
 			// console.log("ArticleList.updateDisplay", j);
 			this.articles = j.articles;
@@ -74,6 +77,7 @@ export default class ArticleList extends FlexibleElement {
 			this.articles = [];
 			this.articlesCount = 0;
 		}
+		// console.log("ArticleList.updateDisplay", this.dataset.href, this.articles, this.articlesCount);
 		this.pageNumber = 1;
 		this.appendChild(this.interpolateContent({
 			emptySlot: this.articles.length ? null : "content",

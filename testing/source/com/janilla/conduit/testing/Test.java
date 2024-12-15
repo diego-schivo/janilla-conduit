@@ -24,41 +24,35 @@
 package com.janilla.conduit.testing;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Properties;
+import java.nio.channels.Channels;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.web.Handle;
 
 public class Test {
 
-	static ConduitFullstack fullstack;
+	public ConduitFullstack fullstack;
 
-	public Properties configuration;
+	static final AtomicBoolean ongoing = new AtomicBoolean();
 
 	@Handle(method = "POST", path = "/test/start")
 	public void start() throws IOException {
-		if (fullstack != null)
+		System.out.println("Test.start, this=" + this);
+		if (ongoing.getAndSet(true))
 			throw new RuntimeException();
-		fullstack = new ConduitFullstack(configuration);
-		{
-			var p = configuration.getProperty("conduit.database.file");
-			if (p.startsWith("~"))
-				p = System.getProperty("user.home") + p.substring(1);
-			var f = Path.of(p);
-			Files.createDirectories(f.getParent());
-			try (var s = getClass().getResourceAsStream("conduit-test.database")) {
-				Files.copy(s, f, StandardCopyOption.REPLACE_EXISTING);
-			}
+		var ch = fullstack.backend.persistence.database().getChannel().channel();
+		ch.position(0);
+		try (var is = getClass().getResourceAsStream("conduit-test.database")) {
+			var s = is.transferTo(Channels.newOutputStream(ch));
+			ch.truncate(s);
 		}
 	}
 
 	@Handle(method = "POST", path = "/test/stop")
 	public void stop() {
-		if (fullstack == null)
+		System.out.println("Test.stop, this=" + this);
+		if (!ongoing.getAndSet(false))
 			throw new RuntimeException();
-		fullstack = null;
 	}
 }

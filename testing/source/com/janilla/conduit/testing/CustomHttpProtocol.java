@@ -23,16 +23,19 @@
  */
 package com.janilla.conduit.testing;
 
+import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
 
 public class CustomHttpProtocol extends HttpProtocol {
 
+	public ConduitFullstack fullstack;
+
 	@Override
 	protected HttpExchange createExchange(HttpRequest request) {
-		return Test.fullstack != null && request.getPath().startsWith("/api/")
-				? Test.fullstack.backend.factory.create(HttpExchange.class)
+		return Test.ongoing.get() && request.getPath().startsWith("/api/")
+				? fullstack.backend.factory.create(HttpExchange.class)
 				: super.createExchange(request);
 	}
 }

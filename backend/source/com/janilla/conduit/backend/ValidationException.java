@@ -43,4 +43,9 @@ public class ValidationException extends RuntimeException {
 	public ValidationException(String name, String value) {
 		this(Map.of(name, List.of(value)));
 	}
+
+	@Override
+	public String toString() {
+		return getClass().getName() + ": " + errors;
+	}
 }

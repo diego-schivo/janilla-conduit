@@ -38,7 +38,7 @@ export default class ArticlePreview extends FlexibleElement {
 	}
 
 	get article() {
-		return this.closest("article-list")?.articles[parseInt(this.dataset.index)];
+		return this.closest("article-list").articles[parseInt(this.dataset.index)];
 	}
 
 	set article(x) {
@@ -63,22 +63,21 @@ export default class ArticlePreview extends FlexibleElement {
 	}
 
 	async updateDisplay() {
-		// console.log("ArticlePreview.updateDisplay");
+		// console.log("ArticlePreview.updateDisplay", this.dataset.index);
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		this.content ??= this.createInterpolateDom(1);
 		const a = this.article;
 		this.appendChild(this.interpolate({
-			content: a ? this.content({
-				...a,
-				authorHref: `#/@${a.author.username}`,
-				href: `#/article/${a.slug}`,
-				tags: (() => {
-					if (this.tags?.length !== a.tagList.length)
-						this.tags = a.tagList.map(_ => this.createInterpolateDom(2));
-					return this.tags.map((x, i) => x(a.tagList[i]));
-				})()
-			}) : null
+			...a,
+			authorHref: `#/@${a.author.username}`,
+			href: `#/article/${a.slug}`,
+			tagItems: (() => {
+				if (this.interpolateTags?.length !== a.tagList.length)
+					this.interpolateTags = a.tagList.map(_ => this.createInterpolateDom("tag-item"));
+				return a.tagList.map((x, i) => this.interpolateTags[i](x));
+			})()
 		}));
 	}
 }
