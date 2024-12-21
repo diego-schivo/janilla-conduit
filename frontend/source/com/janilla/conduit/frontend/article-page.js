@@ -109,45 +109,56 @@ export default class ArticlePage extends SlottableElement {
 
 	async computeState() {
 		// console.log("ArticlePage.computeState");
+		if (!this.dataset.slug)
+			return null;
 		const ca = this.closest("conduit-app");
-		const uu = Array.from({ length: 2 }, _ => new URL(ca.dataset.apiUrl));
+		const uu = Array.from({ length: 2 }, () => new URL(ca.dataset.apiUrl));
 		uu[0].pathname += `/articles/${this.dataset.slug}`;
 		uu[1].pathname += `/articles/${this.dataset.slug}/comments`;
-		const [{ article }, { comments }] = await Promise.all(uu.map(x => fetch(x, { headers: ca.apiHeaders }).then(y => y.json())));
-		article.bodyHtml = (() => {
-			const t = document.createElement("template");
-			t.innerHTML = formatMarkdownAsHTML(parseMarkdown(article.body));
-			return t.content;
-		})();
-		return { article, comments };
+		const [{ article }, { comments }] = await Promise.all(uu.map(x => {
+			const p = fetch(x, { headers: ca.apiHeaders }).then(y => y.json());
+			return p;
+		}));
+		return {
+			article,
+			body: (() => {
+				const t = document.createElement("template");
+				t.innerHTML = formatMarkdownAsHTML(parseMarkdown(article.body));
+				return t.content;
+			})(),
+			comments
+		};
 	}
 
 	renderState() {
 		// console.log("ArticlePage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
-		this.content ??= this.createInterpolateDom(1);
-		this.meta ??= Array.from({ length: 2 }, _ => this.createInterpolateDom(2));
-		this.canModify ??= Array.from({ length: 2 }, _ => this.createInterpolateDom(3));
-		this.cannotModify ??= Array.from({ length: 2 }, _ => this.createInterpolateDom(4));
 		const a = this.state?.article;
 		const ca = this.closest("conduit-app");
 		this.appendChild(this.interpolate({
-			content: this.slot && a ? this.content({
-				...a,
-				meta1: this.meta[0]({
+			content: (() => {
+				this.interpolateContent ??= this.createInterpolateDom("content");
+				return a ? this.interpolateContent({
 					...a,
-					content: a.author.username === ca.currentUser?.username ? this.canModify[0]() : this.cannotModify[0](a)
-				}),
-				tags: (() => {
-					if (this.tags?.length !== a.tagList.length)
-						this.tags = a.tagList.map(_ => this.createInterpolateDom(5));
-					return this.tags.map((x, i) => x(a.tagList[i]));
-				})(),
-				meta2: this.meta[1]({
-					...a,
-					content: a.author.username === ca.currentUser?.username ? this.canModify[1]() : this.cannotModify[1](a)
-				}),
-			}) : null
+					body: this.state.body,
+					meta: (() => {
+						this.interpolateMeta ??= Array.from({ length: 2 }, () => this.createInterpolateDom("meta"));
+						this.interpolateCanModify ??= this.interpolateMeta.map(() => this.createInterpolateDom("can-modify"));
+						this.interpolateCannotModify ??= this.interpolateMeta.map(() => this.createInterpolateDom("cannot-modify"));
+						return this.interpolateMeta.map((x, i) => x({
+							...a,
+							content: a.author.username === ca.currentUser?.username
+								? this.interpolateCanModify[i]()
+								: this.interpolateCannotModify[i](a)
+						}));
+					})(),
+					tagItems: (() => {
+						if (this.interpolateTagItems?.length !== a.tagList.length)
+							this.interpolateTagItems = a.tagList.map(() => this.createInterpolateDom("tag-item"));
+						return a.tagList.map((x, i) => this.interpolateTagItems[i](x));
+					})()
+				}) : null;
+			})()
 		}));
 	}
 }

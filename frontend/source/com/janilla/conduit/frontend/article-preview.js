@@ -74,9 +74,9 @@ export default class ArticlePreview extends FlexibleElement {
 			authorHref: `#/@${a.author.username}`,
 			href: `#/article/${a.slug}`,
 			tagItems: (() => {
-				if (this.interpolateTags?.length !== a.tagList.length)
-					this.interpolateTags = a.tagList.map(_ => this.createInterpolateDom("tag-item"));
-				return a.tagList.map((x, i) => this.interpolateTags[i](x));
+				if (this.interpolateTagItems?.length !== a.tagList.length)
+					this.interpolateTagItems = a.tagList.map(() => this.createInterpolateDom("tag-item"));
+				return a.tagList.map((x, i) => this.interpolateTagItems[i](x));
 			})()
 		}));
 	}

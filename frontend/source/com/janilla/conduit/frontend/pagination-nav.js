@@ -64,16 +64,20 @@ export default class PaginationNav extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("PaginationNav.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		const pc = this.dataset.pagesCount ? parseInt(this.dataset.pagesCount) : 0;
-		if (this.items?.length !== pc)
-			this.items = pc > 1 ? Array.from({ length: pc }, _ => this.createInterpolateDom(1)) : null;
-		const pn = this.dataset.pageNumber ? parseInt(this.dataset.pageNumber) : 1;
 		this.appendChild(this.interpolate({
-			items: this.items?.map((x, i) => x({
-				class: `page-item ${i + 1 === pn ? "active" : ""}`,
-				number: i + 1
-			}))
+			items: (() => {
+				const pc = this.dataset.pagesCount ? parseInt(this.dataset.pagesCount) : 0;
+				if (this.interpolateItems?.length !== pc)
+					this.interpolateItems = pc > 1 ? Array.from({ length: pc }, () => this.createInterpolateDom("item")) : null;
+				const pn = this.dataset.pageNumber ? parseInt(this.dataset.pageNumber) : 1;
+				return this.interpolateItems?.map((x, i) => x({
+					class: `page-item ${i + 1 === pn ? "active" : ""}`,
+					number: i + 1
+				}));
+			})()
 		}));
 	}
 }

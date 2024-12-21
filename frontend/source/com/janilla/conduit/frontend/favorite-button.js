@@ -63,10 +63,9 @@ export default class FavoriteButton extends FlexibleElement {
 			headers: ca.apiHeaders
 		});
 		if (r.ok) {
-			const j = await r.json();
 			this.dispatchEvent(new CustomEvent("toggle-favorite", {
 				bubbles: true,
-				detail: j
+				detail: await r.json()
 			}));
 		}
 	}
@@ -74,18 +73,24 @@ export default class FavoriteButton extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("FavoriteButton.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		this.previewContent ??= this.createInterpolateDom(1);
-		this.content ??= this.createInterpolateDom(2);
+		const a = this.dataset.active === "true";
+		const p = this.dataset.preview === "true";
 		this.appendChild(this.interpolate({
 			...this.dataset,
-			class: `btn btn-sm ${this.dataset.active === "true" ? "btn-primary" : "btn-outline-primary"} ${this.dataset.preview === "true" ? "pull-xs-right" : ""}`,
-			content: this.dataset.preview === "true"
-				? this.previewContent(this.dataset)
-				: this.content({
+			class: `btn btn-sm ${a ? "btn-primary" : "btn-outline-primary"} ${p ? "pull-xs-right" : ""}`,
+			content: p ? (() => {
+				this.previewContent ??= this.createInterpolateDom("preview-content");
+				return this.previewContent(this.dataset);
+			})() : (() => {
+				this.content ??= this.createInterpolateDom("content");
+				return this.content({
 					text: `${this.dataset.active === "true" ? "Unfavorite" : "Favorite"} Article`,
 					count: `(${this.dataset.count})`
-				})
+				});
+			})()
 		}));
 	}
 }

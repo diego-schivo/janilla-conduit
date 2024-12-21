@@ -23,25 +23,24 @@
  */
 import { FlexibleElement } from "./flexible-element.js";
 
-function updateElement(element, active, more) {
+const updateElement = (element, active, more) => {
 	if (active) {
-		// console.log("PageRouter.updateElement", element);
+		// console.log("PageDisplay.updateElement", element);
 		element.setAttribute("slot", "content");
-	} else
-		element.removeAttribute("slot");
+	}
 
 	if (more)
 		more(element, active);
 }
 
-export default class PageRouter extends FlexibleElement {
+export default class PageDisplay extends FlexibleElement {
 
 	static get observedAttributes() {
 		return ["data-path"];
 	}
 
 	static get templateName() {
-		return "page-router";
+		return "page-display";
 	}
 
 	constructor() {
@@ -50,8 +49,10 @@ export default class PageRouter extends FlexibleElement {
 	}
 
 	async updateDisplay() {
-		// console.log("PageRouter.updateDisplay");
+		// console.log("PageDisplay.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
 		this.shadowRoot.appendChild(this.interpolate());
 		const nn = this.dataset.path.split("/");

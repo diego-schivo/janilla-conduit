@@ -48,12 +48,16 @@ export default class ErrorList extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("ErrorList.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		const mm = this.messages;
-		if (this.items?.length !== mm.length)
-			this.items = mm.map(_ => this.createInterpolateDom(1));
 		this.appendChild(this.interpolate({
-			items: this.items.map((x, i) => x(mm[i]))
+			items: (() => {
+				const mm = this.messages;
+				if (this.interpolateItems?.length !== mm.length)
+					this.interpolateItems = mm.map(() => this.createInterpolateDom("item"));
+				return mm.map((x, i) => this.interpolateItems[i](x));
+			})()
 		}));
 	}
 }

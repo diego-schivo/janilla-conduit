@@ -64,8 +64,7 @@ export default class TagsInput extends FlexibleElement {
 		if (!el)
 			return;
 		event.preventDefault();
-		const el2 = el.nextElementSibling;
-		const v = el2.textContent;
+		const v = el.nextElementSibling.textContent;
 		this.values = this.values.filter(x => x !== v);
 	}
 
@@ -83,12 +82,16 @@ export default class TagsInput extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("TagsInput.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		const vv = this.values;
-		if (this.tags?.length !== vv.length)
-			this.tags = vv.map(_ => this.createInterpolateDom(1));
 		this.appendChild(this.interpolate({
-			tags: this.tags.map((x, i) => x(vv[i]))
+			tags: (() => {
+				const vv = this.values;
+				if (this.interpolateTags?.length !== vv.length)
+					this.interpolateTags = vv.map(() => this.createInterpolateDom("tag"));
+				return vv.map((x, i) => this.interpolateTags[i](x));
+			})()
 		}));
 	}
 }

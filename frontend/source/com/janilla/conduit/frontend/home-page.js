@@ -49,11 +49,11 @@ export default class HomePage extends SlottableElement {
 			href: "#all",
 			text: "Global Feed"
 		});
-		if (this.activeTab === "tag")
+		if (this.state.activeTab === "tag")
 			ii.push({
 				href: "#tag",
 				icon: "ion-pound",
-				text: this.selectedTag
+				text: this.state.selectedTag
 			});
 		return ii;
 	}
@@ -78,57 +78,62 @@ export default class HomePage extends SlottableElement {
 			return;
 		event.preventDefault();
 		if (!el.classList.contains("active")) {
-			this.activeTab = el.dataset.href.substring(1);
+			this.state.activeTab = el.dataset.href.substring(1);
 			this.requestUpdate();
 		}
 	}
 
 	handleSelectTag = event => {
 		// console.log("HomePage.handleSelectTag", event);
-		this.activeTab = "tag";
-		this.selectedTag = event.detail.tag;
+		this.state.activeTab = "tag";
+		this.state.selectedTag = event.detail.tag;
 		this.requestUpdate();
+	}
+
+	async computeState() {
+		// console.log("LoginPage.computeState");
+		const ca = this.closest("conduit-app");
+		return { activeTab: ca.currentUser ? "feed" : "all" };
 	}
 
 	renderState() {
 		// console.log("HomePage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
-		this.content ??= this.createInterpolateDom(1);
-		this.banner ??= this.createInterpolateDom(2);
 		const ca = this.closest("conduit-app");
-		if (this.slot)
-			this.activeTab ??= ca.currentUser ? "feed" : "all";
-		else
-			this.activeTab = null;
-		const c = this.content({
-			banner: ca.currentUser ? null : this.banner(),
-			tabItems: (() => {
-				const tii = this.tabItems;
-				if (this.navItems?.length !== tii.length)
-					this.navItems = tii.map(_ => this.createInterpolateDom(3));
-				return tii.map((x, i) => this.navItems[i]({
-					...x,
-					class: `nav-link ${x.href.substring(1) === this.activeTab ? "active" : ""}`,
-				}));
-			})(),
-			articlesUrl: (() => {
-				if (!this.activeTab)
-					return null;
-				const u = new URL(ca.dataset.apiUrl);
-				u.pathname += "/articles";
-				switch (this.activeTab) {
-					case "feed":
-						u.pathname += "/feed";
-						break;
-					case "tag":
-						u.searchParams.append("tag", this.selectedTag);
-						break;
-				}
-				return u;
-			})()
-		});
 		this.appendChild(this.interpolate({
-			content: this.slot ? c : null
+			content: !this.state ? null : (() => {
+				this.interpolateContent ??= this.createInterpolateDom("content");
+				return this.interpolateContent({
+					banner: ca.currentUser ? null : (() => {
+						this.interpolateBanner ??= this.createInterpolateDom("banner");
+						return this.interpolateBanner();
+					})(),
+					tabItems: (() => {
+						const tii = this.tabItems;
+						if (this.interpolateTabItems?.length !== tii.length)
+							this.interpolateTabItems = tii.map(() => this.createInterpolateDom("tab-item"));
+						return tii.map((x, i) => this.interpolateTabItems[i]({
+							...x,
+							class: `nav-link ${x.href.substring(1) === this.state.activeTab ? "active" : ""}`,
+						}));
+					})(),
+					articlesUrl: (() => {
+						if (!this.state.activeTab)
+							return null;
+						const u = new URL(ca.dataset.apiUrl);
+						u.pathname += "/articles";
+						switch (this.state.activeTab) {
+							case "feed":
+								u.pathname += "/feed";
+								break;
+							case "tag":
+								u.searchParams.append("tag", this.state.selectedTag);
+								break;
+						}
+						return u;
+					})()
+				});
+			})()
 		}));
 	}
 }

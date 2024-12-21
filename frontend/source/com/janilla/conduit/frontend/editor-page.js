@@ -84,24 +84,26 @@ export default class EditorPage extends SlottableElement {
 	async computeState() {
 		// console.log("EditorPage.computeState");
 		if (!this.dataset.slug)
-			return null;
+			return { article: {} };
 		const ca = this.closest("conduit-app");
 		const u = new URL(ca.dataset.apiUrl);
 		u.pathname += `/articles/${this.dataset.slug}`;
-		const j = await (await fetch(u, { headers: ca.apiHeaders })).json();
-		return j.article;
+		return await (await fetch(u, { headers: ca.apiHeaders })).json();
 	}
 
 	renderState() {
 		// console.log("EditorPage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
-		this.content ??= this.createInterpolateDom(1);
 		this.appendChild(this.interpolate({
-			content: this.slot && (!this.dataset.slug || this.state) ? this.content({
-				...this.state,
-				tagList: this.state?.tagList.join(),
-				errorMessages: this.errorMessages
-			}) : null
+			content: (() => {
+				this.interpolateContent ??= this.createInterpolateDom("content");
+				const a = this.state?.article;
+				return a ? this.interpolateContent({
+					...a,
+					tagList: this.state?.tagList?.join(),
+					errorMessages: this.errorMessages
+				}) : null;
+			})()
 		}));
 	}
 }

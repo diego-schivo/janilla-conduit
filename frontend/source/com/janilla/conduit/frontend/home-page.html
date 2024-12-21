@@ -1,6 +1,6 @@
 <!--${content}-->
 
-<template>
+<template id="content">
 	<div class="home-page">
 		<!--${banner}-->
 		<div class="container page">
@@ -11,7 +11,7 @@
 							<!--${tabItems}-->
 						</ul>
 					</div>
-					<article-list data-href="${articlesUrl}"></article-list>
+					<article-list data-api-href="${articlesUrl}"></article-list>
 				</div>
 				<div class="col-md-3">
 					<div class="sidebar">
@@ -23,7 +23,7 @@
 	</div>
 </template>
 
-<template>
+<template id="banner">
 	<div class="banner">
 		<div class="container">
 			<h1 class="logo-font">conduit</h1>
@@ -32,7 +32,7 @@
 	</div>
 </template>
 
-<template>
+<template id="tab-item">
 	<li class="nav-item">
 		<nav-link class="${class}" data-href="${href}" data-icon="${icon}">${text}</nav-link>
 	</li>

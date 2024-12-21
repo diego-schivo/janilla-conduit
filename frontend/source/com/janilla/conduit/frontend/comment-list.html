@@ -5,7 +5,7 @@
 	</div>
 </div>
 
-<template>
+<template id="authenticated">
 	<div>
 		<error-list data-messages="${errorMessages}"></error-list>
 		<form class="card comment-form">
@@ -20,11 +20,11 @@
 	</div>
 </template>
 
-<template>
+<template id="unauthenticated">
 	<a href="#/login">Sign in</a> or <a href="#/register">sign up</a> to add comments on this article.
 </template>
 
-<template>
+<template id="card">
 	<div class="card">
 		<div class="card-block">
 			<p class="card-text">${body}</p>
@@ -43,7 +43,7 @@
 	</div>
 </template>
 
-<template>
+<template id="mod-options">
 	<span class="mod-options">
 		<i class="ion-trash-a"></i>
 	</span>

@@ -25,6 +25,7 @@ package com.janilla.conduit.testing;
 
 import java.io.IOException;
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.janilla.conduit.fullstack.ConduitFullstack;
@@ -38,20 +39,19 @@ public class Test {
 
 	@Handle(method = "POST", path = "/test/start")
 	public void start() throws IOException {
-		System.out.println("Test.start, this=" + this);
+//		System.out.println("Test.start, this=" + this);
 		if (ongoing.getAndSet(true))
 			throw new RuntimeException();
-		var ch = fullstack.backend.persistence.database().getChannel().channel();
-		ch.position(0);
-		try (var is = getClass().getResourceAsStream("conduit-test.database")) {
-			var s = is.transferTo(Channels.newOutputStream(ch));
-			ch.truncate(s);
+		var fch = (FileChannel) fullstack.backend.persistence.database().getChannel().channel();
+		try (var ch = Channels.newChannel(getClass().getResourceAsStream("conduit-test.database"))) {
+			var s = fch.transferFrom(ch, 0, Long.MAX_VALUE);
+			fch.truncate(s);
 		}
 	}
 
 	@Handle(method = "POST", path = "/test/stop")
 	public void stop() {
-		System.out.println("Test.stop, this=" + this);
+//		System.out.println("Test.stop, this=" + this);
 		if (!ongoing.getAndSet(false))
 			throw new RuntimeException();
 	}

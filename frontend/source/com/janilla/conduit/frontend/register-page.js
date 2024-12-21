@@ -67,17 +67,24 @@ export default class RegisterPage extends SlottableElement {
 			}));
 			location.hash = "#/";
 		} else {
-			this.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+			this.state.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 			this.requestUpdate();
 		}
+	}
+
+	async computeState() {
+		// console.log("RegisterPage.computeState");
+		return {};
 	}
 
 	renderState() {
 		// console.log("RegisterPage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
-		this.content ??= this.createInterpolateDom(1);
 		this.appendChild(this.interpolate({
-			content: this.slot ? this.content({ errorMessages: this.errorMessages }) : null
+			content: this.state ? (() => {
+				this.interpolateContent ??= this.createInterpolateDom("content");
+				return this.interpolateContent(this.state);
+			})() : null
 		}));
 	}
 }

@@ -72,12 +72,19 @@ export default class LoginPage extends SlottableElement {
 		}
 	}
 
+	async computeState() {
+		// console.log("LoginPage.computeState");
+		return {};
+	}
+
 	renderState() {
 		// console.log("LoginPage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
-		this.content ??= this.createInterpolateDom(1);
 		this.appendChild(this.interpolate({
-			content: this.slot ? this.content({ errorMessages: this.errorMessages }) : null
+			content: this.state ? (() => {
+				this.interpolateContent ??= this.createInterpolateDom("content");
+				return this.interpolateContent(this.state);
+			})() : null
 		}));
 	}
 }

@@ -80,12 +80,12 @@ export default class ConduitApp extends FlexibleElement {
 	connectedCallback() {
 		// console.log("ConduitApp.connectedCallback");
 		new Promise(x => {
-			const t = this.jwtToken;
-			if (t) {
+			const jt = this.jwtToken;
+			if (jt) {
 				const u = new URL(this.dataset.apiUrl);
 				u.pathname += "/user";
 				fetch(u, {
-					headers: { Authorization: `Token ${t}` }
+					headers: { Authorization: `Token ${jt}` }
 				}).then(y => y.json()).then(y => {
 					this.currentUser = y?.user;
 					if (this.currentUser)
@@ -112,6 +112,9 @@ export default class ConduitApp extends FlexibleElement {
 
 	handleHashChange = event => {
 		// console.log("ConduitApp.handleHashChange", event);
+		const cc = this.querySelector("page-display")?.children;
+		if (cc)
+			Array.prototype.forEach.call(cc, x => x.removeAttribute("slot"));
 		this.requestUpdate();
 	}
 
@@ -125,21 +128,29 @@ export default class ConduitApp extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("ConduitApp.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		this.header ??= this.createInterpolateDom("header");
-		const nii = this.navItems;
-		if (this.headerNavItems?.length !== nii.length)
-			this.headerNavItems = nii.map(_ => this.createInterpolateDom("nav-item"));
-		this.footer ??= this.createInterpolateDom("footer");
 		this.appendChild(this.interpolate({
-			header: this.header({
-				navItems: nii.map((x, i) => this.headerNavItems[i]({
-					...x,
-					class: `nav-link ${x.href === location.hash ? "active" : ""}`,
-				}))
-			}),
+			header: (() => {
+				this.interpolateHeader ??= this.createInterpolateDom("header");
+				return this.interpolateHeader({
+					navItems: (() => {
+						const nii = this.navItems;
+						if (this.interpolateNavItems?.length !== nii.length)
+							this.interpolateNavItems = nii.map(() => this.createInterpolateDom("nav-item"));
+						return nii.map((x, i) => this.interpolateNavItems[i]({
+							...x,
+							class: `nav-link ${x.href === location.hash ? "active" : ""}`,
+						}));
+					})()
+				});
+			})(),
 			path: location.hash.substring(1),
-			footer: this.footer()
+			footer: (() => {
+				this.interpolateFooter ??= this.createInterpolateDom("footer");
+				return this.interpolateFooter();
+			})()
 		}));
 	}
 }

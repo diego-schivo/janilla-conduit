@@ -31,6 +31,7 @@ export default class PopularTags extends FlexibleElement {
 
 	constructor() {
 		super();
+		this.attachShadow({ mode: "open" });
 	}
 
 	connectedCallback() {
@@ -59,28 +60,27 @@ export default class PopularTags extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("PopularTags.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		this.loadingContent ??= this.createInterpolateDom(1);
-		this.emptyContent ??= this.createInterpolateDom(2);
-		this.nonemptyContent ??= this.createInterpolateDom(3);
+		this.shadowRoot.appendChild(this.interpolate());
+		this.interpolateContent ??= this.createInterpolateDom("content");
 		this.tags ??= await (async () => {
-			this.appendChild(this.interpolate({ content: this.loadingContent() }));
+			this.appendChild(this.interpolateContent({ loadingSlot: "content" }));
 			const ca = this.closest("conduit-app");
 			const u = new URL(ca.dataset.apiUrl);
 			u.pathname += "/tags";
 			const j = await (await fetch(u, { headers: ca.apiHeaders })).json();
 			return j.tags;
 		})();
-		this.appendChild(this.interpolate({
-			content: this.tags.length
-				? this.nonemptyContent({
-					items: (() => {
-						if (this.items?.length !== this.tags.length)
-							this.items = this.tags.map(_ => this.createInterpolateDom(4));
-						return this.tags.map((x, i) => this.items[i](x));
-					})()
-				})
-				: this.emptyContent()
+		this.appendChild(this.interpolateContent({
+			emptySlot: this.tags.length ? null : "content",
+			nonemptySlot: this.tags.length ? "content" : null,
+			tags: (() => {
+				if (this.interpolateTags?.length !== this.tags.length)
+					this.interpolateTags = this.tags.map(() => this.createInterpolateDom("tag"));
+				return this.tags.map((x, i) => this.interpolateTags[i](x));
+			})()
 		}));
 	}
 }

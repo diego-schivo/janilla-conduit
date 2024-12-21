@@ -81,21 +81,25 @@ export default class SettingsPage extends SlottableElement {
 			}));
 			location.hash = `#/@${ca.currentUser.username}`;
 		} else {
-			this.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+			this.state.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 			this.requestUpdate();
 		}
+	}
+
+	async computeState() {
+		// console.log("SettingsPage.computeState");
+		const ca = this.closest("conduit-app");
+		return { ...ca.currentUser };
 	}
 
 	renderState() {
 		// console.log("SettingsPage.renderState");
 		this.interpolate ??= this.createInterpolateDom();
-		this.content ??= this.createInterpolateDom(1);
-		const ca = this.closest("conduit-app");
 		this.appendChild(this.interpolate({
-			content: this.slot && ca.currentUser ? this.content({
-				...ca.currentUser,
-				errorMessages: this.errorMessages
-			}) : null
+			content: this.state ? (() => {
+				this.interpolateContent ??= this.createInterpolateDom("content");
+				return this.interpolateContent(this.state);
+			})() : null
 		}));
 	}
 }

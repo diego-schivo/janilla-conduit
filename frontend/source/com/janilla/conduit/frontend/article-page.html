@@ -1,33 +1,33 @@
 <!--${content}-->
 
-<template>
+<template id="content">
 	<div class="article-page">
 		<div class="banner">
 			<div class="container">
 				<h1>${title}</h1>
-				<!--${meta1}-->
+				<!--${meta[0]}-->
 			</div>
 		</div>
 		<div class="container page">
 			<div class="row article-content">
 				<div class="col-md-12">
 					<p>${description}</p>
-					<!--${bodyHtml}-->
+					<!--${body}-->
 					<ul class="tag-list">
-						<!--${tags}-->
+						<!--${tagItems}-->
 					</ul>
 				</div>
 			</div>
 			<hr />
 			<div class="article-actions">
-				<!--${meta2}-->
+				<!--${meta[1]}-->
 			</div>
 			<comment-list></comment-list>
 		</div>
 	</div>
 </template>
 
-<template>
+<template id="meta">
 	<div class="article-meta">
 		<a href="${authorHref}">
 			<img src="${author.image}" />
@@ -42,7 +42,7 @@
 	</div>
 </template>
 
-<template>
+<template id="can-modify">
 	<span>
 		<a class="btn btn-sm btn-outline-secondary">
 			<i class="ion-edit"></i>
@@ -55,11 +55,11 @@
 	</span>
 </template>
 
-<template>
+<template id="cannot-modify">
 	<follow-button data-username="${author.username}" data-active="${author.following}"></follow-button>
 	<favorite-button data-slug="${slug}" data-active="${favorited}" data-count="${favoritesCount}"></favorite-button>
 </template>
 
-<template>
+<template id="tag-item">
 	<li class="tag-default tag-pill tag-outline">${}</li>
 </template>

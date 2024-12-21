@@ -26,7 +26,7 @@ import { FlexibleElement } from "./flexible-element.js";
 export default class ArticleList extends FlexibleElement {
 
 	static get observedAttributes() {
-		return ["data-href"];
+		return ["data-api-href"];
 	}
 
 	static get templateName() {
@@ -58,40 +58,42 @@ export default class ArticleList extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("ArticleList.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
 		this.shadowRoot.appendChild(this.interpolate());
 		this.interpolateContent ??= this.createInterpolateDom("content");
-		if (this.dataset.href) {
-			const u = new URL(this.dataset.href);
+		if (this.dataset.apiHref) {
+			const u = new URL(this.dataset.apiHref);
 			u.searchParams.append("skip", ((this.pageNumber ?? 1) - 1) * 10);
 			u.searchParams.append("limit", 10);
-			if (u.href === this.url?.href)
+			if (u.href === this.apiUrl?.href)
 				return;
-			this.url = u;
+			this.apiUrl = u;
 			this.appendChild(this.interpolateContent({ loadingSlot: "content" }));
 			const j = await (await fetch(u, { headers: this.closest("conduit-app").apiHeaders })).json();
 			// console.log("ArticleList.updateDisplay", j);
 			this.articles = j.articles;
-			this.articlesCount = j.articlesCount;
+			this.pagesCount = Math.ceil(j.articlesCount / 10);
+			this.pageNumber = 1;
 		} else {
 			this.articles = [];
-			this.articlesCount = 0;
+			this.pagesCount = 0;
+			this.pageNumber = 0;
 		}
-		// console.log("ArticleList.updateDisplay", this.dataset.href, this.articles, this.articlesCount);
-		this.pageNumber = 1;
+		// console.log("ArticleList.updateDisplay", this.dataset.apiHref, this.articles, this.articlesCount);
 		this.appendChild(this.interpolateContent({
 			emptySlot: this.articles.length ? null : "content",
 			nonemptySlot: this.articles.length ? "content" : null,
 			previews: (() => {
-				if (this.previews?.length !== this.articles.length)
-					this.previews = this.articles.map(_ => this.createInterpolateDom("preview"));
-				return this.previews.map((x, i) => x({ index: i }));
+				if (this.interpolatePreviews?.length !== this.articles.length)
+					this.interpolatePreviews = this.articles.map(() => this.createInterpolateDom("preview"));
+				return this.interpolatePreviews.map((x, i) => x({ index: i }));
 			})(),
 			pagination: (() => {
 				this.interpolatePagination ??= this.createInterpolateDom("pagination");
-				const pc = Math.ceil(this.articlesCount / 10);
-				return pc > 1 ? this.interpolatePagination({
-					pagesCount: pc,
+				return this.pagesCount > 1 ? this.interpolatePagination({
+					pagesCount: this.pagesCount,
 					pageNumber: this.pageNumber
 				}) : null;
 			})()

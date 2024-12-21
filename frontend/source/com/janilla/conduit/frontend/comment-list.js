@@ -51,11 +51,11 @@ export default class CommentList extends FlexibleElement {
 		if (!event.target.matches(".ion-trash-a"))
 			return;
 		event.preventDefault();
-		const ca = this.closest("conduit-app");
-		const ap = this.closest("article-page");
 		const el = event.target.closest(".card");
 		const i = Array.prototype.findIndex.call(el.parentElement.querySelectorAll(":scope > .card"), x => x === el);
+		const ap = this.closest("article-page");
 		const c = ap.state.comments[i];
+		const ca = this.closest("conduit-app");
 		const u = new URL(ca.dataset.apiUrl);
 		u.pathname += `/articles/${ap.state.article.slug}/comments/${c.id}`;
 		const r = await fetch(u, {
@@ -73,8 +73,8 @@ export default class CommentList extends FlexibleElement {
 		// console.log("CommentList.handleSubmit", event);
 		event.preventDefault();
 		const ca = this.closest("conduit-app");
-		const ap = this.closest("article-page");
 		const u = new URL(ca.dataset.apiUrl);
+		const ap = this.closest("article-page");
 		u.pathname += `/articles/${ap.state.article.slug}/comments`;
 		const r = await fetch(u, {
 			method: "POST",
@@ -97,27 +97,34 @@ export default class CommentList extends FlexibleElement {
 	async updateDisplay() {
 		// console.log("CommentList.updateDisplay");
 		await super.updateDisplay();
+		if (!this.isConnected)
+			return;
 		this.interpolate ??= this.createInterpolateDom();
-		this.authenticated ??= this.createInterpolateDom(1);
-		this.unauthenticated ??= this.createInterpolateDom(2);
 		const ca = this.closest("conduit-app");
 		const ap = this.closest("article-page");
-		if (this.cards?.length !== ap.state.comments.length) {
-			this.cards = ap.state.comments.map(_ => this.createInterpolateDom(3));
-			this.modOptions = this.cards.map(_ => this.createInterpolateDom(4));
-		}
 		this.appendChild(this.interpolate({
-			form: ca.currentUser ? this.authenticated({
-				...ca.currentUser,
-				errorMessages: this.errorMessages
-			}) : this.unauthenticated(),
-			cards: this.cards.map((x, i) => {
-				const c = ap.state.comments[i];
-				return x({
-					...c,
-					modOptions: c.author.username === ca.currentUser?.username ? this.modOptions[i]() : null
+			form: ca.currentUser ? (() => {
+				this.interpolateAuthenticated ??= this.createInterpolateDom("authenticated");
+				return this.interpolateAuthenticated({
+					...ca.currentUser,
+					errorMessages: this.errorMessages
 				});
-			})
+			})() : (() => {
+				this.interpolateUnauthenticated ??= this.createInterpolateDom("unauthenticated");
+				return this.interpolateUnauthenticated();
+			})(),
+			cards: (() => {
+				if (this.interpolateCards?.length !== ap.state.comments.length) {
+					this.interpolateCards = ap.state.comments.map(() => this.createInterpolateDom("card"));
+					this.interpolateModOptions = this.interpolateCards.map(() => this.createInterpolateDom("mod-options"));
+				}
+				return ap.state.comments.map((x, i) => {
+					return this.interpolateCards[i]({
+						...x,
+						modOptions: x.author.username === ca.currentUser?.username ? this.interpolateModOptions[i]() : null
+					});
+				});
+			})()
 		}));
 	}
 }
