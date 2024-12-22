@@ -42,7 +42,7 @@ import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
 
-@Render("index.html")
+@Render(ConduitTestingRenderer.class)
 public class ConduitTesting {
 
 	public static void main(String[] args) throws Exception {

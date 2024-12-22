@@ -21,25 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
+package com.janilla.conduit.testing;
 
 import com.janilla.http.HttpExchange;
-import com.janilla.web.Error;
-import com.janilla.web.ExceptionHandlerFactory;
-import com.janilla.web.Renderable;
-import com.janilla.web.WebHandlerFactory;
+import com.janilla.web.Renderer;
 
-public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
-
-	public WebHandlerFactory mainFactory;
+public class ConduitTestingRenderer extends Renderer<ConduitTesting> {
 
 	@Override
-	protected boolean handle(Error error, HttpExchange exchange) {
-		super.handle(error, exchange);
-		if (exchange.getException() instanceof ValidationException e) {
-			var o = Renderable.of(e.errors, null);
-			mainFactory.createHandler(o, exchange).handle(exchange);
-		}
-		return true;
+	public String apply(ConduitTesting application, HttpExchange exchange) {
+		var tt = templates("index.html");
+		return interpolate(tt.get(null), application);
 	}
 }
