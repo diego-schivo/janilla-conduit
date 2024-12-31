@@ -91,14 +91,15 @@ public class ConduitFullstack {
 		factory.setSource(this);
 
 		handler = x -> {
-			var he = (HttpExchange) x;
-			var o = he.getException() != null ? he.getException() : he.getRequest();
+			var hx = (HttpExchange) x;
+//			System.out.println("ConduitFullstack, " + hx.getRequest().getPath());
+			var o = hx.getException() != null ? hx.getException() : hx.getRequest();
 			var h = switch (o) {
 			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;
 			case Exception e -> backend.handler;
 			default -> null;
 			};
-			return h.handle(he);
+			return h.handle(hx);
 		};
 
 		backend = new ConduitBackend(configuration);

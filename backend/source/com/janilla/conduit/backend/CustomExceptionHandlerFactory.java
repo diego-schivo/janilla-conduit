@@ -37,7 +37,8 @@ public class CustomExceptionHandlerFactory extends ExceptionHandlerFactory {
 	protected boolean handle(Error error, HttpExchange exchange) {
 		super.handle(error, exchange);
 		if (exchange.getException() instanceof ValidationException e) {
-			var o = Renderable.of(null, e.errors);
+//			var o = Renderable.of(null, e.errors);
+			Renderable<?> o = null;
 			mainFactory.createHandler(o, exchange).handle(exchange);
 		}
 		return true;

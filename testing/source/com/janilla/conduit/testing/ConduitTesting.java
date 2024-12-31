@@ -96,9 +96,11 @@ public class ConduitTesting {
 			var hb = factory.create(ApplicationHandlerBuilder.class);
 			var h = hb.build();
 			handler = x -> {
-				var he = (HttpExchange) x;
-				var fh = Test.ongoing.get() && !he.getRequest().getPath().startsWith("/test/") ? fullstack.handler : h;
-				return fh.handle(he);
+				var hx = (HttpExchange) x;
+//				System.out.println(
+//						"ConduitTesting, " + hx.getRequest().getPath() + ", Test.ongoing=" + Test.ongoing.get());
+				var h2 = Test.ongoing.get() && !hx.getRequest().getPath().startsWith("/test/") ? fullstack.handler : h;
+				return h2.handle(hx);
 			};
 		}
 	}

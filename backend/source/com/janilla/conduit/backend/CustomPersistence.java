@@ -77,13 +77,11 @@ public class CustomPersistence extends Persistence {
 			var c = (Crud<E>) new ArticleCrud();
 			return c;
 		}
-
 		if (type == User.class) {
 			@SuppressWarnings("unchecked")
 			var c = (Crud<E>) new UserCrud();
 			return c;
 		}
-
 		return super.createCrud(type);
 	}
 }

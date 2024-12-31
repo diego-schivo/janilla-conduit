@@ -41,76 +41,72 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
 	@Override
 	public Persistence build() {
-		var a = (ConduitBackend) factory.getSource();
-		var s = Boolean.parseBoolean(a.configuration.getProperty("conduit.database.seed"));
-		var e = Files.exists(file);
+		var cb = (ConduitBackend) factory.getSource();
+		var s = Boolean.parseBoolean(cb.configuration.getProperty("conduit.database.seed"));
+		var fe = Files.exists(file);
 		var p = super.build();
 		p.setTypeResolver(x -> {
 			try {
-				return Class.forName("com.janilla.conduit.backend." + x.replace('.', '$'));
-			} catch (ClassNotFoundException f) {
-				throw new RuntimeException(f);
+				return Class.forName(getClass().getPackageName() + "." + x.replace('.', '$'));
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
 			}
 		});
-		if (s && !e)
-			populate(p);
+		if (s && !fe)
+			seed(p);
 		return p;
 	}
 
-	static List<String> w = new ArrayList<>(Validation.safeWords);
-
-	void populate(Persistence p) {
-		if (p.crud(Article.class).count() > 0)
-			return;
+	private void seed(Persistence persistence) {
 		var r = ThreadLocalRandom.current();
-		var tags = Randomize.elements(5, 15, w).distinct().toList();
+		var ww = new ArrayList<>(Validation.safeWords);
+		var tags = Randomize.elements(5, 15, ww).distinct().toList();
 		for (var i = r.nextInt(6, 11); i > 0; i--) {
-			var n = Randomize.phrase(2, 2, () -> Util.capitalizeFirstChar(Randomize.element(w)));
+			var n = Randomize.phrase(2, 2, () -> Util.capitalizeFirstChar(Randomize.element(ww)));
 			var u = new User(null, n.toLowerCase().replace(' ', '.') + "@lorem.ipsum", null, null, n, null,
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600 + r.nextInt(0x50))) + "</text></svg>");
 			u = UserApi.setHashAndSalt(u, n.toLowerCase().substring(0, n.indexOf(' ')));
-			u = p.crud(User.class).create(u);
+			u = persistence.crud(User.class).create(u);
 			for (var j = r.nextInt(0, 5); j > 0; j--) {
-				var t = Util.capitalizeFirstChar(Randomize.phrase(2, 6, () -> Randomize.element(w)));
+				var t = Util.capitalizeFirstChar(Randomize.phrase(2, 6, () -> Randomize.element(ww)));
 				var c = Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
 						OffsetDateTime.now(ZoneOffset.UTC).toInstant());
 				var a = new Article(null, t.toLowerCase().replace(' ', '-'), t,
-						Randomize.sentence(3, 10, () -> Randomize.element(w)), nextBody(),
+						Randomize.sentence(3, 10, () -> Randomize.element(ww)), randomMarkdown(ww),
 						Randomize.elements(1, 5, tags).distinct().toList(), c, c, u.id());
-				p.crud(Article.class).create(a);
+				persistence.crud(Article.class).create(a);
 			}
 		}
 		for (var i = r.nextInt(20, 31); i > 0; i--) {
-			var u = p.crud(User.class).read(1 + r.nextLong(p.crud(User.class).count()));
-			var a = p.crud(Article.class).read(1 + r.nextLong(p.crud(Article.class).count()));
+			var u = persistence.crud(User.class).read(1 + r.nextLong(persistence.crud(User.class).count()));
+			var a = persistence.crud(Article.class).read(1 + r.nextLong(persistence.crud(Article.class).count()));
 			var j = r.nextInt(1, 8);
 			if ((j & 1) != 0) {
 				var d = Randomize.instant(a.createdAt(), OffsetDateTime.now(ZoneOffset.UTC).toInstant());
-				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(w)), u.id(),
-						a.id());
-				c = p.crud(Comment.class).create(c);
+				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(ww)), u.id(), a.id());
+				c = persistence.crud(Comment.class).create(c);
 			}
 			if ((j & 2) != 0)
-				((ArticleCrud) p.crud(Article.class)).favorite(a.id(), a.createdAt(), u.id());
+				((ArticleCrud) persistence.crud(Article.class)).favorite(a.id(), a.createdAt(), u.id());
 			if ((j & 4) != 0)
-				((UserCrud) p.crud(User.class)).follow(a.author(), u.id());
+				((UserCrud) persistence.crud(User.class)).follow(a.author(), u.id());
 		}
 	}
 
-	static String nextBody() {
+	private static String randomMarkdown(List<String> words) {
 		var r = ThreadLocalRandom.current();
 		var b = Stream.<String>builder();
 		if (r.nextBoolean())
-			b.add("# " + Util.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(w))) + "\n");
+			b.add("# " + Util.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(words))) + "\n");
 		for (var i = r.nextInt(1, 6); i > 0; i--) {
 			if (r.nextBoolean())
-				b.add("### " + Util.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(w))) + "\n");
+				b.add("### " + Util.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(words))) + "\n");
 			if (r.nextInt(3) == 2)
-				b.add(Stream.iterate("", x -> "- " + Randomize.phrase(5, 11, () -> Randomize.element(w))).skip(1)
+				b.add(Stream.iterate("", x -> "- " + Randomize.phrase(5, 11, () -> Randomize.element(words))).skip(1)
 						.limit(r.nextInt(2, 6)).collect(Collectors.joining("\n")) + "\n");
 			else
-				b.add(Stream.iterate("", x -> Randomize.sentence(5, 11, () -> Randomize.element(w))).skip(1)
+				b.add(Stream.iterate("", x -> Randomize.sentence(5, 11, () -> Randomize.element(words))).skip(1)
 						.limit(r.nextInt(2, 6)).collect(Collectors.joining(" ")) + "\n");
 		}
 		return b.build().collect(Collectors.joining("\n"));

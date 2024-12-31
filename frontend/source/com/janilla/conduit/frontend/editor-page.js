@@ -84,7 +84,7 @@ export default class EditorPage extends SlottableElement {
 	async computeState() {
 		// console.log("EditorPage.computeState");
 		if (!this.dataset.slug) {
-			await super.computeState();
+			this.state = { article: {} };
 			return;
 		}
 		const ca = this.closest("conduit-app");
