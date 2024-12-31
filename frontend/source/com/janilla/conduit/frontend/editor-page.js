@@ -76,7 +76,7 @@ export default class EditorPage extends SlottableElement {
 		if (r.ok)
 			location.hash = `#/article/${j.article.slug}`;
 		else {
-			this.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+			this.state.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 			this.requestUpdate();
 		}
 	}
@@ -100,8 +100,8 @@ export default class EditorPage extends SlottableElement {
 			content: this.state?.article ? {
 				$template: "content",
 				...this.state.article,
-				tagList: this.state?.tagList?.join(),
-				errorMessages: this.errorMessages
+				tagList: this.state.tagList?.join(),
+				errorMessages: this.state.errorMessages?.join(";")
 			} : null
 		}));
 	}

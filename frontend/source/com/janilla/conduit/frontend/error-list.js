@@ -38,11 +38,11 @@ export default class ErrorList extends FlexibleElement {
 	}
 
 	get messages() {
-		return this.dataset.messages ? this.dataset.messages.split(",") : [];
+		return this.dataset.messages ? this.dataset.messages.split(";") : [];
 	}
 
 	set messages(x) {
-		this.dataset.messages = x.join();
+		this.dataset.messages = x.join(";");
 	}
 
 	async updateDisplay() {
@@ -53,7 +53,7 @@ export default class ErrorList extends FlexibleElement {
 			$template: "",
 			items: this.messages.map(x => ({
 				$template: "item",
-				...x
+				message: x
 			}))
 		}));
 	}

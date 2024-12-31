@@ -40,6 +40,7 @@ import com.janilla.reflect.Factory;
 import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.MethodHandlerFactory;
+import com.janilla.web.RenderableFactory;
 
 public class ConduitBackend {
 
@@ -77,6 +78,8 @@ public class ConduitBackend {
 
 	public Factory factory;
 
+	public RenderableFactory renderableFactory;
+
 	public HttpHandler handler;
 
 	public Persistence persistence;
@@ -90,6 +93,7 @@ public class ConduitBackend {
 		factory.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
 		factory.setSource(this);
 
+		renderableFactory = new RenderableFactory();
 		handler = factory.create(ApplicationHandlerBuilder.class).build();
 
 		{

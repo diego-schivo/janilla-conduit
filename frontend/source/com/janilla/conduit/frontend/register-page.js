@@ -78,7 +78,8 @@ export default class RegisterPage extends SlottableElement {
 			$template: "",
 			content: this.state ? {
 				$template: "content",
-				...this.state
+				...this.state,
+				errorMessages: this.state.errorMessages?.join(";")
 			} : null
 		}));
 	}

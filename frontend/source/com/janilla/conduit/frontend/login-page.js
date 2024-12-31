@@ -67,7 +67,7 @@ export default class LoginPage extends SlottableElement {
 			}));
 			location.hash = "#/";
 		} else {
-			this.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+			this.state.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 			this.requestUpdate();
 		}
 	}
@@ -78,7 +78,8 @@ export default class LoginPage extends SlottableElement {
 			$template: "",
 			content: this.state ? {
 				$template: "content",
-				...this.state
+				...this.state,
+				errorMessages: this.state.errorMessages?.join(";")
 			} : null
 		}));
 	}
