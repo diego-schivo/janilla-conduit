@@ -40,20 +40,19 @@ export default class NavLink extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("NavLink.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
-		this.shadowRoot.appendChild(this.interpolate({
+		this.shadowRoot.appendChild(this.interpolateDom({
+			$template: "",
 			...this.dataset,
-			icon: this.dataset.icon ? (() => {
-				this.interpolateIcon ??= this.createInterpolateDom("icon");
-				return this.interpolateIcon({ class: this.dataset.icon });
-			})() : null,
-			image: this.dataset.image ? (() => {
-				this.interpolateImage ??= this.createInterpolateDom("image");
-				return this.interpolateImage({ src: this.dataset.image });
-			})() : null
+			icon: this.dataset.icon ? {
+				$template: "icon",
+				class: this.dataset.icon
+			} : null,
+			image: this.dataset.image ? {
+				$template: "image",
+				src: this.dataset.image
+			} : null
 		}));
 	}
 }

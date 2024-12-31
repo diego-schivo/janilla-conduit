@@ -59,27 +59,29 @@ export default class PopularTags extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("PopularTags.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
-		this.shadowRoot.appendChild(this.interpolate());
-		this.interpolateContent ??= this.createInterpolateDom("content");
+		this.shadowRoot.appendChild(this.interpolateDom());
 		this.tags ??= await (async () => {
-			this.appendChild(this.interpolateContent({ loadingSlot: "content" }));
+			this.appendChild(this.interpolateDom({
+				$template: "content",
+				loadingSlot: "content"
+			}));
 			const ca = this.closest("conduit-app");
 			const u = new URL(ca.dataset.apiUrl);
 			u.pathname += "/tags";
 			const j = await (await fetch(u, { headers: ca.apiHeaders })).json();
 			return j.tags;
 		})();
-		this.appendChild(this.interpolateContent({
+		this.appendChild(this.interpolateDom({
+			$template: "content",
 			emptySlot: this.tags.length ? null : "content",
 			nonemptySlot: this.tags.length ? "content" : null,
 			tags: (() => {
-				if (this.interpolateTags?.length !== this.tags.length)
-					this.interpolateTags = this.tags.map(() => this.createInterpolateDom("tag"));
-				return this.tags.map((x, i) => this.interpolateTags[i](x));
+				return this.tags.map(x => ({
+					$template: "tag",
+					tag: x
+				}));
 			})()
 		}));
 	}

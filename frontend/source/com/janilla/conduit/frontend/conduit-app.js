@@ -127,30 +127,20 @@ export default class ConduitApp extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("ConduitApp.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
-		this.appendChild(this.interpolate({
-			header: (() => {
-				this.interpolateHeader ??= this.createInterpolateDom("header");
-				return this.interpolateHeader({
-					navItems: (() => {
-						const nii = this.navItems;
-						if (this.interpolateNavItems?.length !== nii.length)
-							this.interpolateNavItems = nii.map(() => this.createInterpolateDom("nav-item"));
-						return nii.map((x, i) => this.interpolateNavItems[i]({
-							...x,
-							class: `nav-link ${x.href === location.hash ? "active" : ""}`,
-						}));
-					})()
-				});
-			})(),
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			header: ({
+				$template: "header",
+				navItems: this.navItems.map(x => ({
+					$template: "nav-item",
+					...x,
+					class: `nav-link ${x.href === location.hash ? "active" : ""}`,
+				}))
+			}),
 			path: location.hash.substring(1),
-			footer: (() => {
-				this.interpolateFooter ??= this.createInterpolateDom("footer");
-				return this.interpolateFooter();
-			})()
+			footer: { $template: "footer" }
 		}));
 	}
 }

@@ -89,17 +89,17 @@ export default class SettingsPage extends SlottableElement {
 	async computeState() {
 		// console.log("SettingsPage.computeState");
 		const ca = this.closest("conduit-app");
-		return { ...ca.currentUser };
+		this.state = { ...ca.currentUser };
 	}
 
 	renderState() {
 		// console.log("SettingsPage.renderState");
-		this.interpolate ??= this.createInterpolateDom();
-		this.appendChild(this.interpolate({
-			content: this.state ? (() => {
-				this.interpolateContent ??= this.createInterpolateDom("content");
-				return this.interpolateContent(this.state);
-			})() : null
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			content: this.state ? {
+				$template: "content",
+				...this.state
+			} : null
 		}));
 	}
 }

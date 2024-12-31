@@ -72,12 +72,11 @@ export default class FollowButton extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("FollowButton.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
 		const a = this.dataset.active === "true";
-		this.appendChild(this.interpolate({
+		this.appendChild(this.interpolateDom({
+			$template: "",
 			...this.dataset,
 			class: `btn btn-sm action-btn ${a ? "btn-secondary" : "btn-outline-secondary"}`,
 			text: `${a ? "Unfollow" : "Follow"} ${this.dataset.username}`

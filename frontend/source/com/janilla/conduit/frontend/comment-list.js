@@ -96,35 +96,22 @@ export default class CommentList extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("CommentList.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
 		const ca = this.closest("conduit-app");
 		const ap = this.closest("article-page");
-		this.appendChild(this.interpolate({
-			form: ca.currentUser ? (() => {
-				this.interpolateAuthenticated ??= this.createInterpolateDom("authenticated");
-				return this.interpolateAuthenticated({
-					...ca.currentUser,
-					errorMessages: this.errorMessages
-				});
-			})() : (() => {
-				this.interpolateUnauthenticated ??= this.createInterpolateDom("unauthenticated");
-				return this.interpolateUnauthenticated();
-			})(),
-			cards: (() => {
-				if (this.interpolateCards?.length !== ap.state.comments.length) {
-					this.interpolateCards = ap.state.comments.map(() => this.createInterpolateDom("card"));
-					this.interpolateModOptions = this.interpolateCards.map(() => this.createInterpolateDom("mod-options"));
-				}
-				return ap.state.comments.map((x, i) => {
-					return this.interpolateCards[i]({
-						...x,
-						modOptions: x.author.username === ca.currentUser?.username ? this.interpolateModOptions[i]() : null
-					});
-				});
-			})()
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			form: ca.currentUser ? {
+				$template: "authenticated",
+				...ca.currentUser,
+				errorMessages: this.errorMessages
+			} : { $template: "unauthenticated" },
+			cards: ap.state.comments.map(x => ({
+				$template: "card",
+				...x,
+				modOptions: x.author.username === ca.currentUser?.username ? { $template: "mod-options" } : null
+			}))
 		}));
 	}
 }

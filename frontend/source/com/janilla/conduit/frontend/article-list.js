@@ -57,12 +57,9 @@ export default class ArticleList extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("ArticleList.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
-		this.shadowRoot.appendChild(this.interpolate());
-		this.interpolateContent ??= this.createInterpolateDom("content");
+		this.shadowRoot.appendChild(this.interpolateDom());
 		if (this.dataset.apiHref) {
 			const u = new URL(this.dataset.apiHref);
 			u.searchParams.append("skip", ((this.pageNumber ?? 1) - 1) * 10);
@@ -70,7 +67,10 @@ export default class ArticleList extends FlexibleElement {
 			if (u.href === this.apiUrl?.href)
 				return;
 			this.apiUrl = u;
-			this.appendChild(this.interpolateContent({ loadingSlot: "content" }));
+			this.appendChild(this.interpolateDom({
+				$template: "content",
+				loadingSlot: "content"
+			}));
 			const j = await (await fetch(u, { headers: this.closest("conduit-app").apiHeaders })).json();
 			// console.log("ArticleList.updateDisplay", j);
 			this.articles = j.articles;
@@ -82,21 +82,19 @@ export default class ArticleList extends FlexibleElement {
 			this.pageNumber = 0;
 		}
 		// console.log("ArticleList.updateDisplay", this.dataset.apiHref, this.articles, this.articlesCount);
-		this.appendChild(this.interpolateContent({
+		this.appendChild(this.interpolateDom({
+			$template: "content",
 			emptySlot: this.articles.length ? null : "content",
 			nonemptySlot: this.articles.length ? "content" : null,
-			previews: (() => {
-				if (this.interpolatePreviews?.length !== this.articles.length)
-					this.interpolatePreviews = this.articles.map(() => this.createInterpolateDom("preview"));
-				return this.interpolatePreviews.map((x, i) => x({ index: i }));
-			})(),
-			pagination: (() => {
-				this.interpolatePagination ??= this.createInterpolateDom("pagination");
-				return this.pagesCount > 1 ? this.interpolatePagination({
-					pagesCount: this.pagesCount,
-					pageNumber: this.pageNumber
-				}) : null;
-			})()
+			previews: this.articles.map((_, i) => ({
+				$template: "preview",
+				index: i
+			})),
+			pagination: this.pagesCount > 1 ? this.interpolateDom({
+				$template: "pagination",
+				pagesCount: this.pagesCount,
+				pageNumber: this.pageNumber
+			}) : null
 		}));
 	}
 }

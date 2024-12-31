@@ -72,19 +72,14 @@ export default class RegisterPage extends SlottableElement {
 		}
 	}
 
-	async computeState() {
-		// console.log("RegisterPage.computeState");
-		return {};
-	}
-
 	renderState() {
 		// console.log("RegisterPage.renderState");
-		this.interpolate ??= this.createInterpolateDom();
-		this.appendChild(this.interpolate({
-			content: this.state ? (() => {
-				this.interpolateContent ??= this.createInterpolateDom("content");
-				return this.interpolateContent(this.state);
-			})() : null
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			content: this.state ? {
+				$template: "content",
+				...this.state
+			} : null
 		}));
 	}
 }

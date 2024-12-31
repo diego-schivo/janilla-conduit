@@ -40,7 +40,7 @@ import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.Handle;
 import com.janilla.web.Render;
 
-@Render(ConduitFrontendRenderer.class)
+@Render(template = "index.html")
 public class ConduitFrontend {
 
 	public static void main(String[] args) throws Exception {

@@ -72,25 +72,22 @@ export default class FavoriteButton extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("FavoriteButton.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
 		const a = this.dataset.active === "true";
 		const p = this.dataset.preview === "true";
-		this.appendChild(this.interpolate({
+		this.appendChild(this.interpolateDom({
+			$template: "",
 			...this.dataset,
 			class: `btn btn-sm ${a ? "btn-primary" : "btn-outline-primary"} ${p ? "pull-xs-right" : ""}`,
-			content: p ? (() => {
-				this.previewContent ??= this.createInterpolateDom("preview-content");
-				return this.previewContent(this.dataset);
-			})() : (() => {
-				this.content ??= this.createInterpolateDom("content");
-				return this.content({
-					text: `${this.dataset.active === "true" ? "Unfavorite" : "Favorite"} Article`,
-					count: `(${this.dataset.count})`
-				});
-			})()
+			content: p ? {
+				$template: "preview-content",
+				...this.dataset
+			} : {
+				$template: "content",
+				text: `${this.dataset.active === "true" ? "Unfavorite" : "Favorite"} Article`,
+				count: `(${this.dataset.count})`
+			}
 		}));
 	}
 }

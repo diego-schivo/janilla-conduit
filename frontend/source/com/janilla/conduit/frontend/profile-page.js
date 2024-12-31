@@ -78,54 +78,47 @@ export default class ProfilePage extends SlottableElement {
 
 	async computeState() {
 		// console.log("ProfilePage.computeState");
-		if (!this.dataset.username)
-			return null;
+		if (!this.dataset.username) {
+			await super.computeState();
+			return;
+		}
 		const ca = this.closest("conduit-app");
 		const u = new URL(ca.dataset.apiUrl);
 		u.pathname += `/profiles/${this.dataset.username}`;
 		const j = await (await fetch(u, { headers: ca.apiHeaders })).json();
-		return j.profile;
+		this.state = j.profile;
 	}
 
 	renderState() {
 		// console.log("ProfilePage.renderState");
-		this.interpolate ??= this.createInterpolateDom();
 		const ca = this.closest("conduit-app");
 		if (this.slot)
 			this.activeTab ??= "author";
 		else
 			this.activeTab = null;
-		this.appendChild(this.interpolate({
-			content: this.state ? (() => {
-				this.interpolateContent ??= this.createInterpolateDom("content");
-				return this.interpolateContent({
-					...this.state,
-					action: this.dataset.username === ca.currentUser?.username
-						? (() => {
-							this.interpolateCanModify ??= this.createInterpolateDom("can-modify");
-							return this.interpolateCanModify();
-						})()
-						: (() => {
-							this.interpolateCannotModify ??= this.createInterpolateDom("cannot-modify");
-							return this.interpolateCannotModify(this.state);
-						})(),
-					tabItems: (() => {
-						const tii = this.tabItems;
-						if (this.interpolateTabItems?.length !== tii.length)
-							this.interpolateTabItems = tii.map(() => this.createInterpolateDom("tab-item"));
-						return tii.map((x, i) => this.interpolateTabItems[i]({
-							...x,
-							class: `nav-link ${x.href.substring(1) === this.activeTab ? "active" : ""}`,
-						}));
-					})(),
-					articlesUrl: (() => {
-						const u = new URL(ca.dataset.apiUrl);
-						u.pathname += "/articles";
-						u.searchParams.append(this.activeTab, this.state.username);
-						return u;
-					})()
-				});
-			})() : null
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			content: this.state ? {
+				$template: "content",
+				...this.state,
+				action: this.dataset.username === ca.currentUser?.username
+					? { $template: "can-modify" }
+					: {
+						$template: "cannot-modify",
+						...this.state
+					},
+				tabItems: this.tabItems.map(x => ({
+					$template: "tab-item",
+					...x,
+					class: `nav-link ${x.href.substring(1) === this.activeTab ? "active" : ""}`
+				})),
+				articlesUrl: (() => {
+					const u = new URL(ca.dataset.apiUrl);
+					u.pathname += "/articles";
+					u.searchParams.append(this.activeTab, this.state.username);
+					return u;
+				})()
+			} : null
 		}));
 	}
 }

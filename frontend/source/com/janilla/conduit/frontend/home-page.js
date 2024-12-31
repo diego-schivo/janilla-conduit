@@ -93,47 +93,38 @@ export default class HomePage extends SlottableElement {
 	async computeState() {
 		// console.log("LoginPage.computeState");
 		const ca = this.closest("conduit-app");
-		return { activeTab: ca.currentUser ? "feed" : "all" };
+		this.state = { activeTab: ca.currentUser ? "feed" : "all" };
 	}
 
 	renderState() {
 		// console.log("HomePage.renderState");
-		this.interpolate ??= this.createInterpolateDom();
 		const ca = this.closest("conduit-app");
-		this.appendChild(this.interpolate({
-			content: !this.state ? null : (() => {
-				this.interpolateContent ??= this.createInterpolateDom("content");
-				return this.interpolateContent({
-					banner: ca.currentUser ? null : (() => {
-						this.interpolateBanner ??= this.createInterpolateDom("banner");
-						return this.interpolateBanner();
-					})(),
-					tabItems: (() => {
-						const tii = this.tabItems;
-						if (this.interpolateTabItems?.length !== tii.length)
-							this.interpolateTabItems = tii.map(() => this.createInterpolateDom("tab-item"));
-						return tii.map((x, i) => this.interpolateTabItems[i]({
-							...x,
-							class: `nav-link ${x.href.substring(1) === this.state.activeTab ? "active" : ""}`,
-						}));
-					})(),
-					articlesUrl: (() => {
-						if (!this.state.activeTab)
-							return null;
-						const u = new URL(ca.dataset.apiUrl);
-						u.pathname += "/articles";
-						switch (this.state.activeTab) {
-							case "feed":
-								u.pathname += "/feed";
-								break;
-							case "tag":
-								u.searchParams.append("tag", this.state.selectedTag);
-								break;
-						}
-						return u;
-					})()
-				});
-			})()
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			content: !this.state ? null : {
+				$template: "content",
+				banner: ca.currentUser ? null : { $template: "banner" },
+				tabItems: this.tabItems.map(x => ({
+					$template: "tab-item",
+					...x,
+					class: `nav-link ${x.href.substring(1) === this.state.activeTab ? "active" : ""}`,
+				})),
+				articlesUrl: (() => {
+					if (!this.state.activeTab)
+						return null;
+					const u = new URL(ca.dataset.apiUrl);
+					u.pathname += "/articles";
+					switch (this.state.activeTab) {
+						case "feed":
+							u.pathname += "/feed";
+							break;
+						case "tag":
+							u.searchParams.append("tag", this.state.selectedTag);
+							break;
+					}
+					return u;
+				})()
+			}
 		}));
 	}
 }

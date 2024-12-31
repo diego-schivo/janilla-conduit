@@ -81,16 +81,16 @@ export default class TagsInput extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("TagsInput.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
-		this.appendChild(this.interpolate({
+		this.appendChild(this.interpolateDom({
+			$template: "",
 			tags: (() => {
 				const vv = this.values;
-				if (this.interpolateTags?.length !== vv.length)
-					this.interpolateTags = vv.map(() => this.createInterpolateDom("tag"));
-				return vv.map((x, i) => this.interpolateTags[i](x));
+				return vv.map(x => ({
+					$template: "tag",
+					tag: x
+				}));
 			})()
 		}));
 	}

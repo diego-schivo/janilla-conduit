@@ -80,14 +80,13 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 			if (object != null)
 				switch (object) {
 				case Article a: {
-					var m = Reflection.properties(Article.class).filter(n -> switch (n) {
+					var m = Reflection.properties(Article.class).filter(x -> switch (x.name()) {
 					case "id" -> false;
 					default -> true;
-					}).map(k -> {
+					}).map(x -> {
 //						System.out.println("k=" + k);
-						var g = Reflection.property(Article.class, k);
-						var v = g.get(a);
-						return new AbstractMap.SimpleEntry<>(k, v);
+						var v = x.get(a);
+						return new AbstractMap.SimpleEntry<>(x.name(), v);
 					}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
 					var u = user.get();
 					m.put("favorited",
@@ -100,13 +99,12 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 				}
 					break;
 				case User u: {
-					var m = Reflection.properties(User.class).filter(n -> switch (n) {
+					var m = Reflection.properties(User.class).filter(x -> switch (x.name()) {
 					case "hash", "id", "salt" -> false;
 					default -> true;
-					}).map(k -> {
-						var g = Reflection.property(User.class, k);
-						var w = g.get(u);
-						return new AbstractMap.SimpleEntry<>(k, w);
+					}).map(x -> {
+						var w = x.get(u);
+						return new AbstractMap.SimpleEntry<>(x.name(), w);
 					}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
 					var v = user.get();
 					m.put("following",

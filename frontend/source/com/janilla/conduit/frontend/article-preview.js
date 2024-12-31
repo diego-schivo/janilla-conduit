@@ -64,20 +64,18 @@ export default class ArticlePreview extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("ArticlePreview.updateDisplay", this.dataset.index);
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
 		const a = this.article;
-		this.appendChild(this.interpolate({
+		this.appendChild(this.interpolateDom({
+			$template: "",
 			...a,
 			authorHref: `#/@${a.author.username}`,
 			href: `#/article/${a.slug}`,
-			tagItems: (() => {
-				if (this.interpolateTagItems?.length !== a.tagList.length)
-					this.interpolateTagItems = a.tagList.map(() => this.createInterpolateDom("tag-item"));
-				return a.tagList.map((x, i) => this.interpolateTagItems[i](x));
-			})()
+			tagItems: a.tagList.map(x => ({
+				$template: "tag-item",
+				...x
+			}))
 		}));
 	}
 }

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 import { SlottableElement } from "./slottable-element.js";
-import { formatMarkdownAsHTML, parseMarkdown } from "./markdown.js";
+import { formatMarkdownAsHtml, parseMarkdown } from "./markdown.js";
 
 export default class ArticlePage extends SlottableElement {
 
@@ -109,8 +109,10 @@ export default class ArticlePage extends SlottableElement {
 
 	async computeState() {
 		// console.log("ArticlePage.computeState");
-		if (!this.dataset.slug)
-			return null;
+		if (!this.dataset.slug) {
+			await super.computeState();
+			return;
+		}
 		const ca = this.closest("conduit-app");
 		const uu = Array.from({ length: 2 }, () => new URL(ca.dataset.apiUrl));
 		uu[0].pathname += `/articles/${this.dataset.slug}`;
@@ -119,11 +121,11 @@ export default class ArticlePage extends SlottableElement {
 			const p = fetch(x, { headers: ca.apiHeaders }).then(y => y.json());
 			return p;
 		}));
-		return {
+		this.state = {
 			article,
 			body: (() => {
 				const t = document.createElement("template");
-				t.innerHTML = formatMarkdownAsHTML(parseMarkdown(article.body));
+				t.innerHTML = formatMarkdownAsHtml(parseMarkdown(article.body));
 				return t.content;
 			})(),
 			comments
@@ -132,33 +134,29 @@ export default class ArticlePage extends SlottableElement {
 
 	renderState() {
 		// console.log("ArticlePage.renderState");
-		this.interpolate ??= this.createInterpolateDom();
 		const a = this.state?.article;
 		const ca = this.closest("conduit-app");
-		this.appendChild(this.interpolate({
-			content: (() => {
-				this.interpolateContent ??= this.createInterpolateDom("content");
-				return a ? this.interpolateContent({
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			content: a ? ({
+				$template: "content",
+				...a,
+				body: this.state.body,
+				meta: Array.from({ length: 2 }, (_, i) => ({
+					$template: "meta",
 					...a,
-					body: this.state.body,
-					meta: (() => {
-						this.interpolateMeta ??= Array.from({ length: 2 }, () => this.createInterpolateDom("meta"));
-						this.interpolateCanModify ??= this.interpolateMeta.map(() => this.createInterpolateDom("can-modify"));
-						this.interpolateCannotModify ??= this.interpolateMeta.map(() => this.createInterpolateDom("cannot-modify"));
-						return this.interpolateMeta.map((x, i) => x({
+					content: a.author.username === ca.currentUser?.username
+						? ({ $template: "can-modify" })
+						: ({
 							...a,
-							content: a.author.username === ca.currentUser?.username
-								? this.interpolateCanModify[i]()
-								: this.interpolateCannotModify[i](a)
-						}));
-					})(),
-					tagItems: (() => {
-						if (this.interpolateTagItems?.length !== a.tagList.length)
-							this.interpolateTagItems = a.tagList.map(() => this.createInterpolateDom("tag-item"));
-						return a.tagList.map((x, i) => this.interpolateTagItems[i](x));
-					})()
-				}) : null;
-			})()
+							$template: "cannot-modify"
+						})
+				})),
+				tagItems: a.tagList.map((x, i) => ({
+					$template: "tag-item",
+					...x
+				}))
+			}) : null
 		}));
 	}
 }

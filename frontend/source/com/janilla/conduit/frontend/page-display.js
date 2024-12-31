@@ -50,11 +50,9 @@ export default class PageDisplay extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("PageDisplay.updateDisplay");
-		await super.updateDisplay();
 		if (!this.isConnected)
 			return;
-		this.interpolate ??= this.createInterpolateDom();
-		this.shadowRoot.appendChild(this.interpolate());
+		this.shadowRoot.appendChild(this.interpolateDom());
 		const nn = this.dataset.path.split("/");
 		updateElement(this.querySelector("article-page"), nn[1] === "article", (el, a) => {
 			if (a)
