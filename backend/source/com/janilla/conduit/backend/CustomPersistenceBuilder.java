@@ -103,10 +103,10 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 			if (r.nextBoolean())
 				b.add("### " + Util.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(words))) + "\n");
 			if (r.nextInt(3) == 2)
-				b.add(Stream.iterate("", x -> "- " + Randomize.phrase(5, 11, () -> Randomize.element(words))).skip(1)
+				b.add(Stream.iterate("", _ -> "- " + Randomize.phrase(5, 11, () -> Randomize.element(words))).skip(1)
 						.limit(r.nextInt(2, 6)).collect(Collectors.joining("\n")) + "\n");
 			else
-				b.add(Stream.iterate("", x -> Randomize.sentence(5, 11, () -> Randomize.element(words))).skip(1)
+				b.add(Stream.iterate("", _ -> Randomize.sentence(5, 11, () -> Randomize.element(words))).skip(1)
 						.limit(r.nextInt(2, 6)).collect(Collectors.joining(" ")) + "\n");
 		}
 		return b.build().collect(Collectors.joining("\n"));

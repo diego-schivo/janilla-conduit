@@ -35,7 +35,7 @@ public class TagApi {
 	@Handle(method = "GET", path = "/api/tags")
 	public Tags tags() throws IOException {
 		var l = persistence.database().perform(
-				(ss, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
+				(_, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
 		return new Tags(l);
 	}
 

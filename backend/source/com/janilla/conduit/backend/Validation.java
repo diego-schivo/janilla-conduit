@@ -41,21 +41,21 @@ public class Validation {
 	boolean hasNotBeenTaken(String name, Object value) {
 		if (value == null)
 			return true;
-		errors.computeIfAbsent(name, x -> new LinkedHashSet<>()).add("has already been taken");
+		errors.computeIfAbsent(name, _ -> new LinkedHashSet<>()).add("has already been taken");
 		return false;
 	}
 
 	boolean isNotBlank(String name, String value) {
 		if (value != null && !value.isBlank())
 			return true;
-		errors.computeIfAbsent(name, x -> new LinkedHashSet<>()).add("can't be blank");
+		errors.computeIfAbsent(name, _ -> new LinkedHashSet<>()).add("can't be blank");
 		return false;
 	}
 
 	boolean isNotTooLong(String name, String value, int maxLength) {
 		if ((value != null ? value.length() : 0) <= maxLength)
 			return true;
-		errors.computeIfAbsent(name, x -> new LinkedHashSet<>()).add("can't exceed " + maxLength + " characters");
+		errors.computeIfAbsent(name, _ -> new LinkedHashSet<>()).add("can't exceed " + maxLength + " characters");
 		return false;
 	}
 
@@ -74,7 +74,7 @@ public class Validation {
 		if (value == null || value.isEmpty()
 				|| nonWord.splitAsStream(value).allMatch(w -> w.isEmpty() || safeWords.contains(w.toLowerCase())))
 			return true;
-		errors.computeIfAbsent(name, x -> new LinkedHashSet<>())
+		errors.computeIfAbsent(name, _ -> new LinkedHashSet<>())
 				.add("can only contain \"Lorem ipsum\" words: " + safeWords);
 		return false;
 	}
@@ -82,14 +82,14 @@ public class Validation {
 	boolean isUnique(String name, Object value) {
 		if (value == null)
 			return true;
-		errors.computeIfAbsent(name, x -> new LinkedHashSet<>()).add("must be unique");
+		errors.computeIfAbsent(name, _ -> new LinkedHashSet<>()).add("must be unique");
 		return false;
 	}
 
 	boolean isValid(String name, boolean value) {
 		if (value)
 			return true;
-		errors.computeIfAbsent(name, x -> new LinkedHashSet<>()).add("is invalid");
+		errors.computeIfAbsent(name, _ -> new LinkedHashSet<>()).add("is invalid");
 		return false;
 	}
 
@@ -115,7 +115,7 @@ public class Validation {
 								.matcher(value.substring(emojiPrefix.length(), value.length() - emojiSuffix.length()))
 								.matches()))
 			return true;
-		errors.computeIfAbsent(name, x -> new LinkedHashSet<>())
+		errors.computeIfAbsent(name, _ -> new LinkedHashSet<>())
 				.add("must be an emoji: " + emojiPrefix + new String(Character.toChars(0x1F600)) + emojiSuffix);
 		return false;
 	}

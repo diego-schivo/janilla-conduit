@@ -32,7 +32,7 @@ import com.janilla.persistence.Crud;
 class ArticleCrud extends Crud<Article> {
 
 	public boolean favorite(Long id, Instant createdAt, Long user) {
-		return database.perform((ss, ii) -> {
+		return database.perform((_, ii) -> {
 			var s = ii.perform("User.favoriteList", i -> i.add(id, new Long[] { user }));
 			ii.perform("Article.favoriteList", i -> i.add(user, new Object[][] { { createdAt, id } }));
 			return s;
@@ -40,7 +40,7 @@ class ArticleCrud extends Crud<Article> {
 	}
 
 	public boolean unfavorite(Long id, Instant createdAt, Long user) {
-		return database.perform((ss, ii) -> {
+		return database.perform((_, ii) -> {
 			var s = ii.perform("User.favoriteList", i -> i.remove(id, new Long[] { user }));
 			ii.perform("Article.favoriteList", i -> i.remove(user, new Object[][] { { createdAt, id } }));
 			return s;
@@ -49,7 +49,7 @@ class ArticleCrud extends Crud<Article> {
 
 	@Override
 	protected void updateIndex(String name, Map<Object, Object> remove, Map<Object, Object> add) {
-		database.perform((ss, ii) -> {
+		database.perform((_, ii) -> {
 			super.updateIndex(name, remove, add);
 
 			if (name != null && name.equals("tagList")) {

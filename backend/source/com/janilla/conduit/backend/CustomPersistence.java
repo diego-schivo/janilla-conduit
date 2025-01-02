@@ -64,7 +64,7 @@ public class CustomPersistence extends Persistence {
 	protected void createStoresAndIndexes() {
 		super.createStoresAndIndexes();
 		for (var n : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
-			database.perform((ss, ii) -> {
+			database.perform((_, ii) -> {
 				ii.create(n);
 				return null;
 			}, true);

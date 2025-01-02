@@ -96,7 +96,7 @@ public class ConduitFullstack {
 			var o = hx.getException() != null ? hx.getException() : hx.getRequest();
 			var h = switch (o) {
 			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;
-			case Exception e -> backend.handler;
+			case Exception _ -> backend.handler;
 			default -> null;
 			};
 			return h.handle(hx);
