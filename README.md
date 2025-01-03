@@ -30,29 +30,29 @@ You can view a live demo over at <https://conduit.janilla.com/>.
 
 > **_Note:_**  if you are unfamiliar with the terminal, you can set up the project in an IDE (section below).
 
-Make sure you have Java SE Platform (JDK 21) and [Apache Maven](https://maven.apache.org/install.html) installed.
+Make sure you have Java SE Platform (JDK 23) and [Apache Maven](https://maven.apache.org/install.html) installed.
 
 From the project root, run the following command to run the fullstack application:
 
 ```shell
-mvn compile exec:java -pl fullstack
+mvn compile exec:exec -pl fullstack
 ```
 
-Then open a browser and navigate to <http://localhost:4200/> (APIs use the same port 4200).
+Then open a browser and navigate to <https://localhost:8443/> (APIs use the same port 8443).
 
 > **_Note:_**  consider checking the Disable Cache checkbox in the Network tab of the Web Developer Tools.
 
 Alternatively, you can run the backend and frontend applications separately:
 
 ```shell
-mvn compile exec:java -pl backend
+mvn compile exec:exec -pl backend
 ```
 
 ```shell
-mvn compile exec:java -pl frontend
+mvn compile exec:exec -pl frontend
 ```
 
-Then navigate to <http://localhost:4200/> (the API port is 3000).  
+Then navigate to <https://localhost:8443/> (the API port is 8444).  
 
 If you want to change the API URL, simply edit the `configuration.properties` files located in the source package of each module.
 
@@ -63,11 +63,11 @@ If you want to change the API URL, simply edit the `configuration.properties` fi
 So far the project has been developed with [Eclipse IDE](https://eclipseide.org/):
 
 1. download the [Eclipse Installer](https://www.eclipse.org/downloads/packages/installer)
-2. install the package for Enterprise Java and Web Developers with JRE 21
+2. install the package for Enterprise Java and Web Developers with JRE 23
 3. launch the IDE and choose Import projects from Git (with smart import)
 4. select GitHub as the repository source, then search for `janilla-conduit fork:true` and complete the wizard
-5. select a project (eg: `janilla-conduit-fullstack`) and launch Debug as Java Application
-6. open a browser and navigate to <http://localhost:4200/>
+5. open the Java class `com.janilla.conduit.fullstack.ConduitFullstack` and launch Debug as Java Application
+6. open a browser and navigate to <https://localhost:8443/>
 
 ### Seed the database
 
@@ -80,9 +80,9 @@ You can change the file location and turn off seeding by editing the `configurat
 Run the following command:
 
 ```shell
-mvn compile exec:java -pl testing
+mvn compile exec:exec -pl testing
 ```
 
-or launch the `janilla-conduit-testing` project from the IDE.
+or launch the Java class `com.janilla.conduit.testing.ConduitTesting` from the IDE.
 
-Then navigate to <http://localhost:4200/>, select some tests and click Run, then wait for test color to change to either green (test succeeded) or red (test failed).
+Then navigate to <https://localhost:8443/>, select some tests and click Run, then wait for test color to change to either green (test succeeded) or red (test failed).

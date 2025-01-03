@@ -20,7 +20,14 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>com.janilla.conduit.testing.ConduitTesting</mainClass>
+					<executable>java</executable>
+					<arguments>
+						<argument>--enable-preview</argument>
+						<argument>-p</argument>
+						<modulepath/>
+						<argument>-m</argument>
+						<argument>com.janilla.conduit.testing/com.janilla.conduit.testing.ConduitTesting</argument>
+					</arguments>
 				</configuration>
 			</plugin>
 		</plugins>

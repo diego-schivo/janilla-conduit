@@ -24,7 +24,14 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>com.janilla.conduit.fullstack.ConduitFullstackApp</mainClass>
+					<executable>java</executable>
+					<arguments>
+						<argument>--enable-preview</argument>
+						<argument>-p</argument>
+						<modulepath/>
+						<argument>-m</argument>
+						<argument>com.janilla.conduit.fullstack/com.janilla.conduit.fullstack.ConduitFullstack</argument>
+					</arguments>
 				</configuration>
 			</plugin>
 		</plugins>
