@@ -59,7 +59,7 @@ export default class FavoriteButton extends FlexibleElement {
 		const u = new URL(ca.dataset.apiUrl);
 		u.pathname += `/articles/${this.dataset.slug}/favorite`;
 		const r = await fetch(u, {
-			method: this.dataset.active === "true" ? "DELETE" : "POST",
+			method: this.dataset.active != null ? "DELETE" : "POST",
 			headers: ca.apiHeaders
 		});
 		if (r.ok) {
@@ -74,8 +74,8 @@ export default class FavoriteButton extends FlexibleElement {
 		// console.log("FavoriteButton.updateDisplay");
 		if (!this.isConnected)
 			return;
-		const a = this.dataset.active === "true";
-		const p = this.dataset.preview === "true";
+		const a = this.dataset.active != null;
+		const p = this.dataset.preview != null;
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...this.dataset,
@@ -85,7 +85,7 @@ export default class FavoriteButton extends FlexibleElement {
 				...this.dataset
 			} : {
 				$template: "content",
-				text: `${this.dataset.active === "true" ? "Unfavorite" : "Favorite"} Article`,
+				text: `${this.dataset.active != null ? "Unfavorite" : "Favorite"} Article`,
 				count: `(${this.dataset.count})`
 			}
 		}));

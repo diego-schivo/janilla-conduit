@@ -74,7 +74,7 @@ export default class ArticlePreview extends FlexibleElement {
 			href: `#/article/${a.slug}`,
 			tagItems: a.tagList.map(x => ({
 				$template: "tag-item",
-				...x
+				text: x
 			}))
 		}));
 	}

@@ -142,7 +142,7 @@ export default class ArticlePage extends SlottableElement {
 				$template: "content",
 				...a,
 				body: this.state.body,
-				meta: Array.from({ length: 2 }, (_, i) => ({
+				meta: Array.from({ length: 2 }, () => ({
 					$template: "meta",
 					...a,
 					content: a.author.username === ca.currentUser?.username
@@ -152,9 +152,9 @@ export default class ArticlePage extends SlottableElement {
 							$template: "cannot-modify"
 						})
 				})),
-				tagItems: a.tagList.map((x, i) => ({
+				tagItems: a.tagList.map(x => ({
 					$template: "tag-item",
-					...x
+					text: x
 				}))
 			}) : null
 		}));

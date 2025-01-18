@@ -53,7 +53,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 	protected Iterator<JsonToken<?>> buildJsonIterator(Object object, HttpExchange exchange) {
 		var i = new CustomReflectionJsonIterator();
 		i.setObject(object);
-		i.user = () -> ((CustomExchange) exchange).getUser();
+		i.user = () -> ((CustomHttpExchange) exchange).getUser();
 		return i;
 	}
 
@@ -62,8 +62,8 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 		private Supplier<User> user;
 
 		@Override
-		public Iterator<JsonToken<?>> buildValueIterator(Object object) {
-			var o = getStack().peek();
+		public Iterator<JsonToken<?>> newValueIterator(Object object) {
+			var o = stack().peek();
 			if (o instanceof Map.Entry e) {
 				var n = (String) e.getKey();
 				switch (n) {
@@ -116,7 +116,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 				default:
 					break;
 				}
-			return super.buildValueIterator(object);
+			return super.newValueIterator(object);
 		}
 	}
 }

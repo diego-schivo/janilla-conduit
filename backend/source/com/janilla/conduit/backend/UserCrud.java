@@ -24,16 +24,21 @@
 package com.janilla.conduit.backend;
 
 import com.janilla.persistence.Crud;
+import com.janilla.persistence.Persistence;
 
 public class UserCrud extends Crud<User> {
 
+	public UserCrud(Class<User> type, Persistence persistence) {
+		super(type, persistence);
+	}
+
 	public boolean follow(Long profile, Long user) {
-		return database.perform((_, ii) -> ii.perform("User.followList", i -> i.add(user, new Long[] { profile })),
-				true);
+		return persistence.database()
+				.perform((_, ii) -> ii.perform("User.followList", i -> i.add(user, new Long[] { profile })), true);
 	}
 
 	public boolean unfollow(Long profile, Long user) {
-		return database.perform((_, ii) -> ii.perform("User.followList", i -> i.remove(user, new Long[] { profile })),
-				true);
+		return persistence.database()
+				.perform((_, ii) -> ii.perform("User.followList", i -> i.remove(user, new Long[] { profile })), true);
 	}
 }

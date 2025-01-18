@@ -23,41 +23,48 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.database.Index;
-import com.janilla.io.ElementHelper;
+import java.util.Collection;
+import java.util.Optional;
+
+import com.janilla.database.BTree;
+import com.janilla.database.Database;
+import com.janilla.database.KeyAndData;
+import com.janilla.database.NameAndData;
+import com.janilla.io.ByteConverter;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
 
 public class CustomPersistence extends Persistence {
 
+	public CustomPersistence(Database database, Collection<Class<?>> types) {
+		super(database, types);
+	}
+
 	@Override
-	public <K, V> boolean initializeIndex(String name, Index<K, V> index) {
-		if (super.initializeIndex(name, index))
-			return true;
-		return switch (name) {
-		case "User.favoriteList", "User.followList" -> {
-			@SuppressWarnings("unchecked")
-			var i = (Index<Long, Long>) index;
-			i.setKeyHelper(ElementHelper.LONG);
-			i.setValueHelper(ElementHelper.LONG);
-			yield true;
-		}
-		case "Tag.count" -> {
-			@SuppressWarnings("unchecked")
-			var i = (Index<Object[], String>) index;
-			i.setKeyHelper(ElementHelper.of(new ElementHelper.TypeAndOrder(Long.class, ElementHelper.SortOrder.DESCENDING)));
-			i.setValueHelper(ElementHelper.STRING);
-			yield true;
-		}
-		case "Article.favoriteList" -> {
-			@SuppressWarnings("unchecked")
-			var i = (Index<Long, Object[]>) index;
-			i.setKeyHelper(ElementHelper.LONG);
-			i.setValueHelper(ElementHelper.of(Article.class, "-createdAt", "id"));
-			yield true;
-		}
-		default -> false;
-		};
+	public <K, V> com.janilla.database.Index<K, V> newIndex(NameAndData nameAndData) {
+		@SuppressWarnings("unchecked")
+		var i = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(nameAndData))
+				.orElseGet(() -> (com.janilla.database.Index<K, V>) switch (nameAndData.name()) {
+				case "User.favoriteList",
+						"User.followList" ->
+					new com.janilla.database.Index<Long, Long>(
+							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
+									KeyAndData.getByteConverter(ByteConverter.LONG), nameAndData.bTree()),
+							ByteConverter.LONG);
+				case "Tag.count" ->
+					new com.janilla.database.Index<Object[], String>(
+							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
+									KeyAndData.getByteConverter(ByteConverter.of(new ByteConverter.TypeAndOrder(
+											Long.class, ByteConverter.SortOrder.DESCENDING))),
+									nameAndData.bTree()),
+							ByteConverter.STRING);
+				case "Article.favoriteList" -> new com.janilla.database.Index<Long, Object[]>(
+						new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
+								KeyAndData.getByteConverter(ByteConverter.LONG), nameAndData.bTree()),
+						ByteConverter.of(Article.class, "-createdAt", "id"));
+				default -> null;
+				});
+		return i;
 	}
 
 	@Override
@@ -71,17 +78,17 @@ public class CustomPersistence extends Persistence {
 	}
 
 	@Override
-	protected <E> Crud<E> createCrud(Class<E> type) {
+	protected <E> Crud<E> newCrud(Class<E> type) {
 		if (type == Article.class) {
 			@SuppressWarnings("unchecked")
-			var c = (Crud<E>) new ArticleCrud();
+			var c = (Crud<E>) new ArticleCrud(Article.class, this);
 			return c;
 		}
 		if (type == User.class) {
 			@SuppressWarnings("unchecked")
-			var c = (Crud<E>) new UserCrud();
+			var c = (Crud<E>) new UserCrud(User.class, this);
 			return c;
 		}
-		return super.createCrud(type);
+		return super.newCrud(type);
 	}
 }

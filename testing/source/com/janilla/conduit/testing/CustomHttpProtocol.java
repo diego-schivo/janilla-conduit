@@ -23,14 +23,21 @@
  */
 package com.janilla.conduit.testing;
 
+import javax.net.ssl.SSLContext;
+
 import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
 
 public class CustomHttpProtocol extends HttpProtocol {
 
 	public ConduitFullstack fullstack;
+
+	public CustomHttpProtocol(HttpHandler handler, SSLContext sslContext, boolean useClientMode) {
+		super(handler, sslContext, useClientMode);
+	}
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request) {

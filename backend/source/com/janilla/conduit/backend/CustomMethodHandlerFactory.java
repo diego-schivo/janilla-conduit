@@ -50,7 +50,7 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 			EntryList<String, String> entries, Supplier<String> body,
 			Supplier<UnaryOperator<Converter.MapType>> resolver) {
 		if (type == User.class)
-			return ((CustomExchange) exchange).getUser();
+			return ((CustomHttpExchange) exchange).getUser();
 		return super.resolveArgument(type, exchange, values, entries, body, resolver);
 	}
 }

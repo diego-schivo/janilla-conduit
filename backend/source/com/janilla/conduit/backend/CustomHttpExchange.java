@@ -23,32 +23,35 @@
  */
 package com.janilla.conduit.backend;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import com.janilla.http.HeaderField;
 import com.janilla.http.HttpExchange;
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
-import com.janilla.util.Lazy;
 
-public class CustomExchange extends HttpExchange {
+public class CustomHttpExchange extends HttpExchange {
 
 	public Properties configuration;
 
 	public Persistence persistence;
 
-	private Supplier<User> user = Lazy.of(() -> {
-		var a = getRequest().getHeaders().stream().filter(x -> x.name().equals("authorization")).map(HeaderField::value)
-				.findFirst().orElse(null);
-		var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
-		var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
-		var e = p != null ? (String) p.get("loggedInAs") : null;
-		var c = persistence.crud(User.class);
-		var i = e != null ? c.find("email", e) : -1;
-		var u = i >= 0 ? c.read(i) : null;
-		return u;
-	});
+	private Map<String, Object> map = new HashMap<>();
+
+	private Supplier<User> user = () -> {
+		if (!map.containsKey("user")) {
+			var a = getRequest().getHeaderValue("authorization");
+			var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
+			var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
+			var e = p != null ? (String) p.get("loggedInAs") : null;
+			var c = persistence.crud(User.class);
+			var i = e != null ? c.find("email", e) : 0;
+			map.put("user", i > 0 ? c.read(i) : null);
+		}
+		return (User) map.get("user");
+	};
 
 	public User getUser() {
 		return user.get();

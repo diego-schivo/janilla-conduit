@@ -23,12 +23,13 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.net.ssl.SSLContext;
 
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpProtocol;
@@ -44,45 +45,46 @@ import com.janilla.web.RenderableFactory;
 
 public class ConduitBackend {
 
-	public static void main(String[] args) throws Exception {
-		var pp = new Properties();
-		try (var is = ConduitBackend.class.getResourceAsStream("configuration.properties")) {
-			pp.load(is);
-			if (args.length > 0) {
-				var p = args[0];
-				if (p.startsWith("~"))
-					p = System.getProperty("user.home") + p.substring(1);
-				pp.load(Files.newInputStream(Path.of(p)));
+	public static void main(String[] args) {
+		try {
+			var pp = new Properties();
+			try (var is = ConduitBackend.class.getResourceAsStream("configuration.properties")) {
+				pp.load(is);
+				if (args.length > 0) {
+					var p = args[0];
+					if (p.startsWith("~"))
+						p = System.getProperty("user.home") + p.substring(1);
+					pp.load(Files.newInputStream(Path.of(p)));
+				}
 			}
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+			var cb = new ConduitBackend(pp);
+			Server s;
+			{
+				var a = new InetSocketAddress(
+						Integer.parseInt(cb.configuration.getProperty("conduit.backend.server.port")));
+				SSLContext sc;
+				try (var is = Net.class.getResourceAsStream("testkeys")) {
+					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+				}
+				var p = cb.factory.create(HttpProtocol.class,
+						Map.of("handler", cb.handler, "sslContext", sc, "useClientMode", false));
+				s = new Server(a, p);
+			}
+			s.serve();
+		} catch (Throwable e) {
+			e.printStackTrace();
 		}
-		var a = new ConduitBackend(pp);
-
-		var hp = a.factory.create(HttpProtocol.class);
-		try (var is = Net.class.getResourceAsStream("testkeys")) {
-			hp.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-		hp.setHandler(a.handler);
-
-		var s = new Server();
-		s.setAddress(
-				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.backend.server.port"))));
-		s.setProtocol(hp);
-		s.serve();
 	}
 
 	public Properties configuration;
 
 	public Factory factory;
 
+	public Persistence persistence;
+
 	public RenderableFactory renderableFactory;
 
 	public HttpHandler handler;
-
-	public Persistence persistence;
 
 	public MethodHandlerFactory methodHandlerFactory;
 
@@ -93,17 +95,16 @@ public class ConduitBackend {
 		factory.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
 		factory.setSource(this);
 
-		renderableFactory = new RenderableFactory();
-		handler = factory.create(ApplicationHandlerBuilder.class).build();
-
 		{
-			var pb = factory.create(ApplicationPersistenceBuilder.class);
 			var p = configuration.getProperty("conduit.database.file");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
-			pb.setFile(Path.of(p));
+			var pb = factory.create(ApplicationPersistenceBuilder.class, Map.of("databaseFile", Path.of(p)));
 			persistence = pb.build();
 		}
+
+		renderableFactory = new RenderableFactory();
+		handler = factory.create(ApplicationHandlerBuilder.class).build();
 	}
 
 	public ConduitBackend application() {

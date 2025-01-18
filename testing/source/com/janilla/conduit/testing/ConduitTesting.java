@@ -23,12 +23,13 @@
  */
 package com.janilla.conduit.testing;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.net.ssl.SSLContext;
 
 import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
@@ -45,34 +46,35 @@ import com.janilla.web.Render;
 @Render(template = "index.html")
 public class ConduitTesting {
 
-	public static void main(String[] args) throws Exception {
-		var pp = new Properties();
-		try (var is = ConduitTesting.class.getResourceAsStream("configuration.properties")) {
-			pp.load(is);
-			if (args.length > 0) {
-				var p = args[0];
-				if (p.startsWith("~"))
-					p = System.getProperty("user.home") + p.substring(1);
-				pp.load(Files.newInputStream(Path.of(p)));
+	public static void main(String[] args) {
+		try {
+			var pp = new Properties();
+			try (var is = ConduitTesting.class.getResourceAsStream("configuration.properties")) {
+				pp.load(is);
+				if (args.length > 0) {
+					var p = args[0];
+					if (p.startsWith("~"))
+						p = System.getProperty("user.home") + p.substring(1);
+					pp.load(Files.newInputStream(Path.of(p)));
+				}
 			}
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+			var ct = new ConduitTesting(pp);
+			Server s;
+			{
+				var a = new InetSocketAddress(
+						Integer.parseInt(ct.configuration.getProperty("conduit.testing.server.port")));
+				SSLContext sc;
+				try (var is = Net.class.getResourceAsStream("testkeys")) {
+					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+				}
+				var p = ct.factory.create(HttpProtocol.class,
+						Map.of("handler", ct.handler, "sslContext", sc, "useClientMode", false));
+				s = new Server(a, p);
+			}
+			s.serve();
+		} catch (Throwable e) {
+			e.printStackTrace();
 		}
-		var a = new ConduitTesting(pp);
-
-		var hp = a.factory.create(HttpProtocol.class);
-		try (var is = Net.class.getResourceAsStream("testkeys")) {
-			hp.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-		hp.setHandler(a.handler);
-
-		var s = new Server();
-		s.setAddress(
-				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"))));
-		s.setProtocol(hp);
-		s.serve();
 	}
 
 	public Properties configuration;

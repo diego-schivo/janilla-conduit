@@ -24,6 +24,7 @@
 package com.janilla.conduit.backend;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -34,24 +35,29 @@ import java.util.stream.Stream;
 
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
+import com.janilla.reflect.Factory;
 import com.janilla.util.Randomize;
 import com.janilla.util.Util;
 
 public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
+	public CustomPersistenceBuilder(Path databaseFile, Factory factory) {
+		super(databaseFile, factory);
+	}
+
 	@Override
 	public Persistence build() {
 		var cb = (ConduitBackend) factory.getSource();
 		var s = Boolean.parseBoolean(cb.configuration.getProperty("conduit.database.seed"));
-		var fe = Files.exists(file);
+		var fe = Files.exists(databaseFile);
 		var p = super.build();
-		p.setTypeResolver(x -> {
-			try {
-				return Class.forName(getClass().getPackageName() + "." + x.replace('.', '$'));
-			} catch (ClassNotFoundException e) {
-				throw new RuntimeException(e);
-			}
-		});
+//		p.setTypeResolver(x -> {
+//			try {
+//				return Class.forName(getClass().getPackageName() + "." + x.replace('.', '$'));
+//			} catch (ClassNotFoundException e) {
+//				throw new RuntimeException(e);
+//			}
+//		});
 		if (s && !fe)
 			seed(p);
 		return p;
@@ -87,6 +93,8 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(ww)), u.id(), a.id());
 				c = persistence.crud(Comment.class).create(c);
 			}
+			if (a.author().equals(u.id()))
+				continue;
 			if ((j & 2) != 0)
 				((ArticleCrud) persistence.crud(Article.class)).favorite(a.id(), a.createdAt(), u.id());
 			if ((j & 4) != 0)

@@ -23,12 +23,13 @@
  */
 package com.janilla.conduit.fullstack;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.net.ssl.SSLContext;
 
 import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.conduit.frontend.ConduitFrontend;
@@ -43,34 +44,35 @@ import com.janilla.util.Util;
 
 public class ConduitFullstack {
 
-	public static void main(String[] args) throws Exception {
-		var pp = new Properties();
-		try (var is = ConduitFullstack.class.getResourceAsStream("configuration.properties")) {
-			pp.load(is);
-			if (args.length > 0) {
-				var p = args[0];
-				if (p.startsWith("~"))
-					p = System.getProperty("user.home") + p.substring(1);
-				pp.load(Files.newInputStream(Path.of(p)));
+	public static void main(String[] args) {
+		try {
+			var pp = new Properties();
+			try (var is = ConduitFullstack.class.getResourceAsStream("configuration.properties")) {
+				pp.load(is);
+				if (args.length > 0) {
+					var p = args[0];
+					if (p.startsWith("~"))
+						p = System.getProperty("user.home") + p.substring(1);
+					pp.load(Files.newInputStream(Path.of(p)));
+				}
 			}
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+			var cf = new ConduitFullstack(pp);
+			Server s;
+			{
+				var a = new InetSocketAddress(
+						Integer.parseInt(cf.configuration.getProperty("conduit.fullstack.server.port")));
+				SSLContext sc;
+				try (var is = Net.class.getResourceAsStream("testkeys")) {
+					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+				}
+				var p = cf.factory.create(HttpProtocol.class,
+						Map.of("handler", cf.handler, "sslContext", sc, "useClientMode", false));
+				s = new Server(a, p);
+			}
+			s.serve();
+		} catch (Throwable e) {
+			e.printStackTrace();
 		}
-		var a = new ConduitFullstack(pp);
-
-		var hp = a.factory.create(HttpProtocol.class);
-		try (var is = Net.class.getResourceAsStream("testkeys")) {
-			hp.setSslContext(Net.getSSLContext("JKS", is, "passphrase".toCharArray()));
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-		hp.setHandler(a.handler);
-
-		var s = new Server();
-		s.setAddress(
-				new InetSocketAddress(Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"))));
-		s.setProtocol(hp);
-		s.serve();
 	}
 
 	public Properties configuration;

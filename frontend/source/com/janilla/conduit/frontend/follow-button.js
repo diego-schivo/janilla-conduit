@@ -59,7 +59,7 @@ export default class FollowButton extends FlexibleElement {
 		const u = new URL(ca.dataset.apiUrl);
 		u.pathname += `/profiles/${this.dataset.username}/follow`;
 		const r = await fetch(u, {
-			method: this.dataset.active === "true" ? "DELETE" : "POST",
+			method: this.dataset.active != null ? "DELETE" : "POST",
 			headers: ca.apiHeaders
 		});
 		if (r.ok) {
@@ -74,7 +74,7 @@ export default class FollowButton extends FlexibleElement {
 		// console.log("FollowButton.updateDisplay");
 		if (!this.isConnected)
 			return;
-		const a = this.dataset.active === "true";
+		const a = this.dataset.active != null;
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...this.dataset,
