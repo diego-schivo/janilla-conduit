@@ -26,7 +26,7 @@ import { UpdatableHTMLElement } from "./updatable-html-element.js";
 export default class PageDisplay extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-path", "data-state-id"];
+		return ["data-path"];
 	}
 
 	static get templateName() {
@@ -61,14 +61,10 @@ export default class PageDisplay extends UpdatableHTMLElement {
 					slug: a ? nn[2] : null
 				};
 			})(),
-			homePage: (() => {
-				return {
-					$template: "home-page",
-					slot: nn[1] === "" ? "content" : null,
-					tab: hs.tab ?? (rl.currentUser ? "feed" : "all"),
-					tag: hs.tag
-				};
-			})(),
+			homePage: {
+				$template: "home-page",
+				slot: nn[1] === "" ? "content" : null
+			},
 			loginPage: {
 				$template: "login-page",
 				slot: nn[1] === "login" ? "content" : null

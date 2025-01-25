@@ -29,88 +29,23 @@ export default class RootLayout extends UpdatableHTMLElement {
 		return "root-layout";
 	}
 
-	apiHeaders = {};
-
 	constructor() {
 		super();
-	}
-
-	get jwtToken() {
-		return localStorage.getItem("jwtToken");
-	}
-
-	set jwtToken(x) {
-		if (x)
-			localStorage.setItem("jwtToken", x);
-		else
-			localStorage.removeItem("jwtToken");
-	}
-
-	get navItems() {
-		const nii = [{
-			href: "#/",
-			text: "Home"
-		}];
-		const u = this.currentUser;
-		if (u)
-			nii.push({
-				href: "#/editor",
-				icon: "ion-compose",
-				text: "New Article"
-			}, {
-				href: "#/settings",
-				icon: "ion-gear-a",
-				text: "Settings"
-			}, {
-				href: `#/@${u.username}`,
-				image: u.image,
-				text: u.username
-			});
-		else
-			nii.push({
-				href: "#/login",
-				text: "Sign in"
-			}, {
-				href: "#/register",
-				text: "Sign up"
-			});
-		return nii;
 	}
 
 	connectedCallback() {
 		// console.log("RootLayout.connectedCallback");
 		super.connectedCallback();
-		new Promise(x => {
-			const jt = this.jwtToken;
-			if (jt) {
-				const u = new URL(this.dataset.apiUrl);
-				u.pathname += "/user";
-				fetch(u, {
-					headers: { Authorization: `Token ${jt}` }
-				}).then(y => y.json()).then(y => {
-					this.currentUser = y?.user;
-					if (this.currentUser)
-						this.apiHeaders["Authorization"] = `Token ${this.currentUser.token}`;
-					x();
-				});
-			} else
-				x();
-		}).then(() => {
-			// addEventListener("hashchange", this.handleHashChange);
-			addEventListener("popstate", this.handlePopState);
-			this.addEventListener("click", this.handleClick);
-			this.addEventListener("set-current-user", this.handleSetCurrentUser);
-			if (location.hash)
-				this.handleHashChange();
-			else
-				location.hash = "#/";
-		})
+		addEventListener("popstate", this.handlePopState);
+		this.addEventListener("click", this.handleClick);
+		this.addEventListener("set-current-user", this.handleSetCurrentUser);
+		if (!location.hash)
+			location.hash = "#/";
 	}
 
 	disconnectedCallback() {
 		// console.log("RootLayout.disconnectedCallback");
 		super.disconnectedCallback();
-		// removeEventListener("hashchange", this.handleHashChange);
 		removeEventListener("popstate", this.handlePopState);
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("set-current-user", this.handleSetCurrentUser);
@@ -122,51 +57,115 @@ export default class RootLayout extends UpdatableHTMLElement {
 		if (!a?.href)
 			return;
 		event.preventDefault();
+		const s = this.state;
 		const u = new URL(a.href);
-		history.pushState({ id: this.nextStateId() }, "", u.hash);
+		history.pushState({
+			"root-layout": {
+				...s,
+				version: s.version + 1
+			}
+		}, "", u.pathname + u.hash);
 		dispatchEvent(new CustomEvent("popstate"));
 	}
 
-	/*
-	handleHashChange = event => {
-		console.log("RootLayout.handleHashChange", event);
-		this.requestUpdate();
-	}
-	*/
-
 	handlePopState = event => {
-		console.log("RootLayout.handlePopState", event);
-		this.requestUpdate();
+		// console.log("RootLayout.handlePopState", event);
+		const hs = history.state;
+		console.log("hs", hs);
+		if (hs) {
+			for (const [k, v] of Object.entries(hs))
+				if (k.includes("-")) {
+					const el = document.querySelector(k);
+					if (el && v.version !== el.state.version) {
+						el.state = v;
+						el.requestUpdate();
+					}
+				}
+		} else
+			this.requestUpdate();
 	}
 
 	handleSetCurrentUser = event => {
 		// console.log("RootLayout.handleSetCurrentUser", event);
-		this.currentUser = event.detail.user;
-		this.jwtToken = this.currentUser?.token;
-		this.apiHeaders["Authorization"] = this.currentUser ? `Token ${this.currentUser.token}` : "";
+		this.state.currentUser = event.detail.user;
+		const t = event.detail.user?.token;
+		if (t) {
+			localStorage.setItem("jwtToken", t);
+			this.state.apiHeaders["Authorization"] = `Token ${t}`;
+		} else {
+			localStorage.removeItem("jwtToken");
+			delete this.state.apiHeaders["Authorization"];
+		}
 	}
 
 	async updateDisplay() {
 		// console.log("RootLayout.updateDisplay");
+		const s = this.state;
+		if (s.currentUser === undefined) {
+			const t = localStorage.getItem("jwtToken");
+			const o = {
+				version: (s.version ?? 0) + 1,
+				currentUser: null,
+				apiHeaders: {}
+			};
+			if (t) {
+				const u = new URL(this.dataset.apiUrl);
+				u.pathname += "/user";
+				const j = await (await fetch(u, {
+					headers: { Authorization: `Token ${t}` }
+				})).json();
+				if (j?.user) {
+					o.currentUser = j.user;
+					o.apiHeaders["Authorization"] = `Token ${j.user.token}`;
+				}
+			}
+			Object.assign(s, o);
+			history.replaceState({
+				...history.state,
+				"root-layout": o
+			}, "");
+		}
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			header: ({
 				$template: "header",
-				navItems: this.navItems.map(x => ({
-					$template: "nav-item",
-					...x,
-					class: `nav-link ${x.href === location.hash ? "active" : ""}`,
-				}))
+				navItems: (() => {
+					const ii = [{
+						href: "#/",
+						text: "Home"
+					}];
+					const u = this.state.currentUser;
+					if (u)
+						ii.push({
+							href: "#/editor",
+							icon: "ion-compose",
+							text: "New Article"
+						}, {
+							href: "#/settings",
+							icon: "ion-gear-a",
+							text: "Settings"
+						}, {
+							href: `#/@${u.username}`,
+							image: u.image,
+							text: u.username
+						});
+					else
+						ii.push({
+							href: "#/login",
+							text: "Sign in"
+						}, {
+							href: "#/register",
+							text: "Sign up"
+						});
+					return ii.map(x => ({
+						$template: "nav-item",
+						...x,
+						active: x.href === location.hash ? "active" : "",
+					}));
+				})()
 			}),
 			path: location.hash.substring(1),
-			stateId: history.state?.id,
 			footer: { $template: "footer" }
 		}));
 	}
-
-	nextStateId() {
-		return ++stateId;
-	}
 }
-
-let stateId = 0;

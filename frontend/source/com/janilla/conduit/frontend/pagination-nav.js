@@ -51,15 +51,16 @@ export default class PaginationNav extends UpdatableHTMLElement {
 
 	handleClick = event => {
 		// console.log("PaginationNav.handleClick", event);
-		event.preventDefault();
 		const el = event.target.closest(".page-item");
-		if (!el || el.classList.contains("active"))
+		if (!el)
 			return;
-		const pn = parseInt(el.textContent.trim());
-		this.dispatchEvent(new CustomEvent("select-page", {
-			bubbles: true,
-			detail: { pageNumber: pn }
-		}));
+		event.preventDefault();
+		event.stopPropagation();
+		if (!el.classList.contains("active"))
+			this.dispatchEvent(new CustomEvent("select-page", {
+				bubbles: true,
+				detail: { pageNumber: parseInt(el.textContent.trim()) }
+			}));
 	}
 
 	async updateDisplay() {
@@ -71,7 +72,7 @@ export default class PaginationNav extends UpdatableHTMLElement {
 				const pn = this.dataset.pageNumber ? parseInt(this.dataset.pageNumber) : 1;
 				return pc > 1 ? Array.from({ length: pc }, (_, i) => ({
 					$template: "item",
-					class: `page-item ${i + 1 === pn ? "active" : ""}`,
+					active: `${i + 1 === pn ? "active" : ""}`,
 					number: i + 1
 				})) : null;
 			})()

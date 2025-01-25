@@ -41,6 +41,9 @@ export default class ArticleList extends UpdatableHTMLElement {
 	connectedCallback() {
 		// console.log("ArticleList.connectedCallback");
 		super.connectedCallback();
+		const s = history.state?.["article-list"];
+		if (s)
+			Object.assign(this.state, s);
 		this.addEventListener("select-page", this.handleSelectPage);
 	}
 
@@ -53,8 +56,10 @@ export default class ArticleList extends UpdatableHTMLElement {
 		// console.log("ArticleList.handleSelectPage", event);
 		history.pushState({
 			...history.state,
-			id: this.closest("root-layout").nextStateId(),
-			pageNumber: event.detail.pageNumber
+			"article-list": {
+				version: this.state.version + 1,
+				pageNumber: event.detail.pageNumber
+			}
 		}, "");
 		dispatchEvent(new CustomEvent("popstate"));
 	}
@@ -63,38 +68,27 @@ export default class ArticleList extends UpdatableHTMLElement {
 		// console.log("ArticleList.updateDisplay");
 		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const s = this.state;
-		if (this.dataset.apiUrl !== s.articlesUrl)
-			Object.assign(s, {
-				articlesUrl: this.dataset.apiUrl,
-				articles: null
-			});
-		const hs = history.state ?? {};
-		if (hs.articlesUrl === s.articlesUrl && hs.articles !== s.articles)
-			Object.assign(s, {
-				articles: hs.articles,
-				pagesCount: hs.pagesCount,
-				pageNumber: hs.pageNumber
-			});
-		if (!s.articles) {
+		if (this.dataset.apiUrl !== s.apiUrl) {
 			this.appendChild(this.interpolateDom({
 				$template: "",
 				loadingSlot: "content"
 			}));
 			const u = new URL(this.dataset.apiUrl);
-			u.searchParams.append("skip", ((s.pageNumber ?? 1) - 1) * 10);
+			const pn = s.pageNumber ?? 1;
+			u.searchParams.append("skip", (pn - 1) * 10);
 			u.searchParams.append("limit", 10);
 			const j = await (await fetch(u, { headers: this.closest("root-layout").apiHeaders })).json();
-			// console.log("ArticleList.updateDisplay", j);
 			const o = {
-				articlesUrl: this.dataset.apiUrl,
+				version: (s.version ?? 0) + 1,
+				apiUrl: this.dataset.apiUrl,
 				articles: j.articles,
 				pagesCount: Math.ceil(j.articlesCount / 10),
-				pageNumber: 1
+				pageNumber: pn
 			};
 			Object.assign(s, o);
 			history.replaceState({
-				...hs,
-				...o
+				...history.state,
+				"article-list": o
 			}, "");
 		}
 		// console.log("ArticleList.updateDisplay", s);

@@ -25,10 +25,6 @@ import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
 export default class LoginPage extends UpdatableHTMLElement {
 
-	static get observedAttributes() {
-		return ["slot"];
-	}
-
 	static get templateName() {
 		return "login-page";
 	}

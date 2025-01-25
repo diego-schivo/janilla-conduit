@@ -1,5 +1,5 @@
 <!--${header}-->
-<page-display data-path="${path}" data-state-id="${stateId}"></page-display>
+<page-display data-path="${path}"></page-display>
 <!--${footer}-->
 
 <template id="header">
@@ -16,7 +16,7 @@
 <template id="nav-item">
 	<li class="nav-item">
 		<nav-link
-			class="${class}"
+			class="nav-link ${active}"
 			data-href="${href}"
 			data-icon="${icon}"
 			data-image="${image}">${text}</nav-link>

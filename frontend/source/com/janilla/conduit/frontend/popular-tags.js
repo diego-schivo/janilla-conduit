@@ -37,6 +37,9 @@ export default class PopularTags extends UpdatableHTMLElement {
 	connectedCallback() {
 		// console.log("PopularTags.connectedCallback");
 		super.connectedCallback();
+		const s = history.state?.["popular-tags"];
+		if (s)
+			Object.assign(this.state, s);
 		this.addEventListener("click", this.handleClick);
 	}
 
@@ -48,10 +51,11 @@ export default class PopularTags extends UpdatableHTMLElement {
 
 	handleClick = event => {
 		// console.log("PopularTags.handleClick", event);
-		event.preventDefault();
 		const el = event.target.closest(".tag-default");
 		if (!el)
 			return;
+		event.preventDefault();
+		event.stopPropagation();
 		this.dispatchEvent(new CustomEvent("select-tag", {
 			bubbles: true,
 			detail: { tag: el.textContent.trim() }
@@ -62,8 +66,6 @@ export default class PopularTags extends UpdatableHTMLElement {
 		// console.log("PopularTags.updateDisplay");
 		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const s = this.state;
-		if (!s.tags)
-			s.tags = history.state?.tags;
 		if (!s.tags) {
 			this.appendChild(this.interpolateDom({
 				$template: "",
@@ -73,22 +75,24 @@ export default class PopularTags extends UpdatableHTMLElement {
 			const u = new URL(rl.dataset.apiUrl);
 			u.pathname += "/tags";
 			const j = await (await fetch(u, { headers: rl.apiHeaders })).json();
-			s.tags = j.tags;
+			const o = {
+				version: (s.version ?? 0) + 1,
+				tags: j.tags
+			};
+			Object.assign(s, o);
 			history.replaceState({
 				...history.state,
-				tags: j.tags
+				"popular-tags": o
 			}, "");
 		}
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			emptySlot: s.tags.length ? null : "content",
 			slot: s.tags.length ? "content" : null,
-			tags: (() => {
-				return s.tags.map(x => ({
-					$template: "tag",
-					text: x
-				}));
-			})()
+			tags: s.tags.map(x => ({
+				$template: "tag",
+				text: x
+			}))
 		}));
 	}
 }

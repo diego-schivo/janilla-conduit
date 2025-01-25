@@ -25,10 +25,6 @@ import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
 export default class HomePage extends UpdatableHTMLElement {
 
-	static get observedAttributes() {
-		return ["data-tab", "data-tag", "slot"];
-	}
-
 	static get templateName() {
 		return "home-page";
 	}
@@ -37,30 +33,12 @@ export default class HomePage extends UpdatableHTMLElement {
 		super();
 	}
 
-	get tabItems() {
-		const rl = this.closest("root-layout");
-		const ii = [];
-		if (rl.currentUser)
-			ii.push({
-				href: "#feed",
-				text: "Your Feed"
-			});
-		ii.push({
-			href: "#all",
-			text: "Global Feed"
-		});
-		if (this.state.activeTab === "tag")
-			ii.push({
-				href: "#tag",
-				icon: "ion-pound",
-				text: this.state.selectedTag
-			});
-		return ii;
-	}
-
 	connectedCallback() {
 		// console.log("HomePage.connectedCallback");
 		super.connectedCallback();
+		const s = history.state?.["home-page"];
+		if (s)
+			Object.assign(this.state, s);
 		this.addEventListener("click", this.handleClick);
 		this.addEventListener("select-tag", this.handleSelectTag);
 	}
@@ -81,8 +59,11 @@ export default class HomePage extends UpdatableHTMLElement {
 		event.stopPropagation();
 		if (!el.classList.contains("active")) {
 			history.pushState({
-				id: this.closest("root-layout").nextStateId(),
-				tab: el.dataset.href.substring(1)
+				...history.state,
+				"home-page": {
+					version: this.state.version + 1,
+					tab: el.dataset.href.substring(1)
+				}
 			}, "");
 			dispatchEvent(new CustomEvent("popstate"));
 		}
@@ -91,33 +72,66 @@ export default class HomePage extends UpdatableHTMLElement {
 	handleSelectTag = event => {
 		// console.log("HomePage.handleSelectTag", event);
 		history.pushState({
-			id: this.closest("root-layout").nextStateId(),
-			tab: "tag",
-			tag: event.detail.tag
+			...history.state,
+			"home-page": {
+				version: this.state.version + 1,
+				tab: "tag",
+				tag: event.detail.tag
+			}
 		}, "");
 		dispatchEvent(new CustomEvent("popstate"));
 	}
 
 	async updateDisplay() {
 		// console.log("HomePage.updateDisplay");
+		const s = this.state;
 		const rl = this.closest("root-layout");
+		if (!s.tab) {
+			const o = {
+				version: (s.version ?? 0) + 1,
+				tab: rl.currentUser ? "feed" : "all"
+			};
+			Object.assign(s, o);
+			history.replaceState({
+				...history.state,
+				"home-page": o
+			}, "");
+		}
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			banner: rl.currentUser ? null : { $template: "banner" },
-			tabItems: this.tabItems.map(x => ({
-				$template: "tab-item",
-				...x,
-				class: `nav-link ${x.href.substring(1) === this.dataset.tab ? "active" : ""}`,
-			})),
+			tabItems: (() => {
+				const ii = [];
+				if (rl.currentUser)
+					ii.push({
+						href: "#feed",
+						text: "Your Feed"
+					});
+				ii.push({
+					href: "#all",
+					text: "Global Feed"
+				});
+				if (s.tab === "tag")
+					ii.push({
+						href: "#tag",
+						icon: "ion-pound",
+						text: s.tag
+					});
+				return ii.map(x => ({
+					$template: "tab-item",
+					...x,
+					active: x.href.substring(1) === s.tab ? "active" : "",
+				}));
+			})(),
 			articlesUrl: (() => {
 				const u = new URL(rl.dataset.apiUrl);
 				u.pathname += "/articles";
-				switch (this.dataset.tab) {
+				switch (s.tab) {
 					case "feed":
 						u.pathname += "/feed";
 						break;
 					case "tag":
-						u.searchParams.append("tag", this.dataset.tag);
+						u.searchParams.append("tag", s.tag);
 						break;
 				}
 				return u;
