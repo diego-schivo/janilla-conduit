@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SlottableElement } from "./slottable-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class ProfilePage extends SlottableElement {
+export default class ProfilePage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-username", "slot"];
+		return ["data-tab", "data-username", "slot"];
 	}
 
 	static get templateName() {
@@ -54,6 +54,7 @@ export default class ProfilePage extends SlottableElement {
 
 	disconnectedCallback() {
 		// console.log("ProfilePage.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("toggle-follow", this.handleToggleFollow);
 	}
@@ -64,61 +65,65 @@ export default class ProfilePage extends SlottableElement {
 		if (!el)
 			return;
 		event.preventDefault();
+		event.stopPropagation();
 		if (!el.classList.contains("active")) {
-			this.activeTab = el.dataset.href.substring(1);
-			this.requestUpdate();
+			history.pushState({
+				...history.state,
+				id: this.closest("root-layout").nextStateId(),
+				tab: el.dataset.href.substring(1)
+			}, "");
+			dispatchEvent(new CustomEvent("popstate"));
 		}
 	}
 
 	handleToggleFollow = event => {
 		// console.log("ProfilePage.handleToggleFollow", event);
-		this.state = event.detail.profile;
+		const rl = this.closest("root-layout");
+		rl.state.profile = event.detail.profile;
 		this.requestUpdate();
 	}
 
-	async computeState() {
-		// console.log("ProfilePage.computeState");
-		if (!this.dataset.username) {
-			await super.computeState();
+	async updateDisplay() {
+		// console.log("ProfilePage.updateDisplay");
+		const hs = history.state ?? {};
+		const s = this.state;
+		if (hs.profile !== s.profile)
+			s.profile = hs.profile;
+		const rl = this.closest("root-layout");
+		if (!s.profile) {
+			const u = new URL(rl.dataset.apiUrl);
+			u.pathname += `/profiles/${this.dataset.username}`;
+			const j = await (await fetch(u, { headers: rl.apiHeaders })).json();
+			const o = { profile: j.profile };
+			Object.assign(s, o);
+			history.replaceState({
+				...hs,
+				id: rl.nextStateId(),
+				...o
+			}, "");
+			dispatchEvent(new CustomEvent("popstate"));
 			return;
 		}
-		const ca = this.closest("conduit-app");
-		const u = new URL(ca.dataset.apiUrl);
-		u.pathname += `/profiles/${this.dataset.username}`;
-		const j = await (await fetch(u, { headers: ca.apiHeaders })).json();
-		this.state = j.profile;
-	}
-
-	renderState() {
-		// console.log("ProfilePage.renderState");
-		const ca = this.closest("conduit-app");
-		if (this.slot)
-			this.activeTab ??= "author";
-		else
-			this.activeTab = null;
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			content: this.state ? {
-				$template: "content",
-				...this.state,
-				action: this.dataset.username === ca.currentUser?.username
-					? { $template: "can-modify" }
-					: {
-						$template: "cannot-modify",
-						...this.state
-					},
-				tabItems: this.tabItems.map(x => ({
-					$template: "tab-item",
-					...x,
-					class: `nav-link ${x.href.substring(1) === this.activeTab ? "active" : ""}`
-				})),
-				articlesUrl: (() => {
-					const u = new URL(ca.dataset.apiUrl);
-					u.pathname += "/articles";
-					u.searchParams.append(this.activeTab, this.state.username);
-					return u;
-				})()
-			} : null
+			...s.profile,
+			action: this.dataset.username === rl.currentUser?.username
+				? { $template: "can-modify" }
+				: {
+					$template: "cannot-modify",
+					...s.profile
+				},
+			tabItems: this.tabItems.map(x => ({
+				$template: "tab-item",
+				...x,
+				class: `nav-link ${x.href.substring(1) === this.dataset.tab ? "active" : ""}`
+			})),
+			articlesUrl: (() => {
+				const u = new URL(rl.dataset.apiUrl);
+				u.pathname += "/articles";
+				u.searchParams.append(this.dataset.tab, s.profile.username);
+				return u;
+			})()
 		}));
 	}
 }

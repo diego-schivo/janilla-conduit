@@ -1,16 +1,16 @@
-<div>
-	<p>Popular Tags</p>
-	<slot name="content"></slot>
-</div>
-
-<template id="content">
-	<div slot="${loadingSlot}">Loading tags...</div>
-	<div slot="${emptySlot}" class="post-preview">No tags are here... yet.</div>
-	<div slot="${nonemptySlot}" class="tag-list">
-		<!--${tags}-->
+<template id="shadow">
+	<div>
+		<p>Popular Tags</p>
+		<slot name="content"></slot>
 	</div>
 </template>
 
+<div slot="${loadingSlot}">Loading tags...</div>
+<div slot="${emptySlot}" class="post-preview">No tags are here... yet.</div>
+<div slot="${slot}" class="tag-list">
+	<!--${tags}-->
+</div>
+
 <template id="tag">
-	<a href="" class="tag-pill tag-default">${tag}</a>
+	<a href="" class="tag-pill tag-default">${text}</a>
 </template>

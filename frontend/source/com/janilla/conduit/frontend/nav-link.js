@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class NavLink extends FlexibleElement {
+export default class NavLink extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["data-href", "data-icon", "data-image"];
@@ -40,8 +40,6 @@ export default class NavLink extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("NavLink.updateDisplay");
-		if (!this.isConnected)
-			return;
 		this.shadowRoot.appendChild(this.interpolateDom({
 			$template: "",
 			...this.dataset,

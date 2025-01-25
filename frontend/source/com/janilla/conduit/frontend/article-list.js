@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class ArticleList extends FlexibleElement {
+export default class ArticleList extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-api-href"];
+		return ["data-api-url"];
 	}
 
 	static get templateName() {
@@ -51,49 +51,65 @@ export default class ArticleList extends FlexibleElement {
 
 	handleSelectPage = event => {
 		// console.log("ArticleList.handleSelectPage", event);
-		this.pageNumber = event.detail.pageNumber;
-		this.requestUpdate();
+		history.pushState({
+			...history.state,
+			id: this.closest("root-layout").nextStateId(),
+			pageNumber: event.detail.pageNumber
+		}, "");
+		dispatchEvent(new CustomEvent("popstate"));
 	}
 
 	async updateDisplay() {
 		// console.log("ArticleList.updateDisplay");
-		if (!this.isConnected)
-			return;
-		this.shadowRoot.appendChild(this.interpolateDom());
-		if (this.dataset.apiHref) {
-			const u = new URL(this.dataset.apiHref);
-			u.searchParams.append("skip", ((this.pageNumber ?? 1) - 1) * 10);
-			u.searchParams.append("limit", 10);
-			if (u.href === this.apiUrl?.href)
-				return;
-			this.apiUrl = u;
+		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
+		const s = this.state;
+		if (this.dataset.apiUrl !== s.articlesUrl)
+			Object.assign(s, {
+				articlesUrl: this.dataset.apiUrl,
+				articles: null
+			});
+		const hs = history.state ?? {};
+		if (hs.articlesUrl === s.articlesUrl && hs.articles !== s.articles)
+			Object.assign(s, {
+				articles: hs.articles,
+				pagesCount: hs.pagesCount,
+				pageNumber: hs.pageNumber
+			});
+		if (!s.articles) {
 			this.appendChild(this.interpolateDom({
-				$template: "content",
+				$template: "",
 				loadingSlot: "content"
 			}));
-			const j = await (await fetch(u, { headers: this.closest("conduit-app").apiHeaders })).json();
+			const u = new URL(this.dataset.apiUrl);
+			u.searchParams.append("skip", ((s.pageNumber ?? 1) - 1) * 10);
+			u.searchParams.append("limit", 10);
+			const j = await (await fetch(u, { headers: this.closest("root-layout").apiHeaders })).json();
 			// console.log("ArticleList.updateDisplay", j);
-			this.articles = j.articles;
-			this.pagesCount = Math.ceil(j.articlesCount / 10);
-			this.pageNumber = 1;
-		} else {
-			this.articles = [];
-			this.pagesCount = 0;
-			this.pageNumber = 0;
+			const o = {
+				articlesUrl: this.dataset.apiUrl,
+				articles: j.articles,
+				pagesCount: Math.ceil(j.articlesCount / 10),
+				pageNumber: 1
+			};
+			Object.assign(s, o);
+			history.replaceState({
+				...hs,
+				...o
+			}, "");
 		}
-		// console.log("ArticleList.updateDisplay", this.dataset.apiHref, this.articles, this.articlesCount);
+		// console.log("ArticleList.updateDisplay", s);
 		this.appendChild(this.interpolateDom({
-			$template: "content",
-			emptySlot: this.articles.length ? null : "content",
-			nonemptySlot: this.articles.length ? "content" : null,
-			previews: this.articles.map((_, i) => ({
+			$template: "",
+			emptySlot: s.articles.length ? null : "content",
+			slot: s.articles.length ? "content" : null,
+			previews: s.articles.map(({ slug }, index) => ({
 				$template: "preview",
-				index: i
+				index,
+				slug
 			})),
-			pagination: this.pagesCount > 1 ? this.interpolateDom({
+			pagination: s.pagesCount > 1 ? this.interpolateDom({
 				$template: "pagination",
-				pagesCount: this.pagesCount,
-				pageNumber: this.pageNumber
+				...s
 			}) : null
 		}));
 	}

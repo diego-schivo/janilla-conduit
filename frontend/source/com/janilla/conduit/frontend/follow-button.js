@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class FollowButton extends FlexibleElement {
+export default class FollowButton extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-active"];
+		return ["data-active", "data-username"];
 	}
 
 	static get templateName() {
@@ -45,22 +45,23 @@ export default class FollowButton extends FlexibleElement {
 
 	disconnectedCallback() {
 		// console.log("FollowButton.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 	}
 
 	handleClick = async event => {
 		// console.log("FollowButton.handleClick", event);
 		event.stopPropagation();
-		const ca = this.closest("conduit-app");
-		if (!ca.currentUser) {
+		const rl = this.closest("root-layout");
+		if (!rl.currentUser) {
 			location.hash = "#/login";
 			return;
 		}
-		const u = new URL(ca.dataset.apiUrl);
+		const u = new URL(rl.dataset.apiUrl);
 		u.pathname += `/profiles/${this.dataset.username}/follow`;
 		const r = await fetch(u, {
 			method: this.dataset.active != null ? "DELETE" : "POST",
-			headers: ca.apiHeaders
+			headers: rl.apiHeaders
 		});
 		if (r.ok) {
 			this.dispatchEvent(new CustomEvent("toggle-follow", {
@@ -72,8 +73,6 @@ export default class FollowButton extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("FollowButton.updateDisplay");
-		if (!this.isConnected)
-			return;
 		const a = this.dataset.active != null;
 		this.appendChild(this.interpolateDom({
 			$template: "",

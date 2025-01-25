@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class ErrorList extends FlexibleElement {
+export default class ErrorList extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["data-messages"];
@@ -38,7 +38,7 @@ export default class ErrorList extends FlexibleElement {
 	}
 
 	get messages() {
-		return this.dataset.messages ? this.dataset.messages.split(";") : [];
+		return this.dataset.messages?.split(";") ?? [];
 	}
 
 	set messages(x) {
@@ -47,13 +47,11 @@ export default class ErrorList extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("ErrorList.updateDisplay");
-		if (!this.isConnected)
-			return;
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			items: this.messages.map(x => ({
 				$template: "item",
-				message: x
+				text: x
 			}))
 		}));
 	}

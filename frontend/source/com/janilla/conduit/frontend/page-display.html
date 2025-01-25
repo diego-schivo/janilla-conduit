@@ -1,2 +1,40 @@
-<link href="/page-display.css" rel="stylesheet" />
-<slot name="content"></slot>
+<template id="shadow">
+	<link href="/page-display.css" rel="stylesheet" />
+	<slot name="content"></slot>
+</template>
+
+<!--${articlePage}-->
+<!--${editorPage}-->
+<!--${homePage}-->
+<!--${loginPage}-->
+<!--${profilePage}-->
+<!--${registerPage}-->
+<!--${settingsPage}-->
+
+<template id="article-page">
+	<article-page slot="${slot}" data-slug="${slug}"></article-page>
+</template>
+
+<template id="editor-page">
+	<editor-page slot="${slot}" data-slug="${slug}"></editor-page>
+</template>
+
+<template id="home-page">
+	<home-page slot="${slot}" data-tab="${tab}" data-tag="${tag}"></home-page>
+</template>
+
+<template id="login-page">
+	<login-page slot="${slot}"></login-page>
+</template>
+
+<template id="profile-page">
+	<profile-page slot="${slot}" data-tab="${tab}" data-username="${username}"></profile-page>
+</template>
+
+<template id="register-page">
+	<register-page slot="${slot}"></register-page>
+</template>
+
+<template id="settings-page">
+	<settings-page slot="${slot}"></settings-page>
+</template>

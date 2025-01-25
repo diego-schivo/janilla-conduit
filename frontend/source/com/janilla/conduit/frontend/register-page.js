@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SlottableElement } from "./slottable-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class RegisterPage extends SlottableElement {
+export default class RegisterPage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["slot"];
@@ -45,18 +45,22 @@ export default class RegisterPage extends SlottableElement {
 
 	disconnectedCallback() {
 		// console.log("RegisterPage.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("submit", this.handleSubmit);
 	}
 
 	handleSubmit = async event => {
 		// console.log("RegisterPage.handleSubmit", event);
 		event.preventDefault();
-		const ca = this.closest("conduit-app");
-		const u = new URL(ca.dataset.apiUrl);
+		const rl = this.closest("root-layout");
+		const u = new URL(rl.dataset.apiUrl);
 		u.pathname += "/users";
 		const r = await fetch(u, {
 			method: "POST",
-			headers: { ...ca.apiHeaders, "Content-Type": "application/json" },
+			headers: {
+				...rl.apiHeaders,
+				"Content-Type": "application/json"
+			},
 			body: JSON.stringify({ user: Object.fromEntries(new FormData(event.target)) })
 		});
 		const j = await r.json();
@@ -72,15 +76,16 @@ export default class RegisterPage extends SlottableElement {
 		}
 	}
 
-	renderState() {
-		// console.log("RegisterPage.renderState");
+	async updateDisplay() {
+		// console.log("RegisterPage.updateDisplay");
+		if (this.slot && !this.state)
+			this.state = {};
+		if (!this.slot && this.state)
+			this.state = null;
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			content: this.state ? {
-				$template: "content",
-				...this.state,
-				errorMessages: this.state.errorMessages?.join(";")
-			} : null
+			...this.state,
+			errorMessages: this.state.errorMessages?.join(";")
 		}));
 	}
 }

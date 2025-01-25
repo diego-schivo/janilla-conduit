@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SlottableElement } from "./slottable-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 import { formatMarkdownAsHtml, parseMarkdown } from "./markdown.js";
 
-export default class ArticlePage extends SlottableElement {
+export default class ArticlePage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["data-slug", "slot"];
@@ -50,6 +50,7 @@ export default class ArticlePage extends SlottableElement {
 
 	disconnectedCallback() {
 		// console.log("ArticlePage.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("add-comment", this.handleAddComment);
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("remove-comment", this.handleRemoveComment);
@@ -59,7 +60,8 @@ export default class ArticlePage extends SlottableElement {
 
 	handleAddComment = event => {
 		// console.log("ArticlePage.handleAddComment", event);
-		this.state.comments.unshift(event.detail.comment);
+		const rl = this.closest("root-layout");
+		rl.state.comments.unshift(event.detail.comment);
 		this.querySelector("comment-list").requestUpdate();
 	}
 
@@ -71,15 +73,15 @@ export default class ArticlePage extends SlottableElement {
 		event.preventDefault();
 		switch (el.tagName.toLowerCase()) {
 			case "a":
-				location.hash = `#/editor/${this.state.article.slug}`;
+				location.hash = `#/editor/${this.dataset.slug}`;
 				break;
 			case "button":
-				const ca = this.closest("conduit-app");
-				const u = new URL(ca.dataset.apiUrl);
-				u.pathname += `/articles/${this.state.article.slug}`;
+				const rl = this.closest("root-layout");
+				const u = new URL(rl.dataset.apiUrl);
+				u.pathname += `/articles/${this.dataset.slug}`;
 				const r = await fetch(u, {
 					method: "DELETE",
-					headers: ca.apiHeaders
+					headers: rl.apiHeaders
 				});
 				if (r.ok)
 					location.hash = "#/";
@@ -89,7 +91,8 @@ export default class ArticlePage extends SlottableElement {
 
 	handleRemoveComment = event => {
 		// console.log("ArticlePage.handleRemoveComment", event);
-		const cc = this.state.comments;
+		const rl = this.closest("root-layout");
+		const cc = rl.state.comments;
 		const i = cc.findIndex(x => x === event.detail.comment);
 		cc.splice(i, 1);
 		this.querySelector("comment-list").requestUpdate();
@@ -97,66 +100,64 @@ export default class ArticlePage extends SlottableElement {
 
 	handleToggleFavorite = event => {
 		// console.log("ArticlePage.handleToggleFavorite", event);
-		this.state.article = event.detail.article;
+		const rl = this.closest("root-layout");
+		rl.state.article = event.detail.article;
 		this.requestUpdate();
 	}
 
 	handleToggleFollow = event => {
 		// console.log("ArticlePage.handleToggleFollow", event);
-		this.state.article.author = event.detail.profile;
+		const rl = this.closest("root-layout");
+		rl.state.article.author = event.detail.profile;
 		this.requestUpdate();
 	}
 
-	async computeState() {
-		// console.log("ArticlePage.computeState");
-		if (!this.dataset.slug) {
-			await super.computeState();
+	async updateDisplay() {
+		// console.log("ArticlePage.updateDisplay");
+		const s = this.state;
+		if (!s.article)
+			Object.assign(s, history.state);
+		const rl = this.closest("root-layout");
+		if (!s.article) {
+			const uu = Array.from({ length: 2 }, () => new URL(rl.dataset.apiUrl));
+			uu[0].pathname += `/articles/${this.dataset.slug}`;
+			uu[1].pathname += `/articles/${this.dataset.slug}/comments`;
+			const [{ article }, { comments }] = await Promise.all(uu.map(x => {
+				const p = fetch(x, { headers: rl.apiHeaders }).then(y => y.json());
+				return p;
+			}));
+			history.replaceState({
+				article,
+				comments
+			}, "");
+			Object.assign(s, history.state);
+			this.closest("page-display").requestUpdate();
 			return;
 		}
-		const ca = this.closest("conduit-app");
-		const uu = Array.from({ length: 2 }, () => new URL(ca.dataset.apiUrl));
-		uu[0].pathname += `/articles/${this.dataset.slug}`;
-		uu[1].pathname += `/articles/${this.dataset.slug}/comments`;
-		const [{ article }, { comments }] = await Promise.all(uu.map(x => {
-			const p = fetch(x, { headers: ca.apiHeaders }).then(y => y.json());
-			return p;
-		}));
-		this.state = {
-			article,
-			body: (() => {
-				const t = document.createElement("template");
-				t.innerHTML = formatMarkdownAsHtml(parseMarkdown(article.body));
-				return t.content;
-			})(),
-			comments
-		};
-	}
-
-	renderState() {
-		// console.log("ArticlePage.renderState");
-		const a = this.state?.article;
-		const ca = this.closest("conduit-app");
+		s.body ??= (() => {
+			const t = document.createElement("template");
+			t.innerHTML = formatMarkdownAsHtml(parseMarkdown(s.article.body));
+			return t.content;
+		})();
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			content: a ? ({
-				$template: "content",
-				...a,
-				body: this.state.body,
-				meta: Array.from({ length: 2 }, () => ({
-					$template: "meta",
-					...a,
-					content: a.author.username === ca.currentUser?.username
-						? ({ $template: "can-modify" })
-						: ({
-							...a,
-							$template: "cannot-modify"
-						})
-				})),
-				tagItems: a.tagList.map(x => ({
-					$template: "tag-item",
-					text: x
-				}))
-			}) : null
+			...s.article,
+			body: s.body,
+			comments: s.comments,
+			meta: Array.from({ length: 2 }, () => ({
+				$template: "meta",
+				...s.article,
+				content: s.article.author.username === rl.currentUser?.username
+					? ({ $template: "can-modify" })
+					: ({
+						$template: "cannot-modify",
+						...s.article
+					})
+			})),
+			tagItems: s.article.tagList.map(x => ({
+				$template: "tag-item",
+				text: x
+			}))
 		}));
 	}
 }

@@ -1,33 +1,29 @@
-<!--${content}-->
-
-<template id="content">
-	<div class="profile-page">
-		<div class="user-info">
-			<div class="container">
-				<div class="row">
-					<div class="col-xs-12 col-md-10 offset-md-1">
-						<img src="${image}" class="user-img" />
-						<h4>${username}</h4>
-						<p>${bio}</p>
-						<!--${action}-->
-					</div>
-				</div>
-			</div>
-		</div>
+<div class="profile-page">
+	<div class="user-info">
 		<div class="container">
 			<div class="row">
 				<div class="col-xs-12 col-md-10 offset-md-1">
-					<div class="feed-toggle">
-						<ul class="nav nav-pills outline-active">
-							<!--${tabItems}-->
-						</ul>
-					</div>
-					<article-list data-api-href="${articlesUrl}"></article-list>
+					<img src="${image}" class="user-img" />
+					<h4>${username}</h4>
+					<p>${bio}</p>
+					<!--${action}-->
 				</div>
 			</div>
 		</div>
 	</div>
-</template>
+	<div class="container">
+		<div class="row">
+			<div class="col-xs-12 col-md-10 offset-md-1">
+				<div class="feed-toggle">
+					<ul class="nav nav-pills outline-active">
+						<!--${tabItems}-->
+					</ul>
+				</div>
+				<article-list data-api-url="${articlesUrl}"></article-list>
+			</div>
+		</div>
+	</div>
+</div>
 
 <template id="can-modify">
 	<a href="#/settings" class="btn btn-sm btn-outline-secondary action-btn">

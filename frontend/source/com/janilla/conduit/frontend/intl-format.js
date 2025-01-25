@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableElement } from "./updatable-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
 	day: "numeric",
@@ -33,7 +33,7 @@ const formatters = {
 	date: x => dateFormatter.format(new Date(x))
 };
 
-export default class IntlFormat extends UpdatableElement {
+export default class IntlFormat extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["data-type", "data-value"];
@@ -45,11 +45,10 @@ export default class IntlFormat extends UpdatableElement {
 
 	async updateDisplay() {
 		// console.log("IntlFormat.updateDisplay");
-		if (!this.dataset.value) {
+		if (this.dataset.value) {
+			const f = this.dataset.type ? formatters[this.dataset.type] : null;
+			this.textContent = f ? f(this.dataset.value) : this.dataset.value;
+		} else
 			this.textContent = "";
-			return;
-		}
-		const f = this.dataset.type ? formatters[this.dataset.type] : null;
-		this.textContent = f ? f(this.dataset.value) : this.dataset.value;
 	}
 }

@@ -42,6 +42,14 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 	protected void handle(Invocation invocation, HttpExchange exchange) {
 		exchange.getResponse().getHeaders().add(
 				new HeaderField("access-control-allow-origin", configuration.getProperty("conduit.api.cors.origin")));
+
+//		if (exchange.getRequest().getPath().startsWith("/api"))
+//			try {
+//				Thread.sleep(500);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+
 		super.handle(invocation, exchange);
 	}
 

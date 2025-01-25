@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class ConduitApp extends FlexibleElement {
+export default class RootLayout extends UpdatableHTMLElement {
 
 	static get templateName() {
-		return "conduit-app";
+		return "root-layout";
 	}
 
 	apiHeaders = {};
@@ -78,7 +78,8 @@ export default class ConduitApp extends FlexibleElement {
 	}
 
 	connectedCallback() {
-		// console.log("ConduitApp.connectedCallback");
+		// console.log("RootLayout.connectedCallback");
+		super.connectedCallback();
 		new Promise(x => {
 			const jt = this.jwtToken;
 			if (jt) {
@@ -95,7 +96,9 @@ export default class ConduitApp extends FlexibleElement {
 			} else
 				x();
 		}).then(() => {
-			addEventListener("hashchange", this.handleHashChange);
+			// addEventListener("hashchange", this.handleHashChange);
+			addEventListener("popstate", this.handlePopState);
+			this.addEventListener("click", this.handleClick);
 			this.addEventListener("set-current-user", this.handleSetCurrentUser);
 			if (location.hash)
 				this.handleHashChange();
@@ -105,30 +108,46 @@ export default class ConduitApp extends FlexibleElement {
 	}
 
 	disconnectedCallback() {
-		// console.log("ConduitApp.disconnectedCallback");
-		removeEventListener("hashchange", this.handleHashChange);
+		// console.log("RootLayout.disconnectedCallback");
+		super.disconnectedCallback();
+		// removeEventListener("hashchange", this.handleHashChange);
+		removeEventListener("popstate", this.handlePopState);
+		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("set-current-user", this.handleSetCurrentUser);
 	}
 
+	handleClick = event => {
+		// console.log("RootLayout.handleClick", event);
+		const a = event.composedPath().find(x => x.tagName?.toLowerCase() === "a");
+		if (!a?.href)
+			return;
+		event.preventDefault();
+		const u = new URL(a.href);
+		history.pushState({ id: this.nextStateId() }, "", u.hash);
+		dispatchEvent(new CustomEvent("popstate"));
+	}
+
+	/*
 	handleHashChange = event => {
-		// console.log("ConduitApp.handleHashChange", event);
-		const cc = this.querySelector("page-display")?.children;
-		if (cc)
-			Array.prototype.forEach.call(cc, x => x.removeAttribute("slot"));
+		console.log("RootLayout.handleHashChange", event);
+		this.requestUpdate();
+	}
+	*/
+
+	handlePopState = event => {
+		console.log("RootLayout.handlePopState", event);
 		this.requestUpdate();
 	}
 
 	handleSetCurrentUser = event => {
-		// console.log("ConduitApp.handleSetCurrentUser", event);
+		// console.log("RootLayout.handleSetCurrentUser", event);
 		this.currentUser = event.detail.user;
 		this.jwtToken = this.currentUser?.token;
 		this.apiHeaders["Authorization"] = this.currentUser ? `Token ${this.currentUser.token}` : "";
 	}
 
 	async updateDisplay() {
-		// console.log("ConduitApp.updateDisplay");
-		if (!this.isConnected)
-			return;
+		// console.log("RootLayout.updateDisplay");
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			header: ({
@@ -140,7 +159,14 @@ export default class ConduitApp extends FlexibleElement {
 				}))
 			}),
 			path: location.hash.substring(1),
+			stateId: history.state?.id,
 			footer: { $template: "footer" }
 		}));
 	}
+
+	nextStateId() {
+		return ++stateId;
+	}
 }
+
+let stateId = 0;

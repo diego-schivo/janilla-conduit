@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class CommentList extends FlexibleElement {
+export default class CommentList extends UpdatableHTMLElement {
 
 	static get templateName() {
 		return "comment-list";
@@ -42,6 +42,7 @@ export default class CommentList extends FlexibleElement {
 
 	disconnectedCallback() {
 		// console.log("CommentList.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("submit", this.handleSubmit);
 	}
@@ -52,15 +53,15 @@ export default class CommentList extends FlexibleElement {
 			return;
 		event.preventDefault();
 		const el = event.target.closest(".card");
-		const i = Array.prototype.findIndex.call(el.parentElement.querySelectorAll(":scope > .card"), x => x === el);
+		const i = Array.prototype.findIndex.call(el.parentElement.children, x => x === el);
+		const rl = this.closest("root-layout");
+		const c = rl.state.comments[i];
+		const u = new URL(rl.dataset.apiUrl);
 		const ap = this.closest("article-page");
-		const c = ap.state.comments[i];
-		const ca = this.closest("conduit-app");
-		const u = new URL(ca.dataset.apiUrl);
-		u.pathname += `/articles/${ap.state.article.slug}/comments/${c.id}`;
+		u.pathname += `/articles/${ap.dataset.slug}/comments/${c.id}`;
 		const r = await fetch(u, {
 			method: "DELETE",
-			headers: ca.apiHeaders
+			headers: rl.apiHeaders
 		});
 		if (r.ok)
 			this.dispatchEvent(new CustomEvent("remove-comment", {
@@ -72,45 +73,45 @@ export default class CommentList extends FlexibleElement {
 	handleSubmit = async event => {
 		// console.log("CommentList.handleSubmit", event);
 		event.preventDefault();
-		const ca = this.closest("conduit-app");
-		const u = new URL(ca.dataset.apiUrl);
+		const rl = this.closest("root-layout");
+		const u = new URL(rl.dataset.apiUrl);
 		const ap = this.closest("article-page");
-		u.pathname += `/articles/${ap.state.article.slug}/comments`;
+		u.pathname += `/articles/${ap.dataset.slug}/comments`;
 		const r = await fetch(u, {
 			method: "POST",
-			headers: { ...ca.apiHeaders, "Content-Type": "application/json" },
+			headers: {
+				...rl.apiHeaders,
+				"Content-Type": "application/json"
+			},
 			body: JSON.stringify({ comment: Object.fromEntries(new FormData(event.target)) })
 		});
 		const j = await r.json();
+		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 		if (r.ok) {
 			event.target.elements["body"].value = "";
 			this.dispatchEvent(new CustomEvent("add-comment", {
 				bubbles: true,
 				detail: { comment: j.comment }
 			}));
-		} else {
-			this.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+		} else
 			this.requestUpdate();
-		}
 	}
 
 	async updateDisplay() {
 		// console.log("CommentList.updateDisplay");
-		if (!this.isConnected)
-			return;
-		const ca = this.closest("conduit-app");
+		const rl = this.closest("root-layout");
 		const ap = this.closest("article-page");
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			form: ca.currentUser ? {
+			form: rl.currentUser ? {
 				$template: "authenticated",
-				...ca.currentUser,
+				...rl.currentUser,
 				errorMessages: this.errorMessages
 			} : { $template: "unauthenticated" },
 			cards: ap.state.comments.map(x => ({
 				$template: "card",
 				...x,
-				modOptions: x.author.username === ca.currentUser?.username ? { $template: "mod-options" } : null
+				modOptions: x.author.username === rl.currentUser?.username ? { $template: "mod-options" } : null
 			}))
 		}));
 	}

@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class ArticlePreview extends FlexibleElement {
+export default class ArticlePreview extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-index"];
+		return ["data-index", "data-slug"];
 	}
 
 	static get templateName() {
@@ -37,14 +37,6 @@ export default class ArticlePreview extends FlexibleElement {
 		super();
 	}
 
-	get article() {
-		return this.closest("article-list").articles[parseInt(this.dataset.index)];
-	}
-
-	set article(x) {
-		this.closest("article-list").articles[parseInt(this.dataset.index)] = x;
-	}
-
 	connectedCallback() {
 		// console.log("ArticlePreview.connectedCallback");
 		super.connectedCallback();
@@ -53,20 +45,19 @@ export default class ArticlePreview extends FlexibleElement {
 
 	disconnectedCallback() {
 		// console.log("ArticlePreview.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("toggle-favorite", this.handleToggleFavorite);
 	}
 
 	handleToggleFavorite = event => {
 		// console.log("ArticlePreview.handleToggleFavorite", event);
-		this.article = event.detail.article;
+		this.closest("article-list").state.articles[parseInt(this.dataset.index)] = event.detail.article;
 		this.requestUpdate();
 	}
 
 	async updateDisplay() {
 		// console.log("ArticlePreview.updateDisplay", this.dataset.index);
-		if (!this.isConnected)
-			return;
-		const a = this.article;
+		const a = this.closest("article-list").state.articles[parseInt(this.dataset.index)];
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...a,

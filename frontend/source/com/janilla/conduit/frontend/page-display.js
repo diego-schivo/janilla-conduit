@@ -21,22 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-const updateElement = (element, active, more) => {
-	if (active) {
-		// console.log("PageDisplay.updateElement", element);
-		element.setAttribute("slot", "content");
-	}
-
-	if (more)
-		more(element, active);
-}
-
-export default class PageDisplay extends FlexibleElement {
+export default class PageDisplay extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-path"];
+		return ["data-path", "data-state-id"];
 	}
 
 	static get templateName() {
@@ -50,31 +40,66 @@ export default class PageDisplay extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("PageDisplay.updateDisplay");
-		if (!this.isConnected)
-			return;
-		this.shadowRoot.appendChild(this.interpolateDom());
+		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const nn = this.dataset.path.split("/");
-		updateElement(this.querySelector("article-page"), nn[1] === "article", (el, a) => {
-			if (a)
-				el.setAttribute("data-slug", nn[2]);
-			else
-				el.removeAttribute("data-slug");
-		});
-		updateElement(this.querySelector("editor-page"), nn[1] === "editor", (el, a) => {
-			if (a && nn[2])
-				el.setAttribute("data-slug", nn[2]);
-			else
-				el.removeAttribute("data-slug");
-		});
-		updateElement(this.querySelector("home-page"), nn[1] === "");
-		updateElement(this.querySelector("login-page"), nn[1] === "login");
-		updateElement(this.querySelector("profile-page"), nn[1]?.startsWith("@"), (el, a) => {
-			if (a)
-				el.setAttribute("data-username", decodeURIComponent(nn[1].substring(1)));
-			else
-				el.removeAttribute("data-username");
-		});
-		updateElement(this.querySelector("register-page"), nn[1] === "register");
-		updateElement(this.querySelector("settings-page"), nn[1] === "settings");
+		const hs = history.state ?? {};
+		const rl = this.closest("root-layout");
+		const pp = {
+			articlePage: (() => {
+				const a = nn[1] === "article";
+				return {
+					$template: "article-page",
+					slot: a ? (hs.article?.slug === nn[2] ? "content" : "content2") : null,
+					slug: a ? nn[2] : null
+				};
+			})(),
+			editorPage: (() => {
+				const a = nn[1] === "editor";
+				return {
+					$template: "editor-page",
+					slot: a ? (hs.article?.slug === nn[2] ? "content" : "content2") : null,
+					slug: a ? nn[2] : null
+				};
+			})(),
+			homePage: (() => {
+				return {
+					$template: "home-page",
+					slot: nn[1] === "" ? "content" : null,
+					tab: hs.tab ?? (rl.currentUser ? "feed" : "all"),
+					tag: hs.tag
+				};
+			})(),
+			loginPage: {
+				$template: "login-page",
+				slot: nn[1] === "login" ? "content" : null
+			},
+			profilePage: (() => {
+				const a = nn[1]?.startsWith("@");
+				const u = a ? decodeURIComponent(nn[1].substring(1)) : null;
+				return {
+					$template: "profile-page",
+					slot: a ? (hs.profile?.username === u ? "content" : "content2") : null,
+					tab: hs.tab ?? "author",
+					username: u
+				};
+			})(),
+			registerPage: {
+				$template: "register-page",
+				slot: nn[1] === "register" ? "content" : null
+			},
+			settingsPage: {
+				$template: "settings-page",
+				slot: nn[1] === "settings" ? "content" : null
+			}
+		};
+		if (Object.values(pp).every(x => x.slot !== "content")) {
+			const t = Array.prototype.find.call(this.children, x => x.slot === "content")?.tagName?.toLowerCase();
+			if (t)
+				Array.prototype.find.call(Object.values(pp), x => x.$template === t).slot = "content";
+		}
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			...Object.fromEntries(Object.entries(pp).filter(([_, v]) => v.slot))
+		}));
 	}
 }

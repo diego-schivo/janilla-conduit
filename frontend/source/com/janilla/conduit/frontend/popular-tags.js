@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class PopularTags extends FlexibleElement {
+export default class PopularTags extends UpdatableHTMLElement {
 
 	static get templateName() {
 		return "popular-tags";
@@ -42,6 +42,7 @@ export default class PopularTags extends FlexibleElement {
 
 	disconnectedCallback() {
 		// console.log("PopularTags.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 	}
 
@@ -59,28 +60,33 @@ export default class PopularTags extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("PopularTags.updateDisplay");
-		if (!this.isConnected)
-			return;
-		this.shadowRoot.appendChild(this.interpolateDom());
-		this.tags ??= await (async () => {
+		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
+		const s = this.state;
+		if (!s.tags)
+			s.tags = history.state?.tags;
+		if (!s.tags) {
 			this.appendChild(this.interpolateDom({
-				$template: "content",
+				$template: "",
 				loadingSlot: "content"
 			}));
-			const ca = this.closest("conduit-app");
-			const u = new URL(ca.dataset.apiUrl);
+			const rl = this.closest("root-layout");
+			const u = new URL(rl.dataset.apiUrl);
 			u.pathname += "/tags";
-			const j = await (await fetch(u, { headers: ca.apiHeaders })).json();
-			return j.tags;
-		})();
+			const j = await (await fetch(u, { headers: rl.apiHeaders })).json();
+			s.tags = j.tags;
+			history.replaceState({
+				...history.state,
+				tags: j.tags
+			}, "");
+		}
 		this.appendChild(this.interpolateDom({
-			$template: "content",
-			emptySlot: this.tags.length ? null : "content",
-			nonemptySlot: this.tags.length ? "content" : null,
+			$template: "",
+			emptySlot: s.tags.length ? null : "content",
+			slot: s.tags.length ? "content" : null,
 			tags: (() => {
-				return this.tags.map(x => ({
+				return s.tags.map(x => ({
 					$template: "tag",
-					tag: x
+					text: x
 				}));
 			})()
 		}));

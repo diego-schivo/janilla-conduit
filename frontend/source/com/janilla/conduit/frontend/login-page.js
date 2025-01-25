@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SlottableElement } from "./slottable-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class LoginPage extends SlottableElement {
+export default class LoginPage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["slot"];
@@ -45,42 +45,42 @@ export default class LoginPage extends SlottableElement {
 
 	disconnectedCallback() {
 		// console.log("LoginPage.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("submit", this.handleSubmit);
 	}
 
 	handleSubmit = async event => {
 		// console.log("LoginPage.handleSubmit", event);
 		event.preventDefault();
-		const ca = this.closest("conduit-app");
-		const u = new URL(ca.dataset.apiUrl);
+		const rl = this.closest("root-layout");
+		const u = new URL(rl.dataset.apiUrl);
 		u.pathname += "/users/login";
+		const u2 = Object.fromEntries(new FormData(event.target));
 		const r = await fetch(u, {
 			method: "POST",
-			headers: { ...ca.apiHeaders, "Content-Type": "application/json" },
-			body: JSON.stringify({ user: Object.fromEntries(new FormData(event.target)) })
+			headers: {
+				...rl.apiHeaders,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({ user: u2 })
 		});
 		const j = await r.json();
+		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 		if (r.ok) {
 			this.dispatchEvent(new CustomEvent("set-current-user", {
 				bubbles: true,
 				detail: { user: j.user }
 			}));
 			location.hash = "#/";
-		} else {
-			this.state.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+		} else
 			this.requestUpdate();
-		}
 	}
 
-	renderState() {
-		// console.log("LoginPage.renderState");
+	async updateDisplay() {
+		// console.log("LoginPage.updateDisplay");
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			content: this.state ? {
-				$template: "content",
-				...this.state,
-				errorMessages: this.state.errorMessages?.join(";")
-			} : null
+			errorMessages: this.state.errorMessages?.join(";")
 		}));
 	}
 }

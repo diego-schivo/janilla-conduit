@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class FavoriteButton extends FlexibleElement {
+export default class FavoriteButton extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-active", "data-count"];
+		return ["data-active", "data-count", "data-preview"];
 	}
 
 	static get templateName() {
@@ -45,22 +45,23 @@ export default class FavoriteButton extends FlexibleElement {
 
 	disconnectedCallback() {
 		// console.log("FavoriteButton.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 	}
 
 	handleClick = async event => {
 		// console.log("FavoriteButton.handleClick", event);
 		event.stopPropagation();
-		const ca = this.closest("conduit-app");
-		if (!ca.currentUser) {
+		const rl = this.closest("root-layout");
+		if (!rl.currentUser) {
 			location.hash = "#/login";
 			return;
 		}
-		const u = new URL(ca.dataset.apiUrl);
+		const u = new URL(rl.dataset.apiUrl);
 		u.pathname += `/articles/${this.dataset.slug}/favorite`;
 		const r = await fetch(u, {
 			method: this.dataset.active != null ? "DELETE" : "POST",
-			headers: ca.apiHeaders
+			headers: rl.apiHeaders
 		});
 		if (r.ok) {
 			this.dispatchEvent(new CustomEvent("toggle-favorite", {
@@ -72,8 +73,6 @@ export default class FavoriteButton extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("FavoriteButton.updateDisplay");
-		if (!this.isConnected)
-			return;
 		const a = this.dataset.active != null;
 		const p = this.dataset.preview != null;
 		this.appendChild(this.interpolateDom({

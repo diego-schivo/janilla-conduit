@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SlottableElement } from "./slottable-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class HomePage extends SlottableElement {
+export default class HomePage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["slot"];
+		return ["data-tab", "data-tag", "slot"];
 	}
 
 	static get templateName() {
@@ -38,9 +38,9 @@ export default class HomePage extends SlottableElement {
 	}
 
 	get tabItems() {
-		const ca = this.closest("conduit-app");
+		const rl = this.closest("root-layout");
 		const ii = [];
-		if (ca.currentUser)
+		if (rl.currentUser)
 			ii.push({
 				href: "#feed",
 				text: "Your Feed"
@@ -67,6 +67,7 @@ export default class HomePage extends SlottableElement {
 
 	disconnectedCallback() {
 		// console.log("HomePage.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("select-tag", this.handleSelectTag);
 	}
@@ -77,54 +78,50 @@ export default class HomePage extends SlottableElement {
 		if (!el)
 			return;
 		event.preventDefault();
+		event.stopPropagation();
 		if (!el.classList.contains("active")) {
-			this.state.activeTab = el.dataset.href.substring(1);
-			this.requestUpdate();
+			history.pushState({
+				id: this.closest("root-layout").nextStateId(),
+				tab: el.dataset.href.substring(1)
+			}, "");
+			dispatchEvent(new CustomEvent("popstate"));
 		}
 	}
 
 	handleSelectTag = event => {
 		// console.log("HomePage.handleSelectTag", event);
-		this.state.activeTab = "tag";
-		this.state.selectedTag = event.detail.tag;
-		this.requestUpdate();
+		history.pushState({
+			id: this.closest("root-layout").nextStateId(),
+			tab: "tag",
+			tag: event.detail.tag
+		}, "");
+		dispatchEvent(new CustomEvent("popstate"));
 	}
 
-	async computeState() {
-		// console.log("LoginPage.computeState");
-		const ca = this.closest("conduit-app");
-		this.state = { activeTab: ca.currentUser ? "feed" : "all" };
-	}
-
-	renderState() {
-		// console.log("HomePage.renderState");
-		const ca = this.closest("conduit-app");
+	async updateDisplay() {
+		// console.log("HomePage.updateDisplay");
+		const rl = this.closest("root-layout");
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			content: !this.state ? null : {
-				$template: "content",
-				banner: ca.currentUser ? null : { $template: "banner" },
-				tabItems: this.tabItems.map(x => ({
-					$template: "tab-item",
-					...x,
-					class: `nav-link ${x.href.substring(1) === this.state.activeTab ? "active" : ""}`,
-				})),
-				articlesUrl: (() => {
-					if (!this.state.activeTab)
-						return null;
-					const u = new URL(ca.dataset.apiUrl);
-					u.pathname += "/articles";
-					switch (this.state.activeTab) {
-						case "feed":
-							u.pathname += "/feed";
-							break;
-						case "tag":
-							u.searchParams.append("tag", this.state.selectedTag);
-							break;
-					}
-					return u;
-				})()
-			}
+			banner: rl.currentUser ? null : { $template: "banner" },
+			tabItems: this.tabItems.map(x => ({
+				$template: "tab-item",
+				...x,
+				class: `nav-link ${x.href.substring(1) === this.dataset.tab ? "active" : ""}`,
+			})),
+			articlesUrl: (() => {
+				const u = new URL(rl.dataset.apiUrl);
+				u.pathname += "/articles";
+				switch (this.dataset.tab) {
+					case "feed":
+						u.pathname += "/feed";
+						break;
+					case "tag":
+						u.searchParams.append("tag", this.dataset.tag);
+						break;
+				}
+				return u;
+			})()
 		}));
 	}
 }

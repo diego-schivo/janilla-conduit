@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { FlexibleElement } from "./flexible-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class TagsInput extends FlexibleElement {
+export default class TagsInput extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["data-values"];
@@ -38,7 +38,7 @@ export default class TagsInput extends FlexibleElement {
 	}
 
 	get values() {
-		return this.dataset.values ? this.dataset.values.split(",") : [];
+		return this.dataset.values?.split(",") ?? [];
 	}
 
 	set values(x) {
@@ -54,6 +54,7 @@ export default class TagsInput extends FlexibleElement {
 
 	disconnectedCallback() {
 		// console.log("TagsInput.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("keydown", this.handleKeyDown);
 	}
@@ -81,8 +82,6 @@ export default class TagsInput extends FlexibleElement {
 
 	async updateDisplay() {
 		// console.log("TagsInput.updateDisplay");
-		if (!this.isConnected)
-			return;
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			tags: (() => {

@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SlottableElement } from "./slottable-element.js";
+import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
-export default class EditorPage extends SlottableElement {
+export default class EditorPage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
 		return ["data-slug", "slot"];
@@ -45,64 +45,66 @@ export default class EditorPage extends SlottableElement {
 
 	disconnectedCallback() {
 		// console.log("EditorPage.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("submit", this.handleSubmit);
 	}
 
 	handleSubmit = async event => {
 		// console.log("EditorPage.handleSubmit", event);
 		event.preventDefault();
-		const ca = this.closest("conduit-app");
-		const u = new URL(ca.dataset.apiUrl);
+		const rl = this.closest("root-layout");
+		const u = new URL(rl.dataset.apiUrl);
 		u.pathname += this.dataset.slug ? `/articles/${this.dataset.slug}` : "/articles";
+		const fd = new FormData(event.target);
+		const a = [...fd.entries()].reduce((x, y) => {
+			switch (y[0]) {
+				case "tagList":
+					x.tagList ??= [];
+					x.tagList.push(y[1]);
+					break;
+				default:
+					x[y[0]] = y[1];
+					break;
+			}
+			return x;
+		}, {});
 		const r = await fetch(u, {
 			method: this.dataset.slug ? "PUT" : "POST",
-			headers: { ...ca.apiHeaders, "Content-Type": "application/json" },
-			body: JSON.stringify({
-				article: [...new FormData(event.target).entries()].reduce((x, y) => {
-					switch (y[0]) {
-						case "tagList":
-							x.tagList ??= [];
-							x.tagList.push(y[1]);
-							break;
-						default:
-							x[y[0]] = y[1];
-							break;
-					}
-					return x;
-				}, {})
-			})
+			headers: {
+				...rl.apiHeaders,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({ article: a })
 		});
 		const j = await r.json();
+		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 		if (r.ok)
 			location.hash = `#/article/${j.article.slug}`;
-		else {
-			this.state.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+		else
 			this.requestUpdate();
-		}
 	}
 
-	async computeState() {
-		// console.log("EditorPage.computeState");
-		if (!this.dataset.slug) {
-			this.state = { article: {} };
+	async updateDisplay() {
+		// console.log("EditorPage.updateDisplay");
+		const rl = this.closest("root-layout");
+		const s = rl.state;
+		if (this.slot && !s.article) {
+			if (this.dataset.slug) {
+				const u = new URL(rl.dataset.apiUrl);
+				u.pathname += `/articles/${this.dataset.slug}`;
+				const j = await (await fetch(u, { headers: rl.apiHeaders })).json();
+				s.article = j.article;
+			} else
+				s.article = {};
+			this.closest("page-display").requestUpdate();
 			return;
 		}
-		const ca = this.closest("conduit-app");
-		const u = new URL(ca.dataset.apiUrl);
-		u.pathname += `/articles/${this.dataset.slug}`;
-		this.state = await (await fetch(u, { headers: ca.apiHeaders })).json();
-	}
-
-	renderState() {
-		// console.log("EditorPage.renderState");
+		const a = s.article;
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			content: this.state?.article ? {
-				$template: "content",
-				...this.state.article,
-				tagList: this.state.tagList?.join(),
-				errorMessages: this.state.errorMessages?.join(";")
-			} : null
+			...a,
+			tagList: a.tagList?.join(),
+			errorMessages: this.state.errorMessages?.join(";")
 		}));
 	}
 }
