@@ -34,6 +34,14 @@ export default class PopularTags extends UpdatableHTMLElement {
 		this.attachShadow({ mode: "open" });
 	}
 
+	get historyState() {
+		const s = this.state;
+		return {
+			...history.state,
+			"popular-tags": Object.fromEntries(["tags"].map(x => [x, s[x]]))
+		};
+	}
+
 	connectedCallback() {
 		// console.log("PopularTags.connectedCallback");
 		super.connectedCallback();
@@ -75,15 +83,8 @@ export default class PopularTags extends UpdatableHTMLElement {
 			const u = new URL(rl.dataset.apiUrl);
 			u.pathname += "/tags";
 			const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
-			const o = {
-				version: (s.version ?? 0) + 1,
-				tags: j.tags
-			};
-			Object.assign(s, o);
-			history.replaceState({
-				...history.state,
-				"popular-tags": o
-			}, "");
+			s.tags = j.tags;
+			history.replaceState(this.historyState, "");
 		}
 		this.appendChild(this.interpolateDom({
 			$template: "",

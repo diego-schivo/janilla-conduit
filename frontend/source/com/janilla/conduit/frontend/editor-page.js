@@ -37,6 +37,14 @@ export default class EditorPage extends UpdatableHTMLElement {
 		super();
 	}
 
+	get historyState() {
+		const s = this.state;
+		return {
+			...history.state,
+			"editor-page": Object.fromEntries(["article"].map(x => [x, s[x]]))
+		};
+	}
+
 	connectedCallback() {
 		// console.log("EditorPage.connectedCallback");
 		super.connectedCallback();
@@ -92,19 +100,14 @@ export default class EditorPage extends UpdatableHTMLElement {
 		const s = this.state;
 		const rl = this.closest("root-layout");
 		if (!s.article || this.dataset.slug != s.article.slug) {
-			const o = { version: (s.version ?? 0) + 1 };
 			if (this.dataset.slug) {
 				const u = new URL(rl.dataset.apiUrl);
 				u.pathname += `/articles/${this.dataset.slug}`;
 				const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
-				o.article = j.article;
+				s.article = j.article;
 			} else
-				o.article = {};
-			history.replaceState({
-				...history.state,
-				"editor-page": o
-			}, "");
-			Object.assign(s, o);
+				s.article = {};
+			history.replaceState(this.historyState, "");
 			this.closest("page-display").requestUpdate();
 			return;
 		}

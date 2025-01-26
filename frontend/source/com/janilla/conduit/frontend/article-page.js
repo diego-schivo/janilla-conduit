@@ -38,6 +38,14 @@ export default class ArticlePage extends UpdatableHTMLElement {
 		super();
 	}
 
+	get historyState() {
+		const s = this.state;
+		return {
+			...history.state,
+			"article-page": Object.fromEntries(["article", "comments"].map(x => [x, s[x]]))
+		};
+	}
+
 	connectedCallback() {
 		// console.log("ArticlePage.connectedCallback");
 		super.connectedCallback();
@@ -64,7 +72,7 @@ export default class ArticlePage extends UpdatableHTMLElement {
 	handleAddComment = event => {
 		// console.log("ArticlePage.handleAddComment", event);
 		this.state.comments.unshift(event.detail.comment);
-		this.updateHistory();
+		history.replaceState(this.historyState, "");
 		this.querySelector("comment-list").requestUpdate();
 	}
 
@@ -97,21 +105,19 @@ export default class ArticlePage extends UpdatableHTMLElement {
 		const cc = this.state.comments;
 		const i = cc.findIndex(x => x === event.detail.comment);
 		cc.splice(i, 1);
-		this.updateHistory();
+		history.replaceState(this.historyState, "");
 		this.querySelector("comment-list").requestUpdate();
 	}
 
 	handleToggleFavorite = event => {
 		// console.log("ArticlePage.handleToggleFavorite", event);
-		const rl = this.closest("root-layout");
-		rl.state.article = event.detail.article;
+		this.state.article = event.detail.article;
 		this.requestUpdate();
 	}
 
 	handleToggleFollow = event => {
 		// console.log("ArticlePage.handleToggleFollow", event);
-		const rl = this.closest("root-layout");
-		rl.state.article.author = event.detail.profile;
+		this.state.article.author = event.detail.profile;
 		this.requestUpdate();
 	}
 
@@ -127,13 +133,9 @@ export default class ArticlePage extends UpdatableHTMLElement {
 				const p = fetch(x, { headers: rl.state.apiHeaders }).then(y => y.json());
 				return p;
 			}));
-			const o = {
-				version: (s.version ?? 0) + 1,
-				article: j1.article,
-				comments: j2.comments
-			};
-			Object.assign(s, o);
-			this.updateHistory();
+			s.article = j1.article;
+			s.comments = j2.comments;
+			history.replaceState(this.historyState, "");
 			this.closest("page-display").requestUpdate();
 			return;
 		}
@@ -162,14 +164,5 @@ export default class ArticlePage extends UpdatableHTMLElement {
 				text: x
 			}))
 		}));
-	}
-
-	updateHistory = () => {
-		// console.log("ArticlePage.updateHistory");
-		const s = this.state;
-		history.replaceState({
-			...history.state,
-			"article-page": Object.fromEntries(["version", "article", "comments"].map(x => [x, s[x]]))
-		}, "");
 	}
 }

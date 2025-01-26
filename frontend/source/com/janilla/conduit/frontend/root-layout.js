@@ -90,11 +90,8 @@ export default class RootLayout extends UpdatableHTMLElement {
 		// console.log("RootLayout.handleSetCurrentUser", event);
 		const u = event.detail.user;
 		const s = this.state;
-		Object.assign(s, {
-			version: (s.version ?? 0) + 1,
-			currentUser: u,
-			apiHeaders: u?.token ? { Authorization: `Token ${u.token}` } : {}
-		});
+		s.currentUser = u;
+		s.apiHeaders = u?.token ? { Authorization: `Token ${u.token}` } : {};
 		history.replaceState(this.historyState, "");
 		if (u?.token)
 			localStorage.setItem("jwtToken", u.token);
@@ -117,11 +114,8 @@ export default class RootLayout extends UpdatableHTMLElement {
 				u = j?.user ?? null;
 			} else
 				u = null;
-			Object.assign(s, {
-				version: (s.version ?? 0) + 1,
-				currentUser: u,
-				apiHeaders: t ? { Authorization: `Token ${t}` } : {}
-			});
+			s.currentUser = u;
+			s.apiHeaders = u?.token ? { Authorization: `Token ${u.token}` } : {};
 			history.replaceState(this.historyState, "");
 		}
 		this.appendChild(this.interpolateDom({

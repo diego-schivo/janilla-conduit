@@ -38,6 +38,14 @@ export default class ArticleList extends UpdatableHTMLElement {
 		this.attachShadow({ mode: "open" });
 	}
 
+	get historyState() {
+		const s = this.state;
+		return {
+			...history.state,
+			"article-list": Object.fromEntries(["apiUrl", "articles", "pagesCount", "pageNumber"].map(x => [x, s[x]]))
+		};
+	}
+
 	connectedCallback() {
 		// console.log("ArticleList.connectedCallback");
 		super.connectedCallback();
@@ -54,21 +62,19 @@ export default class ArticleList extends UpdatableHTMLElement {
 
 	handleSelectPage = event => {
 		// console.log("ArticleList.handleSelectPage", event);
-		history.pushState({
-			...history.state,
-			"article-list": {
-				version: this.state.version + 1,
-				pageNumber: event.detail.pageNumber
-			}
-		}, "");
 		dispatchEvent(new CustomEvent("popstate"));
+		const s = this.state;
+		s.apiUrl = null;
+		s.pageNumber = event.detail.pageNumber;
+		history.pushState(this.historyState, "");
+		this.requestUpdate();
 	}
 
 	async updateDisplay() {
 		// console.log("ArticleList.updateDisplay");
 		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const s = this.state;
-		if (this.dataset.apiUrl !== s.apiUrl) {
+		if (this.dataset.apiUrl != s.apiUrl) {
 			this.appendChild(this.interpolateDom({
 				$template: "",
 				loadingSlot: "content"
@@ -78,18 +84,11 @@ export default class ArticleList extends UpdatableHTMLElement {
 			u.searchParams.append("skip", (pn - 1) * 10);
 			u.searchParams.append("limit", 10);
 			const j = await (await fetch(u, { headers: this.closest("root-layout").state.apiHeaders })).json();
-			const o = {
-				version: (s.version ?? 0) + 1,
-				apiUrl: this.dataset.apiUrl,
-				articles: j.articles,
-				pagesCount: Math.ceil(j.articlesCount / 10),
-				pageNumber: pn
-			};
-			Object.assign(s, o);
-			history.replaceState({
-				...history.state,
-				"article-list": o
-			}, "");
+			s.apiUrl = this.dataset.apiUrl;
+			s.articles = j.articles;
+			s.pagesCount = Math.ceil(j.articlesCount / 10);
+			s.pageNumber = pn;
+			history.replaceState(this.historyState, "");
 		}
 		// console.log("ArticleList.updateDisplay", s);
 		this.appendChild(this.interpolateDom({
