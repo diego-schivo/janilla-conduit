@@ -26,7 +26,7 @@ import { UpdatableHTMLElement } from "./updatable-html-element.js";
 export default class EditorPage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-slug", "slot"];
+		return ["slot"];
 	}
 
 	static get templateName() {
@@ -40,6 +40,9 @@ export default class EditorPage extends UpdatableHTMLElement {
 	connectedCallback() {
 		// console.log("EditorPage.connectedCallback");
 		super.connectedCallback();
+		const s = history.state?.["editor-page"];
+		if (s)
+			Object.assign(this.state, s);
 		this.addEventListener("submit", this.handleSubmit);
 	}
 
@@ -71,7 +74,7 @@ export default class EditorPage extends UpdatableHTMLElement {
 		const r = await fetch(u, {
 			method: this.dataset.slug ? "PUT" : "POST",
 			headers: {
-				...rl.apiHeaders,
+				...rl.state.apiHeaders,
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({ article: a })
@@ -86,24 +89,29 @@ export default class EditorPage extends UpdatableHTMLElement {
 
 	async updateDisplay() {
 		// console.log("EditorPage.updateDisplay");
+		const s = this.state;
 		const rl = this.closest("root-layout");
-		const s = rl.state;
-		if (this.slot && !s.article) {
+		if (!s.article || this.dataset.slug != s.article.slug) {
+			const o = { version: (s.version ?? 0) + 1 };
 			if (this.dataset.slug) {
 				const u = new URL(rl.dataset.apiUrl);
 				u.pathname += `/articles/${this.dataset.slug}`;
-				const j = await (await fetch(u, { headers: rl.apiHeaders })).json();
-				s.article = j.article;
+				const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
+				o.article = j.article;
 			} else
-				s.article = {};
+				o.article = {};
+			history.replaceState({
+				...history.state,
+				"editor-page": o
+			}, "");
+			Object.assign(s, o);
 			this.closest("page-display").requestUpdate();
 			return;
 		}
-		const a = s.article;
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			...a,
-			tagList: a.tagList?.join(),
+			...s.article,
+			tagList: s.article.tagList?.join(),
 			errorMessages: this.state.errorMessages?.join(";")
 		}));
 	}

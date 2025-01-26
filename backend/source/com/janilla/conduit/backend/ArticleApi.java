@@ -70,9 +70,9 @@ public class ArticleApi {
 
 	@Handle(method = "GET", path = "/api/articles/([^/]*)")
 	public Object read(String slug) throws IOException {
-		var c = persistence.crud(Article.class);
-		var i = c.find("slug", slug);
-		var a = i > 0 ? c.read(i) : null;
+		var ac = persistence.crud(Article.class);
+		var i = ac.find("slug", slug);
+		var a = i > 0 ? ac.read(i) : null;
 		return Collections.singletonMap("article", a);
 	}
 
@@ -81,9 +81,9 @@ public class ArticleApi {
 		var s = form.article.title != null ? toSlug(form.article.title) : slug;
 		validate(slug, s, form.article);
 
-		var c = persistence.crud(Article.class);
-		var i = c.find("slug", slug);
-		var a = i > 0 ? c.update(i, x -> {
+		var ac = persistence.crud(Article.class);
+		var i = ac.find("slug", slug);
+		var a = i > 0 ? ac.update(i, x -> {
 			x = new Article(x.id(), s, null, null, null,
 					form.article.tagList() != null ? form.article.tagList().stream().sorted().toList()
 							: Collections.emptyList(),
@@ -97,10 +97,10 @@ public class ArticleApi {
 
 	@Handle(method = "DELETE", path = "/api/articles/([^/]*)")
 	public void delete(String slug) throws IOException {
-		var c = persistence.crud(Article.class);
-		var i = c.find("slug", slug);
+		var ac = persistence.crud(Article.class);
+		var i = ac.find("slug", slug);
 		if (i > 0)
-			c.delete(i);
+			ac.delete(i);
 	}
 
 	@Handle(method = "GET", path = "/api/articles")
@@ -154,10 +154,10 @@ public class ArticleApi {
 
 	@Handle(method = "DELETE", path = "/api/articles/([^/]*)/comments/([^/]*)")
 	public void deleteComment(String slug, Long id, User user) throws IOException {
-		var c = persistence.crud(Comment.class);
-		var d = c.read(id);
-		if (d.author().equals(user.id()))
-			c.delete(id);
+		var cc = persistence.crud(Comment.class);
+		var c = cc.read(id);
+		if (c.author().equals(user.id()))
+			cc.delete(id);
 		else
 			throw new ForbiddenException();
 	}
@@ -165,9 +165,9 @@ public class ArticleApi {
 	@Handle(method = "GET", path = "/api/articles/([^/]*)/comments")
 	public Object listComments(String slug) throws IOException {
 		var i = persistence.crud(Article.class).find("slug", slug);
-		var c = persistence.crud(Comment.class);
-		var j = c.filter("article", i);
-		return Map.of("comments", c.read(j));
+		var cc = persistence.crud(Comment.class);
+		var j = cc.filter("article", i);
+		return Map.of("comments", cc.read(j));
 	}
 
 	@Handle(method = "POST", path = "/api/articles/([^/]*)/favorite")
@@ -185,10 +185,10 @@ public class ArticleApi {
 	public Object unfavorite(String slug, User user) throws IOException {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
-		var c = (ArticleCrud) persistence.crud(Article.class);
-		var i = c.find("slug", slug);
-		var a = i > 0 ? c.read(i) : null;
-		c.unfavorite(a.id(), a.createdAt(), user.id());
+		var ac = (ArticleCrud) persistence.crud(Article.class);
+		var i = ac.find("slug", slug);
+		var a = i > 0 ? ac.read(i) : null;
+		ac.unfavorite(a.id(), a.createdAt(), user.id());
 		return Map.of("article", i);
 	}
 
@@ -201,11 +201,11 @@ public class ArticleApi {
 	protected void validate(String slug1, String slug2, Form.Article article) throws IOException {
 		var v = new Validation();
 		v.configuration = configuration;
-		var c = persistence.crud(Article.class);
+		var ac = persistence.crud(Article.class);
 		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
 				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {
-			var i = c.filter("slug", slug2);
-			var a = c.read(i).filter(x -> !x.slug().equals(slug1)).findFirst().orElse(null);
+			var i = ac.filter("slug", slug2);
+			var a = ac.read(i).filter(x -> !x.slug().equals(slug1)).findFirst().orElse(null);
 			v.isUnique("title", a);
 		}
 		if ((slug2.equals(slug1) && article.description == null) || (v.isNotBlank("description", article.description)

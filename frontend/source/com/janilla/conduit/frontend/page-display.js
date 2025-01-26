@@ -43,21 +43,22 @@ export default class PageDisplay extends UpdatableHTMLElement {
 		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const nn = this.dataset.path.split("/");
 		const hs = history.state ?? {};
-		const rl = this.closest("root-layout");
 		const pp = {
 			articlePage: (() => {
 				const a = nn[1] === "article";
+				const a2 = hs["article-page"]?.article;
 				return {
 					$template: "article-page",
-					slot: a ? (hs.article?.slug === nn[2] ? "content" : "content2") : null,
+					slot: a ? (a2 && a2.slug == nn[2] ? "content" : "content2") : null,
 					slug: a ? nn[2] : null
 				};
 			})(),
 			editorPage: (() => {
 				const a = nn[1] === "editor";
+				const a2 = hs["editor-page"]?.article;
 				return {
 					$template: "editor-page",
-					slot: a ? (hs.article?.slug === nn[2] ? "content" : "content2") : null,
+					slot: a ? (a2 && a2.slug == nn[2] ? "content" : "content2") : null,
 					slug: a ? nn[2] : null
 				};
 			})(),
@@ -72,10 +73,10 @@ export default class PageDisplay extends UpdatableHTMLElement {
 			profilePage: (() => {
 				const a = nn[1]?.startsWith("@");
 				const u = a ? decodeURIComponent(nn[1].substring(1)) : null;
+				const s = a ? hs["profile-page"] : null;
 				return {
 					$template: "profile-page",
-					slot: a ? (hs.profile?.username === u ? "content" : "content2") : null,
-					tab: hs.tab ?? "author",
+					slot: a ? (s?.profile && s.profile.username == u ? "content" : "content2") : null,
 					username: u
 				};
 			})(),

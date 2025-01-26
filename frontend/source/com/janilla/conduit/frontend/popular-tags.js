@@ -74,7 +74,7 @@ export default class PopularTags extends UpdatableHTMLElement {
 			const rl = this.closest("root-layout");
 			const u = new URL(rl.dataset.apiUrl);
 			u.pathname += "/tags";
-			const j = await (await fetch(u, { headers: rl.apiHeaders })).json();
+			const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
 			const o = {
 				version: (s.version ?? 0) + 1,
 				tags: j.tags

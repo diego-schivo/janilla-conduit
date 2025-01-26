@@ -53,15 +53,16 @@ export default class CommentList extends UpdatableHTMLElement {
 			return;
 		event.preventDefault();
 		const el = event.target.closest(".card");
-		const i = Array.prototype.findIndex.call(el.parentElement.children, x => x === el);
-		const rl = this.closest("root-layout");
-		const c = rl.state.comments[i];
-		const u = new URL(rl.dataset.apiUrl);
+		const els = el.parentElement.querySelectorAll(":scope > .card");
+		const i = Array.prototype.findIndex.call(els, x => x === el);
 		const ap = this.closest("article-page");
+		const c = ap.state.comments[i];
+		const rl = this.closest("root-layout");
+		const u = new URL(rl.dataset.apiUrl);
 		u.pathname += `/articles/${ap.dataset.slug}/comments/${c.id}`;
 		const r = await fetch(u, {
 			method: "DELETE",
-			headers: rl.apiHeaders
+			headers: rl.state.apiHeaders
 		});
 		if (r.ok)
 			this.dispatchEvent(new CustomEvent("remove-comment", {
@@ -80,7 +81,7 @@ export default class CommentList extends UpdatableHTMLElement {
 		const r = await fetch(u, {
 			method: "POST",
 			headers: {
-				...rl.apiHeaders,
+				...rl.state.apiHeaders,
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({ comment: Object.fromEntries(new FormData(event.target)) })
@@ -103,15 +104,15 @@ export default class CommentList extends UpdatableHTMLElement {
 		const ap = this.closest("article-page");
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			form: rl.currentUser ? {
+			form: rl.state.currentUser ? {
 				$template: "authenticated",
-				...rl.currentUser,
+				...rl.state.currentUser,
 				errorMessages: this.errorMessages
 			} : { $template: "unauthenticated" },
 			cards: ap.state.comments.map(x => ({
 				$template: "card",
 				...x,
-				modOptions: x.author.username === rl.currentUser?.username ? { $template: "mod-options" } : null
+				modOptions: x.author.username === rl.state.currentUser?.username ? { $template: "mod-options" } : null
 			}))
 		}));
 	}

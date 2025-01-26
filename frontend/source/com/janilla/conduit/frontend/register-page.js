@@ -25,10 +25,6 @@ import { UpdatableHTMLElement } from "./updatable-html-element.js";
 
 export default class RegisterPage extends UpdatableHTMLElement {
 
-	static get observedAttributes() {
-		return ["slot"];
-	}
-
 	static get templateName() {
 		return "register-page";
 	}
@@ -55,36 +51,31 @@ export default class RegisterPage extends UpdatableHTMLElement {
 		const rl = this.closest("root-layout");
 		const u = new URL(rl.dataset.apiUrl);
 		u.pathname += "/users";
+		const u2 = Object.fromEntries(new FormData(event.target));
 		const r = await fetch(u, {
 			method: "POST",
 			headers: {
-				...rl.apiHeaders,
+				...rl.state.apiHeaders,
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify({ user: Object.fromEntries(new FormData(event.target)) })
+			body: JSON.stringify({ user: u2 })
 		});
 		const j = await r.json();
+		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 		if (r.ok) {
 			this.dispatchEvent(new CustomEvent("set-current-user", {
 				bubbles: true,
 				detail: { user: j.user }
 			}));
 			location.hash = "#/";
-		} else {
-			this.state.errorMessages = j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
+		} else
 			this.requestUpdate();
-		}
 	}
 
 	async updateDisplay() {
 		// console.log("RegisterPage.updateDisplay");
-		if (this.slot && !this.state)
-			this.state = {};
-		if (!this.slot && this.state)
-			this.state = null;
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			...this.state,
 			errorMessages: this.state.errorMessages?.join(";")
 		}));
 	}

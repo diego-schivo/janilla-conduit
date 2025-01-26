@@ -72,7 +72,7 @@ export default class PaginationNav extends UpdatableHTMLElement {
 				const pn = this.dataset.pageNumber ? parseInt(this.dataset.pageNumber) : 1;
 				return pc > 1 ? Array.from({ length: pc }, (_, i) => ({
 					$template: "item",
-					active: `${i + 1 === pn ? "active" : ""}`,
+					active: i + 1 === pn ? "active" : null,
 					number: i + 1
 				})) : null;
 			})()

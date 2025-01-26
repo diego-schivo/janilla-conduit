@@ -27,7 +27,7 @@ import { formatMarkdownAsHtml, parseMarkdown } from "./markdown.js";
 export default class ArticlePage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-slug", "slot"];
+		return ["slot"];
 	}
 
 	static get templateName() {
@@ -41,6 +41,9 @@ export default class ArticlePage extends UpdatableHTMLElement {
 	connectedCallback() {
 		// console.log("ArticlePage.connectedCallback");
 		super.connectedCallback();
+		const s = history.state?.["article-page"];
+		if (s)
+			Object.assign(this.state, s);
 		this.addEventListener("add-comment", this.handleAddComment);
 		this.addEventListener("click", this.handleClick);
 		this.addEventListener("remove-comment", this.handleRemoveComment);
@@ -60,8 +63,8 @@ export default class ArticlePage extends UpdatableHTMLElement {
 
 	handleAddComment = event => {
 		// console.log("ArticlePage.handleAddComment", event);
-		const rl = this.closest("root-layout");
-		rl.state.comments.unshift(event.detail.comment);
+		this.state.comments.unshift(event.detail.comment);
+		this.updateHistory();
 		this.querySelector("comment-list").requestUpdate();
 	}
 
@@ -81,7 +84,7 @@ export default class ArticlePage extends UpdatableHTMLElement {
 				u.pathname += `/articles/${this.dataset.slug}`;
 				const r = await fetch(u, {
 					method: "DELETE",
-					headers: rl.apiHeaders
+					headers: rl.state.apiHeaders
 				});
 				if (r.ok)
 					location.hash = "#/";
@@ -91,10 +94,10 @@ export default class ArticlePage extends UpdatableHTMLElement {
 
 	handleRemoveComment = event => {
 		// console.log("ArticlePage.handleRemoveComment", event);
-		const rl = this.closest("root-layout");
-		const cc = rl.state.comments;
+		const cc = this.state.comments;
 		const i = cc.findIndex(x => x === event.detail.comment);
 		cc.splice(i, 1);
+		this.updateHistory();
 		this.querySelector("comment-list").requestUpdate();
 	}
 
@@ -115,22 +118,22 @@ export default class ArticlePage extends UpdatableHTMLElement {
 	async updateDisplay() {
 		// console.log("ArticlePage.updateDisplay");
 		const s = this.state;
-		if (!s.article)
-			Object.assign(s, history.state);
 		const rl = this.closest("root-layout");
-		if (!s.article) {
+		if (!s.article || this.dataset.slug != s.article.slug) {
 			const uu = Array.from({ length: 2 }, () => new URL(rl.dataset.apiUrl));
 			uu[0].pathname += `/articles/${this.dataset.slug}`;
 			uu[1].pathname += `/articles/${this.dataset.slug}/comments`;
-			const [{ article }, { comments }] = await Promise.all(uu.map(x => {
-				const p = fetch(x, { headers: rl.apiHeaders }).then(y => y.json());
+			const [j1, j2] = await Promise.all(uu.map(x => {
+				const p = fetch(x, { headers: rl.state.apiHeaders }).then(y => y.json());
 				return p;
 			}));
-			history.replaceState({
-				article,
-				comments
-			}, "");
-			Object.assign(s, history.state);
+			const o = {
+				version: (s.version ?? 0) + 1,
+				article: j1.article,
+				comments: j2.comments
+			};
+			Object.assign(s, o);
+			this.updateHistory();
 			this.closest("page-display").requestUpdate();
 			return;
 		}
@@ -147,7 +150,7 @@ export default class ArticlePage extends UpdatableHTMLElement {
 			meta: Array.from({ length: 2 }, () => ({
 				$template: "meta",
 				...s.article,
-				content: s.article.author.username === rl.currentUser?.username
+				content: s.article.author.username === rl.state.currentUser?.username
 					? ({ $template: "can-modify" })
 					: ({
 						$template: "cannot-modify",
@@ -159,5 +162,14 @@ export default class ArticlePage extends UpdatableHTMLElement {
 				text: x
 			}))
 		}));
+	}
+
+	updateHistory = () => {
+		// console.log("ArticlePage.updateHistory");
+		const s = this.state;
+		history.replaceState({
+			...history.state,
+			"article-page": Object.fromEntries(["version", "article", "comments"].map(x => [x, s[x]]))
+		}, "");
 	}
 }

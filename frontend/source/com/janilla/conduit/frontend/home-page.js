@@ -33,6 +33,14 @@ export default class HomePage extends UpdatableHTMLElement {
 		super();
 	}
 
+	get historyState() {
+		const s = this.state;
+		return {
+			...history.state,
+			"home-page": Object.fromEntries(["tab", "tag"].map(x => [x, s[x]]))
+		};
+	}
+
 	connectedCallback() {
 		// console.log("HomePage.connectedCallback");
 		super.connectedCallback();
@@ -57,29 +65,22 @@ export default class HomePage extends UpdatableHTMLElement {
 			return;
 		event.preventDefault();
 		event.stopPropagation();
-		if (!el.classList.contains("active")) {
-			history.pushState({
-				...history.state,
-				"home-page": {
-					version: this.state.version + 1,
-					tab: el.dataset.href.substring(1)
-				}
-			}, "");
-			dispatchEvent(new CustomEvent("popstate"));
-		}
+		if (el.classList.contains("active"))
+			return;
+		const s = this.state;
+		s.tab = el.dataset.href.substring(1);
+		s.tag = null;
+		history.pushState(this.historyState, "");
+		this.requestUpdate();
 	}
 
 	handleSelectTag = event => {
 		// console.log("HomePage.handleSelectTag", event);
-		history.pushState({
-			...history.state,
-			"home-page": {
-				version: this.state.version + 1,
-				tab: "tag",
-				tag: event.detail.tag
-			}
-		}, "");
-		dispatchEvent(new CustomEvent("popstate"));
+		const s = this.state;
+		s.tab = "tag";
+		s.tag = event.detail.tag;
+		history.pushState(this.historyState, "");
+		this.requestUpdate();
 	}
 
 	async updateDisplay() {
@@ -87,22 +88,15 @@ export default class HomePage extends UpdatableHTMLElement {
 		const s = this.state;
 		const rl = this.closest("root-layout");
 		if (!s.tab) {
-			const o = {
-				version: (s.version ?? 0) + 1,
-				tab: rl.currentUser ? "feed" : "all"
-			};
-			Object.assign(s, o);
-			history.replaceState({
-				...history.state,
-				"home-page": o
-			}, "");
+			s.tab = rl.state.currentUser ? "feed" : "all";
+			history.replaceState(this.historyState, "");
 		}
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			banner: rl.currentUser ? null : { $template: "banner" },
+			banner: rl.state.currentUser ? null : { $template: "banner" },
 			tabItems: (() => {
 				const ii = [];
-				if (rl.currentUser)
+				if (rl.state.currentUser)
 					ii.push({
 						href: "#feed",
 						text: "Your Feed"
@@ -120,7 +114,7 @@ export default class HomePage extends UpdatableHTMLElement {
 				return ii.map(x => ({
 					$template: "tab-item",
 					...x,
-					active: x.href.substring(1) === s.tab ? "active" : "",
+					active: x.href.substring(1) === s.tab ? "active" : null,
 				}));
 			})(),
 			articlesUrl: (() => {

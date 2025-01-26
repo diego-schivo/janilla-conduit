@@ -53,7 +53,7 @@ export default class FollowButton extends UpdatableHTMLElement {
 		// console.log("FollowButton.handleClick", event);
 		event.stopPropagation();
 		const rl = this.closest("root-layout");
-		if (!rl.currentUser) {
+		if (!rl.state.currentUser) {
 			location.hash = "#/login";
 			return;
 		}
@@ -61,7 +61,7 @@ export default class FollowButton extends UpdatableHTMLElement {
 		u.pathname += `/profiles/${this.dataset.username}/follow`;
 		const r = await fetch(u, {
 			method: this.dataset.active != null ? "DELETE" : "POST",
-			headers: rl.apiHeaders
+			headers: rl.state.apiHeaders
 		});
 		if (r.ok) {
 			this.dispatchEvent(new CustomEvent("toggle-follow", {
@@ -77,7 +77,7 @@ export default class FollowButton extends UpdatableHTMLElement {
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...this.dataset,
-			class: `btn btn-sm action-btn ${a ? "btn-secondary" : "btn-outline-secondary"}`,
+			secondary: a ? "btn-secondary" : "btn-outline-secondary",
 			text: `${a ? "Unfollow" : "Follow"} ${this.dataset.username}`
 		}));
 	}

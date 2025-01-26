@@ -53,7 +53,7 @@ export default class FavoriteButton extends UpdatableHTMLElement {
 		// console.log("FavoriteButton.handleClick", event);
 		event.stopPropagation();
 		const rl = this.closest("root-layout");
-		if (!rl.currentUser) {
+		if (!rl.state.currentUser) {
 			location.hash = "#/login";
 			return;
 		}
@@ -61,7 +61,7 @@ export default class FavoriteButton extends UpdatableHTMLElement {
 		u.pathname += `/articles/${this.dataset.slug}/favorite`;
 		const r = await fetch(u, {
 			method: this.dataset.active != null ? "DELETE" : "POST",
-			headers: rl.apiHeaders
+			headers: rl.state.apiHeaders
 		});
 		if (r.ok) {
 			this.dispatchEvent(new CustomEvent("toggle-favorite", {
@@ -78,7 +78,8 @@ export default class FavoriteButton extends UpdatableHTMLElement {
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...this.dataset,
-			class: `btn btn-sm ${a ? "btn-primary" : "btn-outline-primary"} ${p ? "pull-xs-right" : ""}`,
+			primary: a ? "btn-primary" : "btn-outline-primary",
+			pull: p ? "pull-xs-right" : null,
 			content: p ? {
 				$template: "preview-content",
 				...this.dataset

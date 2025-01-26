@@ -77,7 +77,7 @@ export default class ArticleList extends UpdatableHTMLElement {
 			const pn = s.pageNumber ?? 1;
 			u.searchParams.append("skip", (pn - 1) * 10);
 			u.searchParams.append("limit", 10);
-			const j = await (await fetch(u, { headers: this.closest("root-layout").apiHeaders })).json();
+			const j = await (await fetch(u, { headers: this.closest("root-layout").state.apiHeaders })).json();
 			const o = {
 				version: (s.version ?? 0) + 1,
 				apiUrl: this.dataset.apiUrl,

@@ -26,28 +26,31 @@ import { UpdatableHTMLElement } from "./updatable-html-element.js";
 export default class ProfilePage extends UpdatableHTMLElement {
 
 	static get observedAttributes() {
-		return ["data-tab", "data-username", "slot"];
+		return ["slot"];
 	}
 
 	static get templateName() {
 		return "profile-page";
 	}
 
-	tabItems = [{
-		href: "#author",
-		text: "My Articles"
-	}, {
-		href: "#favorited",
-		text: "Favorited Articles"
-	}];
-
 	constructor() {
 		super();
+	}
+
+	get historyState() {
+		const s = this.state;
+		return {
+			...history.state,
+			"profile-page": Object.fromEntries(["profile", "tab"].map(x => [x, s[x]]))
+		};
 	}
 
 	connectedCallback() {
 		// console.log("ProfilePage.connectedCallback");
 		super.connectedCallback();
+		const s = history.state?.["profile-page"];
+		if (s)
+			Object.assign(this.state, s);
 		this.addEventListener("click", this.handleClick);
 		this.addEventListener("toggle-follow", this.handleToggleFollow);
 	}
@@ -66,62 +69,59 @@ export default class ProfilePage extends UpdatableHTMLElement {
 			return;
 		event.preventDefault();
 		event.stopPropagation();
-		if (!el.classList.contains("active")) {
-			history.pushState({
-				...history.state,
-				id: this.closest("root-layout").nextStateId(),
-				tab: el.dataset.href.substring(1)
-			}, "");
-			dispatchEvent(new CustomEvent("popstate"));
-		}
+		if (el.classList.contains("active"))
+			return;
+		const s = this.state;
+		s.tab = el.dataset.href.substring(1);
+		history.pushState(this.historyState, "");
+		this.requestUpdate();
 	}
 
 	handleToggleFollow = event => {
 		// console.log("ProfilePage.handleToggleFollow", event);
-		const rl = this.closest("root-layout");
-		rl.state.profile = event.detail.profile;
+		this.state.profile = event.detail.profile;
+		history.replaceState(this.historyState, "");
 		this.requestUpdate();
 	}
 
 	async updateDisplay() {
 		// console.log("ProfilePage.updateDisplay");
-		const hs = history.state ?? {};
 		const s = this.state;
-		if (hs.profile !== s.profile)
-			s.profile = hs.profile;
 		const rl = this.closest("root-layout");
-		if (!s.profile) {
+		if (!s.profile || this.dataset.username != s.profile.username) {
 			const u = new URL(rl.dataset.apiUrl);
 			u.pathname += `/profiles/${this.dataset.username}`;
-			const j = await (await fetch(u, { headers: rl.apiHeaders })).json();
-			const o = { profile: j.profile };
-			Object.assign(s, o);
-			history.replaceState({
-				...hs,
-				id: rl.nextStateId(),
-				...o
-			}, "");
-			dispatchEvent(new CustomEvent("popstate"));
+			const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
+			s.profile = j.profile;
+			s.tab = "author";
+			history.replaceState(this.historyState, "");
+			this.closest("page-display").requestUpdate();
 			return;
 		}
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...s.profile,
-			action: this.dataset.username === rl.currentUser?.username
+			action: this.dataset.username === rl.state.currentUser?.username
 				? { $template: "can-modify" }
 				: {
 					$template: "cannot-modify",
 					...s.profile
 				},
-			tabItems: this.tabItems.map(x => ({
+			tabItems: [{
+				href: "#author",
+				text: "My Articles"
+			}, {
+				href: "#favorited",
+				text: "Favorited Articles"
+			}].map(x => ({
 				$template: "tab-item",
 				...x,
-				class: `nav-link ${x.href.substring(1) === this.dataset.tab ? "active" : ""}`
+				active: x.href.substring(1) === s.tab ? "active" : null
 			})),
 			articlesUrl: (() => {
 				const u = new URL(rl.dataset.apiUrl);
 				u.pathname += "/articles";
-				u.searchParams.append(this.dataset.tab, s.profile.username);
+				u.searchParams.append(s.tab, s.profile.username);
 				return u;
 			})()
 		}));

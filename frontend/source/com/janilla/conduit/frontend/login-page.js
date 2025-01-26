@@ -55,7 +55,7 @@ export default class LoginPage extends UpdatableHTMLElement {
 		const r = await fetch(u, {
 			method: "POST",
 			headers: {
-				...rl.apiHeaders,
+				...rl.state.apiHeaders,
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({ user: u2 })

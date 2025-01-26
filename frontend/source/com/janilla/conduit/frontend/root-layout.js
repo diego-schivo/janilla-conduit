@@ -33,6 +33,12 @@ export default class RootLayout extends UpdatableHTMLElement {
 		super();
 	}
 
+	get historyState() {
+		return {
+			"root-layout": { currentUser: this.state.currentUser }
+		};
+	}
+
 	connectedCallback() {
 		// console.log("RootLayout.connectedCallback");
 		super.connectedCallback();
@@ -57,45 +63,43 @@ export default class RootLayout extends UpdatableHTMLElement {
 		if (!a?.href)
 			return;
 		event.preventDefault();
-		const s = this.state;
 		const u = new URL(a.href);
-		history.pushState({
-			"root-layout": {
-				...s,
-				version: s.version + 1
-			}
-		}, "", u.pathname + u.hash);
+		history.pushState(null, "", u.pathname + u.hash);
 		dispatchEvent(new CustomEvent("popstate"));
 	}
 
 	handlePopState = event => {
 		// console.log("RootLayout.handlePopState", event);
-		const hs = history.state;
-		console.log("hs", hs);
+		const hs = event.state ?? history.state;
 		if (hs) {
 			for (const [k, v] of Object.entries(hs))
 				if (k.includes("-")) {
 					const el = document.querySelector(k);
-					if (el && v.version !== el.state.version) {
+					if (el) {
 						el.state = v;
 						el.requestUpdate();
 					}
 				}
-		} else
+		} else {
+			history.replaceState(this.historyState, "");
 			this.requestUpdate();
+		}
 	}
 
 	handleSetCurrentUser = event => {
 		// console.log("RootLayout.handleSetCurrentUser", event);
-		this.state.currentUser = event.detail.user;
-		const t = event.detail.user?.token;
-		if (t) {
-			localStorage.setItem("jwtToken", t);
-			this.state.apiHeaders["Authorization"] = `Token ${t}`;
-		} else {
+		const u = event.detail.user;
+		const s = this.state;
+		Object.assign(s, {
+			version: (s.version ?? 0) + 1,
+			currentUser: u,
+			apiHeaders: u?.token ? { Authorization: `Token ${u.token}` } : {}
+		});
+		history.replaceState(this.historyState, "");
+		if (u?.token)
+			localStorage.setItem("jwtToken", u.token);
+		else
 			localStorage.removeItem("jwtToken");
-			delete this.state.apiHeaders["Authorization"];
-		}
 	}
 
 	async updateDisplay() {
@@ -103,27 +107,22 @@ export default class RootLayout extends UpdatableHTMLElement {
 		const s = this.state;
 		if (s.currentUser === undefined) {
 			const t = localStorage.getItem("jwtToken");
-			const o = {
-				version: (s.version ?? 0) + 1,
-				currentUser: null,
-				apiHeaders: {}
-			};
+			let u;
 			if (t) {
-				const u = new URL(this.dataset.apiUrl);
-				u.pathname += "/user";
-				const j = await (await fetch(u, {
+				const u2 = new URL(this.dataset.apiUrl);
+				u2.pathname += "/user";
+				const j = await (await fetch(u2, {
 					headers: { Authorization: `Token ${t}` }
 				})).json();
-				if (j?.user) {
-					o.currentUser = j.user;
-					o.apiHeaders["Authorization"] = `Token ${j.user.token}`;
-				}
-			}
-			Object.assign(s, o);
-			history.replaceState({
-				...history.state,
-				"root-layout": o
-			}, "");
+				u = j?.user ?? null;
+			} else
+				u = null;
+			Object.assign(s, {
+				version: (s.version ?? 0) + 1,
+				currentUser: u,
+				apiHeaders: t ? { Authorization: `Token ${t}` } : {}
+			});
+			history.replaceState(this.historyState, "");
 		}
 		this.appendChild(this.interpolateDom({
 			$template: "",
@@ -160,7 +159,7 @@ export default class RootLayout extends UpdatableHTMLElement {
 					return ii.map(x => ({
 						$template: "nav-item",
 						...x,
-						active: x.href === location.hash ? "active" : "",
+						active: x.href === location.hash ? "active" : null,
 					}));
 				})()
 			}),
