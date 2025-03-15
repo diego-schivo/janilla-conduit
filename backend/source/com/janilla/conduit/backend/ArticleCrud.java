@@ -32,8 +32,8 @@ import com.janilla.persistence.Persistence;
 
 class ArticleCrud extends Crud<Article> {
 
-	public ArticleCrud(Class<Article> type, Persistence persistence) {
-		super(type, persistence);
+	public ArticleCrud(Persistence persistence) {
+		super(Article.class, persistence);
 	}
 
 	public boolean favorite(Long id, Instant createdAt, Long user) {

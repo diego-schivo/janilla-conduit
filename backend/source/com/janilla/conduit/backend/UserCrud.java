@@ -28,8 +28,8 @@ import com.janilla.persistence.Persistence;
 
 public class UserCrud extends Crud<User> {
 
-	public UserCrud(Class<User> type, Persistence persistence) {
-		super(type, persistence);
+	public UserCrud(Persistence persistence) {
+		super(User.class, persistence);
 	}
 
 	public boolean follow(Long profile, Long user) {
