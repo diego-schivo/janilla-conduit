@@ -122,7 +122,7 @@ public class ArticleApi {
 	public Object listFeed(Range range, User user) throws IOException {
 		var u = persistence.crud(User.class).filter("followList", user.id());
 		var p = u.length > 0 ? persistence.crud(Article.class).filter("author", range.skip, range.limit,
-				Arrays.stream(u).boxed().toArray()) : Crud.Page.empty();
+				Arrays.stream(u).boxed().toArray()) : Crud.IdPage.empty();
 		return Map.of("articles", persistence.crud(Article.class).read(p.ids()), "articlesCount", p.total());
 	}
 
@@ -205,7 +205,7 @@ public class ArticleApi {
 		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
 				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {
 			var i = ac.filter("slug", slug2);
-			var a = ac.read(i).filter(x -> !x.slug().equals(slug1)).findFirst().orElse(null);
+			var a = ac.read(i).stream().filter(x -> !x.slug().equals(slug1)).findFirst().orElse(null);
 			v.isUnique("title", a);
 		}
 		if ((slug2.equals(slug1) && article.description == null) || (v.isNotBlank("description", article.description)

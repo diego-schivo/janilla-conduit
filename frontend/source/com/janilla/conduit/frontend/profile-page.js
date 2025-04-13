@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 
-export default class ProfilePage extends UpdatableHTMLElement {
+export default class ProfilePage extends WebComponent {
 
 	static get observedAttributes() {
 		return ["slot"];
@@ -74,14 +74,14 @@ export default class ProfilePage extends UpdatableHTMLElement {
 		const s = this.state;
 		s.tab = el.dataset.href.substring(1);
 		history.pushState(this.historyState, "");
-		this.requestUpdate();
+		this.requestDisplay();
 	}
 
 	handleToggleFollow = event => {
 		// console.log("ProfilePage.handleToggleFollow", event);
 		this.state.profile = event.detail.profile;
 		history.replaceState(this.historyState, "");
-		this.requestUpdate();
+		this.requestDisplay();
 	}
 
 	async updateDisplay() {
@@ -95,7 +95,7 @@ export default class ProfilePage extends UpdatableHTMLElement {
 			s.profile = j.profile;
 			s.tab = "author";
 			history.replaceState(this.historyState, "");
-			this.closest("page-display").requestUpdate();
+			this.closest("page-display").requestDisplay();
 			return;
 		}
 		this.appendChild(this.interpolateDom({

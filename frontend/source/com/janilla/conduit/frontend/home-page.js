@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 
-export default class HomePage extends UpdatableHTMLElement {
+export default class HomePage extends WebComponent {
 
 	static get templateName() {
 		return "home-page";
@@ -71,7 +71,7 @@ export default class HomePage extends UpdatableHTMLElement {
 		s.tab = el.dataset.href.substring(1);
 		s.tag = null;
 		history.pushState(this.historyState, "");
-		this.requestUpdate();
+		this.requestDisplay();
 	}
 
 	handleSelectTag = event => {
@@ -80,7 +80,7 @@ export default class HomePage extends UpdatableHTMLElement {
 		s.tab = "tag";
 		s.tag = event.detail.tag;
 		history.pushState(this.historyState, "");
-		this.requestUpdate();
+		this.requestDisplay();
 	}
 
 	async updateDisplay() {

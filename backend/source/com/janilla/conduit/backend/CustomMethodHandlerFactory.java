@@ -26,11 +26,10 @@ package com.janilla.conduit.backend;
 import java.lang.reflect.Type;
 import java.util.Properties;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 
 import com.janilla.http.HeaderField;
 import com.janilla.http.HttpExchange;
-import com.janilla.json.Converter;
+import com.janilla.json.MapAndType.TypeResolver;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodHandlerFactory;
 
@@ -54,11 +53,11 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 	}
 
 	@Override
-	protected Object resolveArgument(Type type, HttpExchange exchange, Supplier<String[]> values,
-			EntryList<String, String> entries, Supplier<String> body,
-			Supplier<UnaryOperator<Converter.MapType>> resolver) {
+	protected Object resolveArgument(Type type, HttpExchange exchange, String[] values,
+			EntryList<String, String> entries, Supplier<String> body, Supplier<TypeResolver> resolver) {
 		if (type == User.class)
 			return ((CustomHttpExchange) exchange).getUser();
 		return super.resolveArgument(type, exchange, values, entries, body, resolver);
 	}
+
 }

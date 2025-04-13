@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 
-export default class LoginPage extends UpdatableHTMLElement {
+export default class LoginPage extends WebComponent {
 
 	static get templateName() {
 		return "login-page";
@@ -69,7 +69,7 @@ export default class LoginPage extends UpdatableHTMLElement {
 			}));
 			location.hash = "#/";
 		} else
-			this.requestUpdate();
+			this.requestDisplay();
 	}
 
 	async updateDisplay() {

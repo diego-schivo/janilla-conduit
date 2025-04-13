@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 
-export default class NavLink extends UpdatableHTMLElement {
+export default class NavLink extends WebComponent {
 
 	static get observedAttributes() {
 		return ["data-href", "data-icon", "data-image"];

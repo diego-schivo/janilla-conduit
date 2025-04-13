@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 
-export default class ArticlePreview extends UpdatableHTMLElement {
+export default class ArticlePreview extends WebComponent {
 
 	static get observedAttributes() {
 		return ["data-index", "data-slug"];
@@ -52,7 +52,7 @@ export default class ArticlePreview extends UpdatableHTMLElement {
 	handleToggleFavorite = event => {
 		// console.log("ArticlePreview.handleToggleFavorite", event);
 		this.closest("article-list").state.articles[parseInt(this.dataset.index)] = event.detail.article;
-		this.requestUpdate();
+		this.requestDisplay();
 	}
 
 	async updateDisplay() {

@@ -37,6 +37,7 @@ import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
+import com.janilla.json.MapAndType;
 import com.janilla.net.Net;
 import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
@@ -85,12 +86,16 @@ public class ConduitFullstack {
 
 	public ConduitFrontend frontend;
 
+	public MapAndType.TypeResolver typeResolver;
+
+	public Iterable<Class<?>> types;
+
 	public ConduitFullstack(Properties configuration) {
 		this.configuration = configuration;
 
-		factory = new Factory();
-		factory.setTypes(Util.getPackageClasses(getClass().getPackageName()).toList());
-		factory.setSource(this);
+		types = Util.getPackageClasses(getClass().getPackageName()).toList();
+		factory = new Factory(types, this);
+		typeResolver = factory.create(MapAndType.DollarTypeResolver.class);
 
 		handler = x -> {
 			var hx = (HttpExchange) x;

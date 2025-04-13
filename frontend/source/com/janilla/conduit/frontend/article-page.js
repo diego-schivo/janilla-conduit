@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 import { formatMarkdownAsHtml, parseMarkdown } from "./markdown.js";
 
-export default class ArticlePage extends UpdatableHTMLElement {
+export default class ArticlePage extends WebComponent {
 
 	static get observedAttributes() {
 		return ["slot"];
@@ -73,7 +73,7 @@ export default class ArticlePage extends UpdatableHTMLElement {
 		// console.log("ArticlePage.handleAddComment", event);
 		this.state.comments.unshift(event.detail.comment);
 		history.replaceState(this.historyState, "");
-		this.querySelector("comment-list").requestUpdate();
+		this.querySelector("comment-list").requestDisplay();
 	}
 
 	handleClick = async event => {
@@ -106,19 +106,19 @@ export default class ArticlePage extends UpdatableHTMLElement {
 		const i = cc.findIndex(x => x === event.detail.comment);
 		cc.splice(i, 1);
 		history.replaceState(this.historyState, "");
-		this.querySelector("comment-list").requestUpdate();
+		this.querySelector("comment-list").requestDisplay();
 	}
 
 	handleToggleFavorite = event => {
 		// console.log("ArticlePage.handleToggleFavorite", event);
 		this.state.article = event.detail.article;
-		this.requestUpdate();
+		this.requestDisplay();
 	}
 
 	handleToggleFollow = event => {
 		// console.log("ArticlePage.handleToggleFollow", event);
 		this.state.article.author = event.detail.profile;
-		this.requestUpdate();
+		this.requestDisplay();
 	}
 
 	async updateDisplay() {
@@ -136,7 +136,7 @@ export default class ArticlePage extends UpdatableHTMLElement {
 			s.article = j1.article;
 			s.comments = j2.comments;
 			history.replaceState(this.historyState, "");
-			this.closest("page-display").requestUpdate();
+			this.closest("page-display").requestDisplay();
 			return;
 		}
 		s.body ??= (() => {

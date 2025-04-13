@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 
-export default class EditorPage extends UpdatableHTMLElement {
+export default class EditorPage extends WebComponent {
 
 	static get observedAttributes() {
 		return ["slot"];
@@ -92,7 +92,7 @@ export default class EditorPage extends UpdatableHTMLElement {
 		if (r.ok)
 			location.hash = `#/article/${j.article.slug}`;
 		else
-			this.requestUpdate();
+			this.requestDisplay();
 	}
 
 	async updateDisplay() {
@@ -108,7 +108,7 @@ export default class EditorPage extends UpdatableHTMLElement {
 			} else
 				s.article = {};
 			history.replaceState(this.historyState, "");
-			this.closest("page-display").requestUpdate();
+			this.closest("page-display").requestDisplay();
 			return;
 		}
 		this.appendChild(this.interpolateDom({

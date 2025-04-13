@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { UpdatableHTMLElement } from "./updatable-html-element.js";
+import { WebComponent } from "./web-component.js";
 
-export default class CommentList extends UpdatableHTMLElement {
+export default class CommentList extends WebComponent {
 
 	static get templateName() {
 		return "comment-list";
@@ -95,7 +95,7 @@ export default class CommentList extends UpdatableHTMLElement {
 				detail: { comment: j.comment }
 			}));
 		} else
-			this.requestUpdate();
+			this.requestDisplay();
 	}
 
 	async updateDisplay() {
