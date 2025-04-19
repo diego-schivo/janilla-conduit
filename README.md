@@ -30,7 +30,7 @@ You can view a live demo over at <https://conduit.janilla.com/>.
 
 > **_Note:_**  if you are unfamiliar with the terminal, you can set up the project in an IDE (section below).
 
-Make sure you have Java SE Platform (JDK 23) and [Apache Maven](https://maven.apache.org/install.html) installed.
+Make sure you have Java SE Platform (JDK 24) and [Apache Maven](https://maven.apache.org/install.html) installed.
 
 From the project root, run the following command to run the fullstack application:
 
@@ -63,7 +63,7 @@ If you want to change the API URL, simply edit the `configuration.properties` fi
 So far the project has been developed with [Eclipse IDE](https://eclipseide.org/):
 
 1. download the [Eclipse Installer](https://www.eclipse.org/downloads/packages/installer)
-2. install the package for Enterprise Java and Web Developers with JRE 23
+2. install the package for Enterprise Java and Web Developers with JRE 24
 3. launch the IDE and choose Import projects from Git (with smart import)
 4. select GitHub as the repository source, then search for `janilla-conduit fork:true` and complete the wizard
 5. open the Java class `com.janilla.conduit.fullstack.ConduitFullstack` and launch Debug as Java Application
