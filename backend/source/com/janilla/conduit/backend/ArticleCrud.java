@@ -54,10 +54,11 @@ class ArticleCrud extends Crud<Article> {
 
 	@Override
 	protected void updateIndex(String name, Map<Object, Object> remove, Map<Object, Object> add) {
+//		System.out.println("ArticleCrud.updateIndex, name=" + name + ", remove=" + remove + ", add" + add);
 		persistence.database().perform((_, ii) -> {
 			super.updateIndex(name, remove, add);
 
-			if (name != null && name.equals("tagList")) {
+			if (name != null && name.equals("Article.tagList")) {
 				var m = new LinkedHashMap<String, long[]>();
 				ii.perform("Article.tagList", i -> {
 					if (remove != null)
@@ -77,6 +78,8 @@ class ArticleCrud extends Crud<Article> {
 						for (var e : m.entrySet()) {
 							var t = e.getKey();
 							var c = e.getValue();
+//							System.out.println(
+//									"ArticleCrud.updateIndex, Tag.count, t=" + t + ", c=" + Arrays.toString(c));
 							if (c[0] > 0)
 								i.remove(new Object[] { c[0] }, new String[] { t });
 							if (c[1] > 0)
