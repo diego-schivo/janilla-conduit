@@ -72,21 +72,11 @@ export default class PopularTags extends WebComponent {
 
 	async updateDisplay() {
 		// console.log("PopularTags.updateDisplay");
-		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const s = this.state;
-		if (!s.tags) {
-			this.appendChild(this.interpolateDom({
-				$template: "",
-				loadingSlot: "content"
-			}));
-			const rl = this.closest("root-layout");
-			const u = new URL(rl.dataset.apiUrl);
-			u.pathname += "/tags";
-			const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
-			s.tags = j.tags;
-			history.replaceState(this.historyState, "");
-		}
-		this.appendChild(this.interpolateDom({
+		const df = this.interpolateDom(!s.tags ? {
+			$template: "",
+			loadingSlot: "content"
+		} : {
 			$template: "",
 			emptySlot: s.tags.length ? null : "content",
 			slot: s.tags.length ? "content" : null,
@@ -94,6 +84,17 @@ export default class PopularTags extends WebComponent {
 				$template: "tag",
 				text: x
 			}))
-		}));
+		});
+		this.shadowRoot.append(...df.querySelectorAll("div:has(slot)"));
+		this.appendChild(df);
+		if (!s.tags) {
+			const rl = this.closest("root-layout");
+			const u = new URL(rl.dataset.apiUrl);
+			u.pathname += "/tags";
+			const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
+			s.tags = j.tags;
+			history.replaceState(this.historyState, "");
+			this.requestDisplay(0);
+		}
 	}
 }

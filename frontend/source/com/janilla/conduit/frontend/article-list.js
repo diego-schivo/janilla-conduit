@@ -72,13 +72,14 @@ export default class ArticleList extends WebComponent {
 
 	async updateDisplay() {
 		// console.log("ArticleList.updateDisplay");
-		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const s = this.state;
 		if (this.dataset.apiUrl != s.apiUrl) {
-			this.appendChild(this.interpolateDom({
+			const df = this.interpolateDom({
 				$template: "",
 				loadingSlot: "content"
-			}));
+			});
+			this.shadowRoot.append(...df.querySelectorAll("slot"));
+			this.appendChild(df);
 			const u = new URL(this.dataset.apiUrl);
 			const pn = s.pageNumber ?? 1;
 			u.searchParams.append("skip", (pn - 1) * 10);

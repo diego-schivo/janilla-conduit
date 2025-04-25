@@ -40,7 +40,6 @@ export default class PageDisplay extends WebComponent {
 
 	async updateDisplay() {
 		// console.log("PageDisplay.updateDisplay");
-		this.shadowRoot.appendChild(this.interpolateDom({ $template: "shadow" }));
 		const nn = this.dataset.path.split("/");
 		const hs = history.state ?? {};
 		const pp = {
@@ -94,9 +93,11 @@ export default class PageDisplay extends WebComponent {
 			if (t)
 				Array.prototype.find.call(Object.values(pp), x => x.$template === t).slot = "content";
 		}
-		this.appendChild(this.interpolateDom({
+		const df = this.interpolateDom({
 			$template: "",
 			...Object.fromEntries(Object.entries(pp).filter(([_, v]) => v.slot))
-		}));
+		});
+		this.shadowRoot.append(...df.querySelectorAll("link, slot"));
+		this.appendChild(df);
 	}
 }
