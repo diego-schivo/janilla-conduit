@@ -58,9 +58,9 @@ If you want to change the API URL, simply edit the `configuration.properties` fi
 
 ### Set up the project in an IDE
 
-[Step-by-step Video Tutorial](https://youtu.be/SwDbc8XPk-U) available on our [YouTube Channel](https://www.youtube.com/@janilla).
+[Step-by-step Video Tutorial](https://youtu.be/SwDbc8XPk-U) available on [Janilla YouTube Channel](https://www.youtube.com/@janilla).
 
-So far the project has been developed with [Eclipse IDE](https://eclipseide.org/):
+[Eclipse IDE](https://eclipseide.org/):
 
 1. download the [Eclipse Installer](https://www.eclipse.org/downloads/packages/installer)
 2. install the package for Enterprise Java and Web Developers with JRE 24
