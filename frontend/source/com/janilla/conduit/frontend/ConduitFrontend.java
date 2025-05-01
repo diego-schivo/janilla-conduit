@@ -26,16 +26,14 @@ package com.janilla.conduit.frontend;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
 
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpProtocol;
+import com.janilla.http.HttpServer;
 import com.janilla.json.MapAndType;
 import com.janilla.net.Net;
-import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
@@ -58,19 +56,16 @@ public class ConduitFrontend {
 				}
 			}
 			var cf = new ConduitFrontend(pp);
-			Server s;
+			HttpServer s;
 			{
-				var a = new InetSocketAddress(
-						Integer.parseInt(cf.configuration.getProperty("conduit.frontend.server.port")));
 				SSLContext sc;
 				try (var is = Net.class.getResourceAsStream("testkeys")) {
 					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
 				}
-				var p = cf.factory.create(HttpProtocol.class,
-						Map.of("handler", cf.handler, "sslContext", sc, "useClientMode", false));
-				s = new Server(a, p);
+				s = new HttpServer(sc, cf.handler);
 			}
-			s.serve();
+			var p = Integer.parseInt(cf.configuration.getProperty("conduit.frontend.server.port"));
+			s.serve(new InetSocketAddress(p));
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

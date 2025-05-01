@@ -32,10 +32,9 @@ import java.util.Properties;
 import javax.net.ssl.SSLContext;
 
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpProtocol;
+import com.janilla.http.HttpServer;
 import com.janilla.json.MapAndType;
 import com.janilla.net.Net;
-import com.janilla.net.Server;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Factory;
@@ -59,19 +58,16 @@ public class ConduitBackend {
 				}
 			}
 			var cb = new ConduitBackend(pp);
-			Server s;
+			HttpServer s;
 			{
-				var a = new InetSocketAddress(
-						Integer.parseInt(cb.configuration.getProperty("conduit.backend.server.port")));
 				SSLContext sc;
 				try (var is = Net.class.getResourceAsStream("testkeys")) {
 					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
 				}
-				var p = cb.factory.create(HttpProtocol.class,
-						Map.of("handler", cb.handler, "sslContext", sc, "useClientMode", false));
-				s = new Server(a, p);
+				s = cb.factory.create(HttpServer.class, Map.of("sslContext", sc, "handler", cb.handler));
 			}
-			s.serve();
+			var p = Integer.parseInt(cb.configuration.getProperty("conduit.backend.server.port"));
+			s.serve(new InetSocketAddress(p));
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

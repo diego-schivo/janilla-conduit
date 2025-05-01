@@ -34,10 +34,9 @@ import javax.net.ssl.SSLContext;
 import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpProtocol;
+import com.janilla.http.HttpServer;
 import com.janilla.json.MapAndType;
 import com.janilla.net.Net;
-import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerBuilder;
@@ -60,19 +59,16 @@ public class ConduitTesting {
 				}
 			}
 			var ct = new ConduitTesting(pp);
-			Server s;
+			HttpServer s;
 			{
-				var a = new InetSocketAddress(
-						Integer.parseInt(ct.configuration.getProperty("conduit.testing.server.port")));
 				SSLContext sc;
 				try (var is = Net.class.getResourceAsStream("testkeys")) {
 					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
 				}
-				var p = ct.factory.create(HttpProtocol.class,
-						Map.of("handler", ct.handler, "sslContext", sc, "useClientMode", false));
-				s = new Server(a, p);
+				s = ct.factory.create(HttpServer.class, Map.of("sslContext", sc, "handler", ct.handler));
 			}
-			s.serve();
+			var p = Integer.parseInt(ct.configuration.getProperty("conduit.testing.server.port"));
+			s.serve(new InetSocketAddress(p));
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

@@ -21,26 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
+package com.janilla.conduit.testing;
 
 import javax.net.ssl.SSLContext;
 
+import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
-import com.janilla.reflect.Factory;
+import com.janilla.http.HttpServer;
 
-public class CustomHttpProtocol extends HttpProtocol {
+public class CustomHttpServer extends HttpServer {
 
-	public Factory factory;
+	public ConduitFullstack fullstack;
 
-	public CustomHttpProtocol(HttpHandler handler, SSLContext sslContext, boolean useClientMode) {
-		super(handler, sslContext, useClientMode);
+	public CustomHttpServer(SSLContext sslContext, HttpHandler handler) {
+		super(sslContext, handler);
 	}
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request) {
-		return factory.create(HttpExchange.class);
+		return Test.ongoing.get() && request.getPath().startsWith("/api/")
+				? fullstack.backend.factory.create(HttpExchange.class)
+				: super.createExchange(request);
 	}
 }

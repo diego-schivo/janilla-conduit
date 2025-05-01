@@ -35,11 +35,10 @@ import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.conduit.frontend.ConduitFrontend;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpServer;
 import com.janilla.json.MapAndType;
 import com.janilla.net.Net;
-import com.janilla.net.Server;
 import com.janilla.reflect.Factory;
 import com.janilla.util.Util;
 
@@ -58,19 +57,16 @@ public class ConduitFullstack {
 				}
 			}
 			var cf = new ConduitFullstack(pp);
-			Server s;
+			HttpServer s;
 			{
-				var a = new InetSocketAddress(
-						Integer.parseInt(cf.configuration.getProperty("conduit.fullstack.server.port")));
 				SSLContext sc;
 				try (var is = Net.class.getResourceAsStream("testkeys")) {
 					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
 				}
-				var p = cf.factory.create(HttpProtocol.class,
-						Map.of("handler", cf.handler, "sslContext", sc, "useClientMode", false));
-				s = new Server(a, p);
+				s = cf.factory.create(HttpServer.class, Map.of("sslContext", sc, "handler", cf.handler));
 			}
-			s.serve();
+			var p = Integer.parseInt(cf.configuration.getProperty("conduit.fullstack.server.port"));
+			s.serve(new InetSocketAddress(p));
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

@@ -28,15 +28,15 @@ import javax.net.ssl.SSLContext;
 import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpProtocol;
 import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpServer;
 
-public class CustomHttpProtocol extends HttpProtocol {
+public class CustomHttpServer extends HttpServer {
 
 	public ConduitBackend backend;
 
-	public CustomHttpProtocol(HttpHandler handler, SSLContext sslContext, boolean useClientMode) {
-		super(handler, sslContext, useClientMode);
+	public CustomHttpServer(SSLContext sslContext, HttpHandler handler) {
+		super(sslContext, handler);
 	}
 
 	@Override
