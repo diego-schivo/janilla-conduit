@@ -25,7 +25,6 @@ package com.janilla.conduit.backend;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -121,8 +120,8 @@ public class ArticleApi {
 	@Handle(method = "GET", path = "/api/articles/feed")
 	public Object listFeed(Range range, User user) throws IOException {
 		var u = persistence.crud(User.class).filter("followList", user.id());
-		var p = u.length > 0 ? persistence.crud(Article.class).filter("author", range.skip, range.limit,
-				Arrays.stream(u).boxed().toArray()) : Crud.IdPage.empty();
+		var p = !u.isEmpty() ? persistence.crud(Article.class).filter("author", range.skip, range.limit, u.toArray())
+				: Crud.IdPage.<Long>empty();
 		return Map.of("articles", persistence.crud(Article.class).read(p.ids()), "articlesCount", p.total());
 	}
 

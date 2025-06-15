@@ -29,8 +29,8 @@ export default class NavLink extends WebComponent {
 		return ["data-href", "data-icon", "data-image"];
 	}
 
-	static get templateName() {
-		return "nav-link";
+	static get templateNames() {
+		return ["nav-link"];
 	}
 
 	constructor() {

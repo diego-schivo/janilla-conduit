@@ -29,8 +29,8 @@ export default class EditorPage extends WebComponent {
 		return ["slot"];
 	}
 
-	static get templateName() {
-		return "editor-page";
+	static get templateNames() {
+		return ["editor-page"];
 	}
 
 	constructor() {

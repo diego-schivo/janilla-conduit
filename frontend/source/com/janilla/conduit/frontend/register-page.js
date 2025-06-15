@@ -25,8 +25,8 @@ import WebComponent from "./web-component.js";
 
 export default class RegisterPage extends WebComponent {
 
-	static get templateName() {
-		return "register-page";
+	static get templateNames() {
+		return ["register-page"];
 	}
 
 	constructor() {

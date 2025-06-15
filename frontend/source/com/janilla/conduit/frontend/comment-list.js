@@ -25,8 +25,8 @@ import WebComponent from "./web-component.js";
 
 export default class CommentList extends WebComponent {
 
-	static get templateName() {
-		return "comment-list";
+	static get templateNames() {
+		return ["comment-list"];
 	}
 
 	constructor() {

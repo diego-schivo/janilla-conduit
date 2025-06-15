@@ -29,8 +29,8 @@ export default class PageDisplay extends WebComponent {
 		return ["data-path"];
 	}
 
-	static get templateName() {
-		return "page-display";
+	static get templateNames() {
+		return ["page-display"];
 	}
 
 	constructor() {

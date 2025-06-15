@@ -29,8 +29,8 @@ export default class FavoriteButton extends WebComponent {
 		return ["data-active", "data-count", "data-preview"];
 	}
 
-	static get templateName() {
-		return "favorite-button";
+	static get templateNames() {
+		return ["favorite-button"];
 	}
 
 	constructor() {

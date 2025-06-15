@@ -29,8 +29,8 @@ export default class ErrorList extends WebComponent {
 		return ["data-messages"];
 	}
 
-	static get templateName() {
-		return "error-list";
+	static get templateNames() {
+		return ["error-list"];
 	}
 
 	constructor() {

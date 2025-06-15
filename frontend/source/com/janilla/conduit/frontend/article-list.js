@@ -29,8 +29,8 @@ export default class ArticleList extends WebComponent {
 		return ["data-api-url"];
 	}
 
-	static get templateName() {
-		return "article-list";
+	static get templateNames() {
+		return ["article-list"];
 	}
 
 	constructor() {

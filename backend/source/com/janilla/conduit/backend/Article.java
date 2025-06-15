@@ -26,6 +26,7 @@ package com.janilla.conduit.backend;
 import java.time.Instant;
 import java.util.Collection;
 
+import com.janilla.persistence.Entity;
 import com.janilla.persistence.Index;
 import com.janilla.persistence.Store;
 
@@ -33,5 +34,5 @@ import com.janilla.persistence.Store;
 @Index(sort = "-createdAt")
 public record Article(Long id, @Index String slug, String title, String description, String body,
 		@Index(sort = "-createdAt") Collection<String> tagList, Instant createdAt, Instant updatedAt,
-		@Index(sort = "-createdAt") Long author) {
+		@Index(sort = "-createdAt") Long author) implements Entity<Long> {
 }

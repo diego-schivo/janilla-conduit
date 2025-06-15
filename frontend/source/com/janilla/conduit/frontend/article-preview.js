@@ -29,8 +29,8 @@ export default class ArticlePreview extends WebComponent {
 		return ["data-index", "data-slug"];
 	}
 
-	static get templateName() {
-		return "article-preview";
+	static get templateNames() {
+		return ["article-preview"];
 	}
 
 	constructor() {

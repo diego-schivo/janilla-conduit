@@ -25,8 +25,8 @@ import WebComponent from "./web-component.js";
 
 export default class SettingsPage extends WebComponent {
 
-	static get templateName() {
-		return "settings-page";
+	static get templateNames() {
+		return ["settings-page"];
 	}
 
 	constructor() {

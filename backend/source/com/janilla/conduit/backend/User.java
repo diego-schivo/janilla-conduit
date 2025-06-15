@@ -23,10 +23,11 @@
  */
 package com.janilla.conduit.backend;
 
+import com.janilla.persistence.Entity;
 import com.janilla.persistence.Index;
 import com.janilla.persistence.Store;
 
 @Store
 public record User(Long id, @Index String email, String hash, String salt, @Index String username, String bio,
-		String image) {
+		String image) implements Entity<Long> {
 }

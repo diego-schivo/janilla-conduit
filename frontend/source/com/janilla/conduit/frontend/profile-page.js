@@ -29,8 +29,8 @@ export default class ProfilePage extends WebComponent {
 		return ["slot"];
 	}
 
-	static get templateName() {
-		return "profile-page";
+	static get templateNames() {
+		return ["profile-page"];
 	}
 
 	constructor() {

@@ -29,8 +29,8 @@ export default class PaginationNav extends WebComponent {
 		return ["data-pages-count", "data-page-number"];
 	}
 
-	static get templateName() {
-		return "pagination-nav";
+	static get templateNames() {
+		return ["pagination-nav"];
 	}
 
 	constructor() {

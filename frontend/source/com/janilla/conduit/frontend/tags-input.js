@@ -29,8 +29,8 @@ export default class TagsInput extends WebComponent {
 		return ["data-values"];
 	}
 
-	static get templateName() {
-		return "tags-input";
+	static get templateNames() {
+		return ["tags-input"];
 	}
 
 	constructor() {

@@ -30,7 +30,7 @@ import java.util.Map;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
 
-class ArticleCrud extends Crud<Article> {
+class ArticleCrud extends Crud<Long, Article> {
 
 	public ArticleCrud(Persistence persistence) {
 		super(Article.class, persistence);

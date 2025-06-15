@@ -25,8 +25,8 @@ import WebComponent from "./web-component.js";
 
 export default class HomePage extends WebComponent {
 
-	static get templateName() {
-		return "home-page";
+	static get templateNames() {
+		return ["home-page"];
 	}
 
 	constructor() {

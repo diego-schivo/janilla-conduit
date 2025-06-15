@@ -26,7 +26,7 @@ package com.janilla.conduit.backend;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
 
-public class UserCrud extends Crud<User> {
+public class UserCrud extends Crud<Long, User> {
 
 	public UserCrud(Persistence persistence) {
 		super(User.class, persistence);

@@ -25,8 +25,8 @@ import WebComponent from "./web-component.js";
 
 export default class PopularTags extends WebComponent {
 
-	static get templateName() {
-		return "popular-tags";
+	static get templateNames() {
+		return ["popular-tags"];
 	}
 
 	constructor() {

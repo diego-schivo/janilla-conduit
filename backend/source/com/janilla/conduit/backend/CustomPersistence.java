@@ -32,11 +32,12 @@ import com.janilla.database.NameAndData;
 import com.janilla.io.ByteConverter;
 import com.janilla.json.MapAndType.TypeResolver;
 import com.janilla.persistence.Crud;
+import com.janilla.persistence.Entity;
 import com.janilla.persistence.Persistence;
 
 public class CustomPersistence extends Persistence {
 
-	public CustomPersistence(Database database, Iterable<Class<?>> types, TypeResolver typeResolver) {
+	public CustomPersistence(Database database, Iterable<Class<? extends Entity<?>>> types, TypeResolver typeResolver) {
 		super(database, types, typeResolver);
 	}
 
@@ -78,15 +79,15 @@ public class CustomPersistence extends Persistence {
 	}
 
 	@Override
-	protected <E> Crud<E> newCrud(Class<E> type) {
+	protected <E extends Entity<?>> Crud<?, E> newCrud(Class<E> type) {
 		if (type == Article.class) {
 			@SuppressWarnings("unchecked")
-			var c = (Crud<E>) new ArticleCrud(this);
+			var c = (Crud<?, E>) new ArticleCrud(this);
 			return c;
 		}
 		if (type == User.class) {
 			@SuppressWarnings("unchecked")
-			var c = (Crud<E>) new UserCrud(this);
+			var c = (Crud<?, E>) new UserCrud(this);
 			return c;
 		}
 		return super.newCrud(type);

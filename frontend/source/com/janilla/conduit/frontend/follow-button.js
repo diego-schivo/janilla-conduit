@@ -29,8 +29,8 @@ export default class FollowButton extends WebComponent {
 		return ["data-active", "data-username"];
 	}
 
-	static get templateName() {
-		return "follow-button";
+	static get templateNames() {
+		return ["follow-button"];
 	}
 
 	constructor() {

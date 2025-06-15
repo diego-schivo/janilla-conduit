@@ -30,8 +30,8 @@ export default class ArticlePage extends WebComponent {
 		return ["slot"];
 	}
 
-	static get templateName() {
-		return "article-page";
+	static get templateNames() {
+		return ["article-page"];
 	}
 
 	constructor() {

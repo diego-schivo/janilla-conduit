@@ -24,7 +24,6 @@
 package com.janilla.conduit.backend;
 
 import java.util.AbstractMap;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -89,10 +88,8 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 						return new AbstractMap.SimpleEntry<>(x.name(), v);
 					}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
 					var u = user.get();
-					m.put("favorited",
-							u != null && a.id() != null
-									&& Arrays.stream(persistence.crud(Article.class).filter("favoriteList", u.id()))
-											.anyMatch(x -> x == a.id()));
+					m.put("favorited", u != null && a.id() != null && persistence.crud(Article.class)
+							.filter("favoriteList", u.id()).stream().anyMatch(x -> x == a.id()));
 					m.put("favoritesCount",
 							a.id() != null ? persistence.crud(User.class).count("favoriteList", a.id()) : 0);
 					object = m;
@@ -107,9 +104,8 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 						return new AbstractMap.SimpleEntry<>(x.name(), w);
 					}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
 					var v = user.get();
-					m.put("following",
-							v != null && Arrays.stream(persistence.crud(User.class).filter("followList", v.id()))
-									.anyMatch(x -> x == u.id()));
+					m.put("following", v != null && persistence.crud(User.class).filter("followList", v.id()).stream()
+							.anyMatch(x -> x == u.id()));
 					object = m;
 				}
 					break;
