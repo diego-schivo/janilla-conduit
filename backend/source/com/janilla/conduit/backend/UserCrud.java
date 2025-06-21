@@ -29,7 +29,12 @@ import com.janilla.persistence.Persistence;
 public class UserCrud extends Crud<Long, User> {
 
 	public UserCrud(Persistence persistence) {
-		super(User.class, persistence);
+		super(User.class, x -> {
+			var v = x.get("nextId");
+			var l = v != null ? (long) v : 1L;
+			x.put("nextId", l + 1);
+			return l;
+		}, persistence);
 	}
 
 	public boolean follow(Long profile, Long user) {

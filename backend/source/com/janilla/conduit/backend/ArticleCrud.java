@@ -33,7 +33,12 @@ import com.janilla.persistence.Persistence;
 class ArticleCrud extends Crud<Long, Article> {
 
 	public ArticleCrud(Persistence persistence) {
-		super(Article.class, persistence);
+		super(Article.class, x -> {
+			var v = x.get("nextId");
+			var l = v != null ? (long) v : 1L;
+			x.put("nextId", l + 1);
+			return l;
+		}, persistence);
 	}
 
 	public boolean favorite(Long id, Instant createdAt, Long user) {

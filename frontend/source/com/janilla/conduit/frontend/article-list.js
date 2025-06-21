@@ -73,13 +73,28 @@ export default class ArticleList extends WebComponent {
 	async updateDisplay() {
 		// console.log("ArticleList.updateDisplay");
 		const s = this.state;
-		if (this.dataset.apiUrl != s.apiUrl) {
-			const df = this.interpolateDom({
+		const df = this.interpolateDom(this.dataset.apiUrl != s.apiUrl
+			? {
 				$template: "",
 				loadingSlot: "content"
+			}
+			: {
+				$template: "",
+				emptySlot: !s.articles.length ? "content" : null,
+				slot: s.articles.length ? "content" : null,
+				previews: s.articles.map(({ slug }, index) => ({
+					$template: "preview",
+					index,
+					slug
+				})),
+				pagination: s.pagesCount > 1 ? {
+					$template: "pagination",
+					...s
+				} : null
 			});
-			this.shadowRoot.append(...df.querySelectorAll("slot"));
-			this.appendChild(df);
+		this.shadowRoot.append(...df.querySelectorAll("slot"));
+		this.appendChild(df);
+		if (this.dataset.apiUrl != s.apiUrl) {
 			const u = new URL(this.dataset.apiUrl);
 			const pn = s.pageNumber ?? 1;
 			u.searchParams.append("skip", (pn - 1) * 10);
@@ -90,21 +105,7 @@ export default class ArticleList extends WebComponent {
 			s.pagesCount = Math.ceil(j.articlesCount / 10);
 			s.pageNumber = pn;
 			history.replaceState(this.historyState, "");
+			this.requestDisplay();
 		}
-		// console.log("ArticleList.updateDisplay", s);
-		this.appendChild(this.interpolateDom({
-			$template: "",
-			emptySlot: s.articles.length ? null : "content",
-			slot: s.articles.length ? "content" : null,
-			previews: s.articles.map(({ slug }, index) => ({
-				$template: "preview",
-				index,
-				slug
-			})),
-			pagination: s.pagesCount > 1 ? this.interpolateDom({
-				$template: "pagination",
-				...s
-			}) : null
-		}));
 	}
 }

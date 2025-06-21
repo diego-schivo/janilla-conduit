@@ -13,7 +13,7 @@
 				<textarea class="form-control" placeholder="Write a comment..." rows="3" name="body"></textarea>
 			</div>
 			<div class="card-footer">
-				<img src="${image}" class="comment-author-img" />
+				<img src="${image}" loading="lazy" class="comment-author-img" />
 				<button class="btn btn-sm btn-primary">Post Comment</button>
 			</div>
 		</form>
@@ -31,7 +31,7 @@
 		</div>
 		<div class="card-footer">
 			<a href="#/@${author.username}" class="comment-author">
-				<img src="${author.image}" class="comment-author-img" />
+				<img src="${author.image}" loading="lazy" class="comment-author-img" />
 			</a>
 			&nbsp;
 			<a href="#/@${author.username}" class="comment-author">${author.username}</a>

@@ -38,7 +38,7 @@ public class ProfileApi {
 	public Object read(String username) throws IOException {
 		var c = persistence.crud(User.class);
 		var i = c.find("username", username);
-		var u = i >= 0 ? c.read(i) : null;
+		var u = c.read(i);
 		return Collections.singletonMap("profile", u);
 	}
 
@@ -46,7 +46,7 @@ public class ProfileApi {
 	public Object follow(String username, User user) throws IOException {
 		var c = (UserCrud) persistence.crud(User.class);
 		var i = c.find("username", username);
-		var u = i >= 0 ? c.read(i) : null;
+		var u = c.read(i);
 		c.follow(u.id(), user.id());
 		return Map.of("profile", u.id());
 	}
@@ -55,7 +55,7 @@ public class ProfileApi {
 	public Object unfollow(String username, User user) throws IOException {
 		var c = (UserCrud) persistence.crud(User.class);
 		var i = c.find("username", username);
-		var u = i >= 0 ? c.read(i) : null;
+		var u = c.read(i);
 		c.unfollow(u.id(), user.id());
 		return Map.of("profile", u.id());
 	}

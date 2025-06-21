@@ -28,7 +28,6 @@ import java.util.Optional;
 import com.janilla.database.BTree;
 import com.janilla.database.Database;
 import com.janilla.database.KeyAndData;
-import com.janilla.database.NameAndData;
 import com.janilla.io.ByteConverter;
 import com.janilla.json.MapAndType.TypeResolver;
 import com.janilla.persistence.Crud;
@@ -42,26 +41,26 @@ public class CustomPersistence extends Persistence {
 	}
 
 	@Override
-	public <K, V> com.janilla.database.Index<K, V> newIndex(NameAndData nameAndData) {
+	public <K, V> com.janilla.database.Index<K, V> newIndex(KeyAndData<String> keyAndData) {
 		@SuppressWarnings("unchecked")
-		var i = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(nameAndData))
-				.orElseGet(() -> (com.janilla.database.Index<K, V>) switch (nameAndData.name()) {
+		var i = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(keyAndData))
+				.orElseGet(() -> (com.janilla.database.Index<K, V>) switch (keyAndData.key()) {
 				case "User.favoriteList",
 						"User.followList" ->
 					new com.janilla.database.Index<Long, Long>(
 							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-									KeyAndData.getByteConverter(ByteConverter.LONG), nameAndData.bTree()),
+									KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
 							ByteConverter.LONG);
 				case "Tag.count" ->
 					new com.janilla.database.Index<Object[], String>(
 							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
 									KeyAndData.getByteConverter(ByteConverter.of(new ByteConverter.TypeAndOrder(
 											Long.class, ByteConverter.SortOrder.DESCENDING))),
-									nameAndData.bTree()),
+									keyAndData.bTree()),
 							ByteConverter.STRING);
 				case "Article.favoriteList" -> new com.janilla.database.Index<Long, Object[]>(
 						new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-								KeyAndData.getByteConverter(ByteConverter.LONG), nameAndData.bTree()),
+								KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
 						ByteConverter.of(Article.class, "-createdAt", "id"));
 				default -> null;
 				});
