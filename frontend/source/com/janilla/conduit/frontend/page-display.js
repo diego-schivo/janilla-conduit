@@ -26,7 +26,7 @@ import WebComponent from "./web-component.js";
 export default class PageDisplay extends WebComponent {
 
 	static get observedAttributes() {
-		return ["data-path"];
+		return ["data-loading", "data-path"];
 	}
 
 	static get templateNames() {
@@ -39,65 +39,87 @@ export default class PageDisplay extends WebComponent {
 	}
 
 	async updateDisplay() {
-		// console.log("PageDisplay.updateDisplay");
 		const nn = this.dataset.path.split("/");
+		//console.log("nn", JSON.stringify(nn));
 		const hs = history.state ?? {};
-		const pp = {
-			articlePage: (() => {
-				const a = nn[1] === "article";
-				const a2 = hs["article-page"]?.article;
+		const o = {
+			$template: "",
+			article: (() => {
+				const x = nn[1] === "article";
 				return {
-					$template: "article-page",
-					slot: a ? (a2 && a2.slug == nn[2] ? "content" : "content2") : null,
-					slug: a ? nn[2] : null
+					$template: "article",
+					slot: x ? (() => {
+						/*
+						if (hs.article && hs.article.slug !== nn[2]) {
+							delete hs.article;
+							history.replaceState(hs, "");
+						}
+						*/
+						return hs.article ? "content" : "content2";
+					})() : null,
+					slug: x ? nn[2] : null
 				};
 			})(),
-			editorPage: (() => {
-				const a = nn[1] === "editor";
-				const a2 = hs["editor-page"]?.article;
+			editor: (() => {
+				const x = nn[1] === "editor";
 				return {
-					$template: "editor-page",
-					slot: a ? (a2 && a2.slug == nn[2] ? "content" : "content2") : null,
-					slug: a ? nn[2] : null
+					$template: "editor",
+					slot: x ? (() => {
+						/*
+						if (hs.article && hs.article.slug !== nn[2]) {
+							delete hs.article;
+							history.replaceState(hs, "");
+						}
+						*/
+						return hs.article ? "content" : "content2";
+					})() : null,
+					slug: x ? nn[2] : null
 				};
 			})(),
-			homePage: {
-				$template: "home-page",
+			home: {
+				$template: "home",
 				slot: nn[1] === "" ? "content" : null
 			},
-			loginPage: {
-				$template: "login-page",
+			login: {
+				$template: "login",
 				slot: nn[1] === "login" ? "content" : null
 			},
-			profilePage: (() => {
-				const a = nn[1]?.startsWith("@");
-				const u = a ? decodeURIComponent(nn[1].substring(1)) : null;
-				const s = a ? hs["profile-page"] : null;
+			profile: (() => {
+				const u = nn[1]?.startsWith("@") ? decodeURIComponent(nn[1].substring(1)) : null;
 				return {
-					$template: "profile-page",
-					slot: a ? (s?.profile && s.profile.username == u ? "content" : "content2") : null,
+					$template: "profile",
+					slot: u ? (() => {
+						/*
+						if (hs.profile && hs.profile.username !== u) {
+							delete hs.profile;
+							history.replaceState(hs, "");
+						}
+						*/
+						return hs.profile ? "content" : "content2";
+					})() : null,
 					username: u
 				};
 			})(),
-			registerPage: {
-				$template: "register-page",
+			register: {
+				$template: "register",
 				slot: nn[1] === "register" ? "content" : null
 			},
-			settingsPage: {
-				$template: "settings-page",
+			settings: {
+				$template: "settings",
 				slot: nn[1] === "settings" ? "content" : null
 			}
 		};
-		if (Object.values(pp).every(x => x.slot !== "content")) {
-			const t = Array.prototype.find.call(this.children, x => x.slot === "content")?.tagName?.toLowerCase();
-			if (t)
-				Array.prototype.find.call(Object.values(pp), x => x.$template === t).slot = "content";
-		}
-		const df = this.interpolateDom({
-			$template: "",
-			...Object.fromEntries(Object.entries(pp).filter(([_, v]) => v.slot))
-		});
-		this.shadowRoot.append(...df.querySelectorAll("link, slot"));
-		this.appendChild(df);
+
+		const ce = Object.entries(o).find(([k, v]) => k !== "$template" && v.slot === "content");
+		const s = this.state;
+		if (ce)
+			s.contentEntry = ce;
+		else if (s.contentEntry && !o[s.contentEntry[0]].slot)
+			o[s.contentEntry[0]] = s.contentEntry[1];
+		//console.log("o", JSON.stringify(o));
+
+		const f = this.interpolateDom(Object.fromEntries(Object.entries(o).filter(([k, v]) => k === "$template" || v.slot)));
+		this.shadowRoot.append(...f.querySelectorAll("link, slot"));
+		this.appendChild(f);
 	}
 }

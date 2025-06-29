@@ -38,41 +38,16 @@ export default class FollowButton extends WebComponent {
 	}
 
 	connectedCallback() {
-		// console.log("FollowButton.connectedCallback");
 		super.connectedCallback();
 		this.addEventListener("click", this.handleClick);
 	}
 
 	disconnectedCallback() {
-		// console.log("FollowButton.disconnectedCallback");
 		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 	}
 
-	handleClick = async event => {
-		// console.log("FollowButton.handleClick", event);
-		event.stopPropagation();
-		const rl = this.closest("root-layout");
-		if (!rl.state.currentUser) {
-			location.hash = "#/login";
-			return;
-		}
-		const u = new URL(rl.dataset.apiUrl);
-		u.pathname += `/profiles/${this.dataset.username}/follow`;
-		const r = await fetch(u, {
-			method: this.dataset.active != null ? "DELETE" : "POST",
-			headers: rl.state.apiHeaders
-		});
-		if (r.ok) {
-			this.dispatchEvent(new CustomEvent("toggle-follow", {
-				bubbles: true,
-				detail: await r.json()
-			}));
-		}
-	}
-
 	async updateDisplay() {
-		// console.log("FollowButton.updateDisplay");
 		const a = this.dataset.active != null;
 		this.appendChild(this.interpolateDom({
 			$template: "",
@@ -80,5 +55,24 @@ export default class FollowButton extends WebComponent {
 			secondary: a ? "btn-secondary" : "btn-outline-secondary",
 			text: `${a ? "Unfollow" : "Follow"} ${this.dataset.username}`
 		}));
+	}
+
+	handleClick = async event => {
+		event.stopPropagation();
+		const { dataset: { apiUrl }, state: { apiHeaders, user } } = this.closest("app-element");
+		if (user) {
+			const r = await fetch(`${apiUrl}/profiles/${this.dataset.username}/follow`, {
+				method: this.dataset.active != null ? "DELETE" : "POST",
+				headers: apiHeaders
+			});
+			if (r.ok) {
+				const o = await r.json();
+				this.dispatchEvent(new CustomEvent("toggle-follow", {
+					bubbles: true,
+					detail: o
+				}));
+			}
+		} else
+			location.hash = "#/login";
 	}
 }

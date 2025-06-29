@@ -38,33 +38,16 @@ export default class PaginationNav extends WebComponent {
 	}
 
 	connectedCallback() {
-		// console.log("PaginationNav.connectedCallback");
 		super.connectedCallback();
 		this.addEventListener("click", this.handleClick);
 	}
 
 	disconnectedCallback() {
-		// console.log("PaginationNav.disconnectedCallback");
 		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 	}
 
-	handleClick = event => {
-		// console.log("PaginationNav.handleClick", event);
-		const el = event.target.closest(".page-item");
-		if (!el)
-			return;
-		event.preventDefault();
-		event.stopPropagation();
-		if (!el.classList.contains("active"))
-			this.dispatchEvent(new CustomEvent("select-page", {
-				bubbles: true,
-				detail: { pageNumber: parseInt(el.textContent.trim()) }
-			}));
-	}
-
 	async updateDisplay() {
-		// console.log("PaginationNav.updateDisplay");
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			items: (() => {
@@ -77,5 +60,18 @@ export default class PaginationNav extends WebComponent {
 				})) : null;
 			})()
 		}));
+	}
+
+	handleClick = event => {
+		const el = event.target.closest(".page-item");
+		if (!el)
+			return;
+		event.preventDefault();
+		event.stopPropagation();
+		if (!el.classList.contains("active"))
+			this.dispatchEvent(new CustomEvent("select-page", {
+				bubbles: true,
+				detail: { pageNumber: parseInt(el.textContent.trim()) }
+			}));
 	}
 }

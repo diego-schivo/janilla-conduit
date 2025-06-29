@@ -23,36 +23,54 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class ErrorList extends WebComponent {
-
-	static get observedAttributes() {
-		return ["data-messages"];
-	}
+export default class Register extends WebComponent {
 
 	static get templateNames() {
-		return ["error-list"];
+		return ["register"];
 	}
 
 	constructor() {
 		super();
 	}
 
-	get messages() {
-		return this.dataset.messages?.split(";") ?? [];
+	connectedCallback() {
+		super.connectedCallback();
+		this.addEventListener("submit", this.handleSubmit);
 	}
 
-	set messages(x) {
-		this.dataset.messages = x.join(";");
+	disconnectedCallback() {
+		super.disconnectedCallback();
+		this.removeEventListener("submit", this.handleSubmit);
 	}
 
 	async updateDisplay() {
-		// console.log("ErrorList.updateDisplay");
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			items: this.messages.map(x => ({
-				$template: "item",
-				text: x
-			}))
+			errorMessages: this.state.errorMessages?.join(";")
 		}));
+	}
+
+	handleSubmit = async event => {
+		event.preventDefault();
+		const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+		const r = await fetch(`${apiUrl}/users`, {
+			method: "POST",
+			headers: {
+				...apiHeaders,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({ user: Object.fromEntries(new FormData(event.target)) })
+		});
+		if (r.ok) {
+			const { user } = await r.json();
+			this.dispatchEvent(new CustomEvent("set-current-user", {
+				bubbles: true,
+				detail: { user }
+			}));
+		} else {
+			const o = await r.json();
+			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
+			this.requestDisplay();
+		}
 	}
 }

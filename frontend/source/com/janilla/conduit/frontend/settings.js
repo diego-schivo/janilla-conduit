@@ -23,10 +23,10 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class RegisterPage extends WebComponent {
+export default class Settings extends WebComponent {
 
 	static get templateNames() {
-		return ["register-page"];
+		return ["settings"];
 	}
 
 	constructor() {
@@ -34,49 +34,57 @@ export default class RegisterPage extends WebComponent {
 	}
 
 	connectedCallback() {
-		// console.log("RegisterPage.connectedCallback");
 		super.connectedCallback();
+		this.addEventListener("click", this.handleClick);
 		this.addEventListener("submit", this.handleSubmit);
 	}
 
 	disconnectedCallback() {
-		// console.log("RegisterPage.disconnectedCallback");
 		super.disconnectedCallback();
+		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("submit", this.handleSubmit);
 	}
 
-	handleSubmit = async event => {
-		// console.log("RegisterPage.handleSubmit", event);
-		event.preventDefault();
-		const rl = this.closest("root-layout");
-		const u = new URL(rl.dataset.apiUrl);
-		u.pathname += "/users";
-		const u2 = Object.fromEntries(new FormData(event.target));
-		const r = await fetch(u, {
-			method: "POST",
-			headers: {
-				...rl.state.apiHeaders,
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({ user: u2 })
-		});
-		const j = await r.json();
-		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
-		if (r.ok) {
-			this.dispatchEvent(new CustomEvent("set-current-user", {
-				bubbles: true,
-				detail: { user: j.user }
-			}));
-			location.hash = "#/";
-		} else
-			this.requestDisplay();
-	}
-
 	async updateDisplay() {
-		// console.log("RegisterPage.updateDisplay");
+		const { state: { user } } = this.closest("app-element");
 		this.appendChild(this.interpolateDom({
 			$template: "",
+			...user,
 			errorMessages: this.state.errorMessages?.join(";")
 		}));
+	}
+
+	handleClick = event => {
+		if (event.target.classList.contains("btn-outline-danger"))
+			this.dispatchEvent(new CustomEvent("set-current-user", {
+				bubbles: true,
+				detail: { user: null }
+			}));
+	}
+
+	handleSubmit = async event => {
+		event.preventDefault();
+
+		const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+		const r = await fetch(`${apiUrl}/user`, {
+			method: "PUT",
+			headers: {
+				...apiHeaders,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({ user: Object.fromEntries(new FormData(event.target)) })
+		});
+
+		if (r.ok) {
+			const { user } = await r.json();
+			this.dispatchEvent(new CustomEvent("set-current-user", {
+				bubbles: true,
+				detail: { user }
+			}));
+		} else {
+			const o = await r.json();
+			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
+			this.requestDisplay();
+		}
 	}
 }

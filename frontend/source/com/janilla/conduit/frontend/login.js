@@ -23,88 +23,54 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class SettingsPage extends WebComponent {
+export default class Login extends WebComponent {
 
 	static get templateNames() {
-		return ["settings-page"];
+		return ["login"];
 	}
 
 	constructor() {
 		super();
 	}
 
-	get historyState() {
-		const s = this.state;
-		return {
-			...history.state,
-			"settings-page": Object.fromEntries(["user"].map(x => [x, s[x]]))
-		};
-	}
-
 	connectedCallback() {
-		// console.log("SettingsPage.connectedCallback");
 		super.connectedCallback();
-		this.addEventListener("click", this.handleClick);
 		this.addEventListener("submit", this.handleSubmit);
 	}
 
 	disconnectedCallback() {
-		// console.log("SettingsPage.disconnectedCallback");
 		super.disconnectedCallback();
-		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("submit", this.handleSubmit);
 	}
 
-	handleClick = event => {
-		// console.log("ArticlePage.handleClick", event);
-		if (!event.target.classList.contains("btn-outline-danger"))
-			return;
-		this.dispatchEvent(new CustomEvent("set-current-user", {
-			bubbles: true,
-			detail: { user: null }
+	async updateDisplay() {
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			errorMessages: this.state.errorMessages?.join(";")
 		}));
-		location.hash = "#/";
 	}
 
 	handleSubmit = async event => {
-		// console.log("SettingsPage.handleSubmit", event);
 		event.preventDefault();
-		const rl = this.closest("root-layout");
-		const u = new URL(rl.dataset.apiUrl);
-		u.pathname += "/user";
-		const u2 = Object.fromEntries(new FormData(event.target));
-		const r = await fetch(u, {
-			method: "PUT",
+		const { dataset: { apiUrl }, state: { apiHeaders }} = this.closest("app-element");
+		const r = await fetch(new URL(`${apiUrl}/users/login`), {
+			method: "POST",
 			headers: {
-				...rl.state.apiHeaders,
+				...apiHeaders,
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify({ user: u2 })
+			body: JSON.stringify({ user: Object.fromEntries(new FormData(event.target)) })
 		});
-		const j = await r.json();
-		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 		if (r.ok) {
+			const { user } = await r.json();
 			this.dispatchEvent(new CustomEvent("set-current-user", {
 				bubbles: true,
-				detail: { user: j.user }
+				detail: { user }
 			}));
-			location.hash = `#/@${rl.state.currentUser.username}`;
-		} else
+		} else {
+			const o = await r.json();
+			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
 			this.requestDisplay();
-	}
-
-	async updateDisplay() {
-		// console.log("SettingsPage.updateDisplay");
-		const s = this.state;
-		if (!s.user) {
-			const rl = this.closest("root-layout");
-			s.user = rl.state.currentUser;
-			history.replaceState(this.historyState, "");
 		}
-		this.appendChild(this.interpolateDom({
-			$template: "",
-			...s.user,
-			errorMessages: s.errorMessages?.join(";")
-		}));
 	}
 }

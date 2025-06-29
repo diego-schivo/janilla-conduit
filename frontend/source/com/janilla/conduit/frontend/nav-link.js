@@ -39,7 +39,6 @@ export default class NavLink extends WebComponent {
 	}
 
 	async updateDisplay() {
-		// console.log("NavLink.updateDisplay");
 		this.shadowRoot.appendChild(this.interpolateDom({
 			$template: "",
 			...this.dataset,

@@ -23,51 +23,55 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class EditorPage extends WebComponent {
+export default class Editor extends WebComponent {
 
 	static get observedAttributes() {
-		return ["slot"];
+		return ["data-slug", "slot"];
 	}
 
 	static get templateNames() {
-		return ["editor-page"];
+		return ["editor"];
 	}
 
 	constructor() {
 		super();
 	}
 
-	get historyState() {
-		const s = this.state;
-		return {
-			...history.state,
-			"editor-page": Object.fromEntries(["article"].map(x => [x, s[x]]))
-		};
-	}
-
 	connectedCallback() {
-		// console.log("EditorPage.connectedCallback");
 		super.connectedCallback();
-		const s = history.state?.["editor-page"];
-		if (s)
-			Object.assign(this.state, s);
 		this.addEventListener("submit", this.handleSubmit);
 	}
 
 	disconnectedCallback() {
-		// console.log("EditorPage.disconnectedCallback");
 		super.disconnectedCallback();
 		this.removeEventListener("submit", this.handleSubmit);
 	}
 
+	async updateDisplay() {
+		const hs = history.state ?? {};
+		if (hs.article) {
+			this.appendChild(this.interpolateDom({
+				$template: "",
+				...hs.article,
+				tagList: hs.article.tagList?.join(),
+				errorMessages: this.state.errorMessages?.join(";")
+			}));
+		} else {
+			if (this.dataset.slug) {
+				const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+				const { article } = await (await fetch(`${apiUrl}/articles/${this.dataset.slug}`, { headers: apiHeaders })).json();
+				hs.article = article;
+			} else
+				hs.article = {};
+			history.replaceState(hs, "");
+			dispatchEvent(new CustomEvent("popstate"));
+		}
+	}
+
 	handleSubmit = async event => {
-		// console.log("EditorPage.handleSubmit", event);
 		event.preventDefault();
-		const rl = this.closest("root-layout");
-		const u = new URL(rl.dataset.apiUrl);
-		u.pathname += this.dataset.slug ? `/articles/${this.dataset.slug}` : "/articles";
-		const fd = new FormData(event.target);
-		const a = [...fd.entries()].reduce((x, y) => {
+
+		const a = [...new FormData(event.target).entries()].reduce((x, y) => {
 			switch (y[0]) {
 				case "tagList":
 					x.tagList ??= [];
@@ -79,43 +83,23 @@ export default class EditorPage extends WebComponent {
 			}
 			return x;
 		}, {});
-		const r = await fetch(u, {
+		const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+		const r = await fetch(new URL([apiUrl, "articles", this.dataset.slug].filter(x => x).join("/")), {
 			method: this.dataset.slug ? "PUT" : "POST",
 			headers: {
-				...rl.state.apiHeaders,
+				...apiHeaders,
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({ article: a })
 		});
-		const j = await r.json();
-		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
-		if (r.ok)
-			location.hash = `#/article/${j.article.slug}`;
-		else
-			this.requestDisplay();
-	}
 
-	async updateDisplay() {
-		// console.log("EditorPage.updateDisplay");
-		const s = this.state;
-		const rl = this.closest("root-layout");
-		if (!s.article || this.dataset.slug != s.article.slug) {
-			if (this.dataset.slug) {
-				const u = new URL(rl.dataset.apiUrl);
-				u.pathname += `/articles/${this.dataset.slug}`;
-				const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
-				s.article = j.article;
-			} else
-				s.article = {};
-			history.replaceState(this.historyState, "");
-			this.closest("page-display").requestDisplay();
-			return;
+		if (r.ok) {
+			const { article } = await r.json();
+			location.hash = `#/article/${article.slug}`;
+		} else {
+			const o = await r.json();
+			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
+			this.requestDisplay();
 		}
-		this.appendChild(this.interpolateDom({
-			$template: "",
-			...s.article,
-			tagList: s.article.tagList?.join(),
-			errorMessages: this.state.errorMessages?.join(";")
-		}));
 	}
 }

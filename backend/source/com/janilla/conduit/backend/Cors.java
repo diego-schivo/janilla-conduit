@@ -32,7 +32,7 @@ import com.janilla.http.HttpResponse;
 import com.janilla.web.Handle;
 import com.janilla.web.MethodHandlerFactory;
 
-public class AccessControlWeb {
+public class Cors {
 
 	public Properties configuration;
 
@@ -42,11 +42,10 @@ public class AccessControlWeb {
 	public void allow(HttpRequest request, HttpResponse response) {
 		var o = configuration.getProperty("conduit.api.cors.origin");
 		var m = methodHandlerFactory.resolveInvocables(request)
-				.flatMap(w -> w.getKey().methodHandles().keySet().stream())
+				.flatMap(x -> x.getKey().methodHandles().keySet().stream())
 				.map(x -> x.getAnnotation(Handle.class).method()).collect(Collectors.toSet());
 		var h = configuration.getProperty("conduit.api.cors.headers");
 
-//		response.setStatus(HttpResponse.Status.of(204));
 		response.setStatus(204);
 		var hh = response.getHeaders();
 		hh.add(new HeaderField("access-control-allow-origin", o));

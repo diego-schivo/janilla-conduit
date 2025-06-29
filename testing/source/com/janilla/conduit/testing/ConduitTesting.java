@@ -26,6 +26,7 @@ package com.janilla.conduit.testing;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -84,7 +85,7 @@ public class ConduitTesting {
 
 	public MapAndType.TypeResolver typeResolver;
 
-	public Iterable<Class<?>> types;
+	public List<Class<?>> types;
 
 	public ConduitTesting(Properties configuration) {
 		this.configuration = configuration;

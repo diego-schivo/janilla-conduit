@@ -23,9 +23,8 @@
  */
 package com.janilla.conduit.backend;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.janilla.web.Error;
 
@@ -34,14 +33,14 @@ public class ValidationException extends RuntimeException {
 
 	private static final long serialVersionUID = 8218650972982689848L;
 
-	public Map<String, Collection<String>> errors;
+	public Map<String, Set<String>> errors;
 
-	public ValidationException(Map<String, Collection<String>> errors) {
+	public ValidationException(Map<String, Set<String>> errors) {
 		this.errors = errors;
 	}
 
 	public ValidationException(String name, String value) {
-		this(Map.of(name, List.of(value)));
+		this(Map.of(name, Set.of(value)));
 	}
 
 	@Override

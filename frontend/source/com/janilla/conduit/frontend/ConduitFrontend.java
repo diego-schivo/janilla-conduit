@@ -26,6 +26,7 @@ package com.janilla.conduit.frontend;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
@@ -55,16 +56,17 @@ public class ConduitFrontend {
 					pp.load(Files.newInputStream(Path.of(p)));
 				}
 			}
-			var cf = new ConduitFrontend(pp);
+			var x = new ConduitFrontend(pp);
+
 			HttpServer s;
 			{
-				SSLContext sc;
+				SSLContext c;
 				try (var is = Net.class.getResourceAsStream("testkeys")) {
-					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+					c = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
 				}
-				s = new HttpServer(sc, cf.handler);
+				s = new HttpServer(c, x.handler);
 			}
-			var p = Integer.parseInt(cf.configuration.getProperty("conduit.frontend.server.port"));
+			var p = Integer.parseInt(x.configuration.getProperty("conduit.frontend.server.port"));
 			s.serve(new InetSocketAddress(p));
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -79,7 +81,7 @@ public class ConduitFrontend {
 
 	public MapAndType.TypeResolver typeResolver;
 
-	public Iterable<Class<?>> types;
+	public List<Class<?>> types;
 
 	public ConduitFrontend(Properties configuration) {
 		this.configuration = configuration;

@@ -26,6 +26,7 @@ package com.janilla.conduit.fullstack;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -56,16 +57,17 @@ public class ConduitFullstack {
 					pp.load(Files.newInputStream(Path.of(p)));
 				}
 			}
-			var cf = new ConduitFullstack(pp);
+			var x = new ConduitFullstack(pp);
+
 			HttpServer s;
 			{
-				SSLContext sc;
+				SSLContext c;
 				try (var is = Net.class.getResourceAsStream("testkeys")) {
-					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+					c = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
 				}
-				s = cf.factory.create(HttpServer.class, Map.of("sslContext", sc, "handler", cf.handler));
+				s = x.factory.create(HttpServer.class, Map.of("sslContext", c, "handler", x.handler));
 			}
-			var p = Integer.parseInt(cf.configuration.getProperty("conduit.fullstack.server.port"));
+			var p = Integer.parseInt(x.configuration.getProperty("conduit.fullstack.server.port"));
 			s.serve(new InetSocketAddress(p));
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -84,7 +86,7 @@ public class ConduitFullstack {
 
 	public MapAndType.TypeResolver typeResolver;
 
-	public Iterable<Class<?>> types;
+	public List<Class<?>> types;
 
 	public ConduitFullstack(Properties configuration) {
 		this.configuration = configuration;
@@ -94,15 +96,15 @@ public class ConduitFullstack {
 		typeResolver = factory.create(MapAndType.DollarTypeResolver.class);
 
 		handler = x -> {
-			var hx = (HttpExchange) x;
+			var ex = (HttpExchange) x;
 //			System.out.println("ConduitFullstack, " + hx.getRequest().getPath());
-			var o = hx.getException() != null ? hx.getException() : hx.getRequest();
+			var o = ex.getException() != null ? ex.getException() : ex.getRequest();
 			var h = switch (o) {
 			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;
 			case Exception _ -> backend.handler;
 			default -> null;
 			};
-			return h.handle(hx);
+			return h.handle(ex);
 		};
 
 		backend = new ConduitBackend(configuration);

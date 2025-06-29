@@ -1,9 +1,9 @@
 @import "base.css";
-@import "article-page.css";
+@import "app.css";
+@import "article.css";
 @import "article-preview.css";
-@import "root-layout.css";
-@import "editor-page.css";
-@import "error-list.css";
+@import "editor.css";
+@import "errors.css";
 @import "favorite-button.css";
-@import "home-page.css";
-@import "profile-page.css";
+@import "home.css";
+@import "profile.css";

@@ -34,31 +34,51 @@ export default class PopularTags extends WebComponent {
 		this.attachShadow({ mode: "open" });
 	}
 
-	get historyState() {
-		const s = this.state;
-		return {
-			...history.state,
-			"popular-tags": Object.fromEntries(["tags"].map(x => [x, s[x]]))
-		};
-	}
-
 	connectedCallback() {
-		// console.log("PopularTags.connectedCallback");
 		super.connectedCallback();
-		const s = history.state?.["popular-tags"];
-		if (s)
-			Object.assign(this.state, s);
 		this.addEventListener("click", this.handleClick);
 	}
 
 	disconnectedCallback() {
-		// console.log("PopularTags.disconnectedCallback");
 		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 	}
 
+	async updateDisplay() {
+		const hs = history.state ?? {};
+		const f = this.interpolateDom(!hs.tags
+			? {
+				$template: "",
+				loadingSlot: "content"
+			}
+			: !hs.tags.length
+				? {
+					$template: "",
+					emptySlot: "content"
+				}
+				: {
+					$template: "",
+					slot: "content",
+					tags: hs.tags.map(x => ({
+						$template: "tag",
+						text: x
+					}))
+				});
+		this.shadowRoot.append(...f.querySelectorAll("div:has(slot)"));
+		this.appendChild(f);
+
+		if (!hs.tags) {
+			const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+			const { tags } = await (await fetch(`${apiUrl}/tags`, { headers: apiHeaders })).json();
+			history.replaceState({
+				...history.state,
+				tags
+			}, "");
+			this.requestDisplay(0);
+		}
+	}
+
 	handleClick = event => {
-		// console.log("PopularTags.handleClick", event);
 		const el = event.target.closest(".tag-default");
 		if (!el)
 			return;
@@ -68,33 +88,5 @@ export default class PopularTags extends WebComponent {
 			bubbles: true,
 			detail: { tag: el.textContent.trim() }
 		}));
-	}
-
-	async updateDisplay() {
-		// console.log("PopularTags.updateDisplay");
-		const s = this.state;
-		const df = this.interpolateDom(!s.tags ? {
-			$template: "",
-			loadingSlot: "content"
-		} : {
-			$template: "",
-			emptySlot: s.tags.length ? null : "content",
-			slot: s.tags.length ? "content" : null,
-			tags: s.tags.map(x => ({
-				$template: "tag",
-				text: x
-			}))
-		});
-		this.shadowRoot.append(...df.querySelectorAll("div:has(slot)"));
-		this.appendChild(df);
-		if (!s.tags) {
-			const rl = this.closest("root-layout");
-			const u = new URL(rl.dataset.apiUrl);
-			u.pathname += "/tags";
-			const j = await (await fetch(u, { headers: rl.state.apiHeaders })).json();
-			s.tags = j.tags;
-			history.replaceState(this.historyState, "");
-			this.requestDisplay(0);
-		}
 	}
 }

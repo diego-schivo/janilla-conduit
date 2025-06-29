@@ -43,17 +43,17 @@ class ArticleCrud extends Crud<Long, Article> {
 
 	public boolean favorite(Long id, Instant createdAt, Long user) {
 		return persistence.database().perform((_, ii) -> {
-			var s = ii.perform("User.favoriteList", i -> i.add(id, new Long[] { user }));
+			var x = ii.perform("User.favoriteList", i -> i.add(id, new Long[] { user }));
 			ii.perform("Article.favoriteList", i -> i.add(user, new Object[][] { { createdAt, id } }));
-			return s;
+			return x;
 		}, true);
 	}
 
 	public boolean unfavorite(Long id, Instant createdAt, Long user) {
 		return persistence.database().perform((_, ii) -> {
-			var s = ii.perform("User.favoriteList", i -> i.remove(id, new Long[] { user }));
+			var x = ii.perform("User.favoriteList", i -> i.remove(id, new Long[] { user }));
 			ii.perform("Article.favoriteList", i -> i.remove(user, new Object[][] { { createdAt, id } }));
-			return s;
+			return x;
 		}, true);
 	}
 
@@ -67,22 +67,22 @@ class ArticleCrud extends Crud<Long, Article> {
 				var m = new LinkedHashMap<String, long[]>();
 				ii.perform("Article.tagList", i -> {
 					if (remove != null)
-						for (var t : remove.keySet()) {
-							var c = i.count(t);
-							m.put((String) t, new long[] { c + 1, c });
+						for (var x : remove.keySet()) {
+							var c = i.count(x);
+							m.put((String) x, new long[] { c + 1, c });
 						}
 					if (add != null)
-						for (var t : add.keySet()) {
-							var c = i.count(t);
-							m.put((String) t, new long[] { c - 1, c });
+						for (var x : add.keySet()) {
+							var c = i.count(x);
+							m.put((String) x, new long[] { c - 1, c });
 						}
 					return null;
 				});
 				if (!m.isEmpty())
 					ii.perform("Tag.count", i -> {
-						for (var e : m.entrySet()) {
-							var t = e.getKey();
-							var c = e.getValue();
+						for (var x : m.entrySet()) {
+							var t = x.getKey();
+							var c = x.getValue();
 //							System.out.println(
 //									"ArticleCrud.updateIndex, Tag.count, t=" + t + ", c=" + Arrays.toString(c));
 							if (c[0] > 0)

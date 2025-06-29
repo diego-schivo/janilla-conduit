@@ -33,8 +33,8 @@ public class CustomHandlerBuilder extends ApplicationHandlerBuilder {
 
 	@Override
 	protected WebHandlerFactory buildMethodHandlerFactory() {
-		var f = (MethodHandlerFactory) super.buildMethodHandlerFactory();
-		application.methodHandlerFactory = f;
-		return f;
+		var x = (MethodHandlerFactory) super.buildMethodHandlerFactory();
+		application.methodHandlerFactory = x;
+		return x;
 	}
 }

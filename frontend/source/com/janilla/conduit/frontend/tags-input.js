@@ -46,51 +46,43 @@ export default class TagsInput extends WebComponent {
 	}
 
 	connectedCallback() {
-		// console.log("TagsInput.connectedCallback");
 		super.connectedCallback();
 		this.addEventListener("click", this.handleClick);
 		this.addEventListener("keydown", this.handleKeyDown);
 	}
 
 	disconnectedCallback() {
-		// console.log("TagsInput.disconnectedCallback");
 		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("keydown", this.handleKeyDown);
 	}
 
+	async updateDisplay() {
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			tags: this.values.map(value => ({
+				$template: "tag",
+				value
+			}))
+		}));
+	}
+
 	handleClick = event => {
-		// console.log("TagsInput.handleClick", event);
 		const el = event.target.closest(".ion-close-round");
-		if (!el)
-			return;
-		event.preventDefault();
-		const v = el.nextElementSibling.textContent;
-		this.values = this.values.filter(x => x !== v);
+		if (el) {
+			event.preventDefault();
+			const x = el.nextElementSibling.textContent;
+			this.values = this.values.filter(y => y !== x);
+		}
 	}
 
 	handleKeyDown = event => {
-		// console.log("TagsInput.handleKeyDown", event);
-		if (event.key !== "Enter")
-			return;
-		event.preventDefault();
-		const el = event.target;
-		if (!this.values.includes(el.value))
-			this.values = [...this.values, el.value];
-		el.value = "";
-	}
-
-	async updateDisplay() {
-		// console.log("TagsInput.updateDisplay");
-		this.appendChild(this.interpolateDom({
-			$template: "",
-			tags: (() => {
-				const vv = this.values;
-				return vv.map(x => ({
-					$template: "tag",
-					tag: x
-				}));
-			})()
-		}));
+		if (event.key === "Enter") {
+			event.preventDefault();
+			const el = event.target;
+			if (!this.values.includes(el.value))
+				this.values = [...this.values, el.value];
+			el.value = "";
+		}
 	}
 }

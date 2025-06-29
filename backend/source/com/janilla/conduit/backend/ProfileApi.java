@@ -23,7 +23,6 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -34,28 +33,25 @@ public class ProfileApi {
 
 	public Persistence persistence;
 
-	@Handle(method = "GET", path = "/api/profiles/([^/]*)")
-	public Object read(String username) throws IOException {
+	@Handle(method = "GET", path = "/api/profiles/([^/]+)")
+	public Object read(String username) {
 		var c = persistence.crud(User.class);
-		var i = c.find("username", username);
-		var u = c.read(i);
+		var u = c.read(c.find("username", username));
 		return Collections.singletonMap("profile", u);
 	}
 
-	@Handle(method = "POST", path = "/api/profiles/([^/]*)/follow")
-	public Object follow(String username, User user) throws IOException {
+	@Handle(method = "POST", path = "/api/profiles/([^/]+)/follow")
+	public Object follow(String username, User user) {
 		var c = (UserCrud) persistence.crud(User.class);
-		var i = c.find("username", username);
-		var u = c.read(i);
+		var u = c.read(c.find("username", username));
 		c.follow(u.id(), user.id());
 		return Map.of("profile", u.id());
 	}
 
-	@Handle(method = "DELETE", path = "/api/profiles/([^/]*)/follow")
-	public Object unfollow(String username, User user) throws IOException {
+	@Handle(method = "DELETE", path = "/api/profiles/([^/]+)/follow")
+	public Object unfollow(String username, User user) {
 		var c = (UserCrud) persistence.crud(User.class);
-		var i = c.find("username", username);
-		var u = c.read(i);
+		var u = c.read(c.find("username", username));
 		c.unfollow(u.id(), user.id());
 		return Map.of("profile", u.id());
 	}

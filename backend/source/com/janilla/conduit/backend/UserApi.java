@@ -23,7 +23,6 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Collections;
@@ -37,34 +36,38 @@ import javax.crypto.spec.PBEKeySpec;
 
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
+import com.janilla.reflect.Factory;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.Handle;
 
 public class UserApi {
 
-	public Persistence persistence;
-
 	public Properties configuration;
+
+	public Factory factory;
+
+	public Persistence persistence;
 
 	@Handle(method = "GET", path = "/api/user")
 	public Object getCurrent(User user) {
-		var h = Map.of("alg", "HS256", "typ", "JWT");
-		var p = user != null && user.email() != null ? Map.of("loggedInAs", user.email()) : null;
-		var t = p != null ? Jwt.generateToken(h, p, configuration.getProperty("conduit.jwt.key")) : null;
+		var p = user != null ? Map.of("loggedInAs", user.email()) : null;
+		var t = p != null
+				? Jwt.generateToken(Map.of("alg", "HS256", "typ", "JWT"), p,
+						configuration.getProperty("conduit.jwt.key"))
+				: null;
 		return Collections.singletonMap("user",
 				user != null ? new CurrentUser(user.email(), t, user.username(), user.bio(), user.image()) : null);
 	}
 
 	@Handle(method = "POST", path = "/api/users/login")
-	public Object authenticate(Authenticate authenticate) throws IOException {
-		var v = new Validation();
-		v.configuration = configuration;
+	public Object authenticate(Authenticate authenticate) {
+		var v = factory.create(Validation.class);
 		v.isNotBlank("email", authenticate.user.email);
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
+
 		var c = persistence.crud(User.class);
-		var i = c.find("email", authenticate.user.email);
-		var u = c.read(i);
+		var u = c.read(c.find("email", authenticate.user.email));
 		{
 			var f = HexFormat.of();
 			var p = authenticate.user.password.toCharArray();
@@ -77,21 +80,18 @@ public class UserApi {
 	}
 
 	@Handle(method = "POST", path = "/api/users")
-	public Object register(Register register) throws IOException {
+	public Object register(Register register) {
 		var u = register.user;
-		var v = new Validation();
-		v.configuration = configuration;
+		var v = factory.create(Validation.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
 			var c = persistence.crud(User.class);
-			var i = c.find("username", u.username);
-			var w = c.read(i);
-			v.hasNotBeenTaken("username", w);
+			var x = c.read(c.find("username", u.username));
+			v.hasNotBeenTaken("username", x);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email)) {
 			var c = persistence.crud(User.class);
-			var i = c.find("email", u.email);
-			var w = c.read(i);
-			v.hasNotBeenTaken("email", w);
+			var x = c.read(c.find("email", u.email));
+			v.hasNotBeenTaken("email", x);
 		}
 		if (v.isNotBlank("password", u.password))
 			v.isSafe("password", u.password);
@@ -103,56 +103,53 @@ public class UserApi {
 				throw new ValidationException("existing users", "are too many (" + c + ")");
 		}
 
-		var w = new User(null, null, null, null, null, null, null);
-		w = Reflection.copy(u, w);
-		w = setHashAndSalt(w, u.password);
-		if (w.image() == null || w.image().isBlank())
-			w = new User(w.id(), w.email(), w.hash(), w.salt(), w.username(), w.bio(),
+		var x = new User(null, null, null, null, null, null, null);
+		x = Reflection.copy(u, x);
+		x = setHashAndSalt(x, u.password);
+		if (x.image() == null || x.image().isBlank())
+			x = new User(x.id(), x.email(), x.hash(), x.salt(), x.username(), x.bio(),
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600)) + "</text></svg>");
-		w = persistence.crud(User.class).create(w);
-		return getCurrent(w);
+		x = persistence.crud(User.class).create(x);
+		return getCurrent(x);
 	}
 
 	@Handle(method = "PUT", path = "/api/user")
-	public Object update(Update update, User user) throws IOException {
+	public Object update(Update update, User user) {
 //		System.out.println("update=" + update);
 		var u = update.user;
-		var v = new Validation();
-		v.configuration = configuration;
+		var v = factory.create(Validation.class);
 		var c = persistence.crud(User.class);
 //		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 		if (u.username != null && !u.username.isBlank() && v.isSafe("username", u.username)
 				&& !u.username.equals(user.username())) {
-			var i = c.find("username", u.username);
-			var w = c.read(i);
-			v.hasNotBeenTaken("username", w);
+			var x = c.read(c.find("username", u.username));
+			v.hasNotBeenTaken("username", x);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email) && !u.email.equals(user.email())) {
-			var i = c.find("email", u.email);
-			var w = c.read(i);
-			v.hasNotBeenTaken("email", w);
+			var x = c.read(c.find("email", u.email));
+			v.hasNotBeenTaken("email", x);
 		}
 		v.isEmoji("image", u.image);
 		v.isSafe("bio", u.bio);
 		v.isSafe("password", u.password);
 		v.orThrow();
-		var w = c.update(user.id(), x -> {
-			x = Reflection.copy(u, x);
+
+		var x = c.update(user.id(), y -> {
+			y = Reflection.copy(u, y);
 			if (u.password != null && !u.password.isBlank())
-				x = setHashAndSalt(x, u.password);
-			return x;
+				y = setHashAndSalt(y, u.password);
+			return y;
 		});
-		return getCurrent(w);
+		return getCurrent(x);
 	}
 
-	static Random random = new SecureRandom();
+	protected static final Random RANDOM = new SecureRandom();
 
 	static User setHashAndSalt(User user, String password) {
-		var p = password.toCharArray();
 		var s = new byte[16];
-		random.nextBytes(s);
-		var h = hash(p, s);
+		RANDOM.nextBytes(s);
+		var h = hash(password.toCharArray(), s);
 		var f = HexFormat.of();
 		return new User(user.id(), user.email(), f.formatHex(h), f.formatHex(s), user.username(), user.bio(),
 				user.image());

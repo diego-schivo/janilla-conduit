@@ -23,14 +23,10 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class FavoriteButton extends WebComponent {
-
-	static get observedAttributes() {
-		return ["data-active", "data-count", "data-preview"];
-	}
+export default class Home extends WebComponent {
 
 	static get templateNames() {
-		return ["favorite-button"];
+		return ["home"];
 	}
 
 	constructor() {
@@ -40,46 +36,72 @@ export default class FavoriteButton extends WebComponent {
 	connectedCallback() {
 		super.connectedCallback();
 		this.addEventListener("click", this.handleClick);
+		this.addEventListener("select-tag", this.handleSelectTag);
 	}
 
 	disconnectedCallback() {
 		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
+		this.removeEventListener("select-tag", this.handleSelectTag);
 	}
 
 	async updateDisplay() {
+		const hs = history.state ?? {};
+		const { dataset: { apiUrl }, state: { user } } = this.closest("app-element");
+		if (!hs.tab) {
+			hs.tab = user ? "feed" : "all";
+			history.replaceState(hs, "");
+		}
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			...this.dataset,
-			primary: this.dataset.active != null ? "btn-primary" : "btn-outline-primary",
-			pull: this.dataset.preview != null ? "pull-xs-right" : null,
-			content: this.dataset.preview != null ? {
-				$template: "preview-content",
-				...this.dataset
-			} : {
-				$template: "content",
-				text: `${this.dataset.active != null ? "Unfavorite" : "Favorite"} Article`,
-				count: `(${this.dataset.count})`
-			}
+			banner: user ? null : { $template: "banner" },
+			tabItems: [user ? {
+				href: "#feed",
+				text: "Your Feed"
+			} : null, {
+				href: "#all",
+				text: "Global Feed"
+			}, hs.tab === "tag" ? {
+				href: "#tag",
+				icon: "ion-pound",
+				text: hs.tag
+			} : null].filter(x => x).map(x => ({
+				$template: "tab-item",
+				...x,
+				active: x.href.substring(1) === hs.tab ? "active" : null,
+			})),
+			articlesUrl: (() => {
+				const x = new URL([apiUrl, "articles", hs.tab === "feed" ? "feed" : null].filter(x => x).join("/"));
+				if (hs.tab === "tag")
+					x.searchParams.append("tag", hs.tag);
+				return x;
+			})()
 		}));
 	}
 
-	handleClick = async event => {
-		event.stopPropagation();
-		const { dataset: { apiUrl }, state: { apiHeaders, user } } = this.closest("app-element");
-		if (user) {
-			const r = await fetch(`${apiUrl}/articles/${this.dataset.slug}/favorite`, {
-				method: this.dataset.active != null ? "DELETE" : "POST",
-				headers: apiHeaders
-			});
-			if (r.ok) {
-				const o = await r.json();
-				this.dispatchEvent(new CustomEvent("toggle-favorite", {
-					bubbles: true,
-					detail: o
-				}));
+	handleClick = event => {
+		const el = event.target.closest("nav-link");
+		if (el) {
+			event.preventDefault();
+			event.stopPropagation();
+			if (!el.classList.contains("active")) {
+				history.pushState({
+					...history.state,
+					tab: el.dataset.href.substring(1),
+					tag: null
+				}, "");
+				this.requestDisplay();
 			}
-		} else
-			location.hash = "#/login";
+		}
+	}
+
+	handleSelectTag = event => {
+		const { tag } = event.detail;
+		history.pushState({
+			...history.state,
+			tab: "tag",
+			tag
+		}, "");
+		this.requestDisplay();
 	}
 }

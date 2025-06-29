@@ -37,27 +37,9 @@ export default class ArticlePreview extends WebComponent {
 		super();
 	}
 
-	connectedCallback() {
-		// console.log("ArticlePreview.connectedCallback");
-		super.connectedCallback();
-		this.addEventListener("toggle-favorite", this.handleToggleFavorite);
-	}
-
-	disconnectedCallback() {
-		// console.log("ArticlePreview.disconnectedCallback");
-		super.disconnectedCallback();
-		this.removeEventListener("toggle-favorite", this.handleToggleFavorite);
-	}
-
-	handleToggleFavorite = event => {
-		// console.log("ArticlePreview.handleToggleFavorite", event);
-		this.closest("article-list").state.articles[parseInt(this.dataset.index)] = event.detail.article;
-		this.requestDisplay();
-	}
-
 	async updateDisplay() {
-		// console.log("ArticlePreview.updateDisplay", this.dataset.index);
-		const a = this.closest("article-list").state.articles[parseInt(this.dataset.index)];
+		const hs = history.state;
+		const a = hs.articles[parseInt(this.dataset.index)];
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...a,
@@ -68,5 +50,20 @@ export default class ArticlePreview extends WebComponent {
 				text: x
 			}))
 		}));
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		this.addEventListener("toggle-favorite", this.handleToggleFavorite);
+	}
+
+	disconnectedCallback() {
+		super.disconnectedCallback();
+		this.removeEventListener("toggle-favorite", this.handleToggleFavorite);
+	}
+
+	handleToggleFavorite = event => {
+		history.state.articles[parseInt(this.dataset.index)] = event.detail.article;
+		this.requestDisplay();
 	}
 }

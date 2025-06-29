@@ -44,7 +44,6 @@ export default class IntlFormat extends WebComponent {
 	}
 
 	async updateDisplay() {
-		// console.log("IntlFormat.updateDisplay");
 		if (this.dataset.value) {
 			const f = this.dataset.type ? formatters[this.dataset.type] : null;
 			this.textContent = f ? f(this.dataset.value) : this.dataset.value;

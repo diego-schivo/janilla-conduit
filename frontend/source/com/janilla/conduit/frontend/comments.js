@@ -23,10 +23,10 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class CommentList extends WebComponent {
+export default class Comments extends WebComponent {
 
 	static get templateNames() {
-		return ["comment-list"];
+		return ["comments"];
 	}
 
 	constructor() {
@@ -34,86 +34,79 @@ export default class CommentList extends WebComponent {
 	}
 
 	connectedCallback() {
-		// console.log("CommentList.connectedCallback");
 		super.connectedCallback();
 		this.addEventListener("click", this.handleClick);
 		this.addEventListener("submit", this.handleSubmit);
 	}
 
 	disconnectedCallback() {
-		// console.log("CommentList.disconnectedCallback");
 		super.disconnectedCallback();
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("submit", this.handleSubmit);
 	}
 
+	async updateDisplay() {
+		const { state: { user } } = this.closest("app-element");
+		this.appendChild(this.interpolateDom({
+			$template: "",
+			form: user ? {
+				$template: "authenticated",
+				...user,
+				errorMessages: this.state.errorMessages
+			} : { $template: "unauthenticated" },
+			cards: history.state.comments.map(x => ({
+				$template: "card",
+				...x,
+				modOptions: x.author.username === user?.username
+					? { $template: "mod-options" }
+					: null
+			}))
+		}));
+	}
+
 	handleClick = async event => {
-		// console.log("CommentList.handleClick", event);
-		if (!event.target.matches(".ion-trash-a"))
-			return;
-		event.preventDefault();
-		const el = event.target.closest(".card");
-		const els = el.parentElement.querySelectorAll(":scope > .card");
-		const i = Array.prototype.findIndex.call(els, x => x === el);
-		const ap = this.closest("article-page");
-		const c = ap.state.comments[i];
-		const rl = this.closest("root-layout");
-		const u = new URL(rl.dataset.apiUrl);
-		u.pathname += `/articles/${ap.dataset.slug}/comments/${c.id}`;
-		const r = await fetch(u, {
-			method: "DELETE",
-			headers: rl.state.apiHeaders
-		});
-		if (r.ok)
-			this.dispatchEvent(new CustomEvent("remove-comment", {
-				bubbles: true,
-				detail: { comment: c }
-			}));
+		if (event.target.matches(".ion-trash-a")) {
+			event.preventDefault();
+			const el = event.target.closest(".card");
+			const els = el.parentElement.querySelectorAll(":scope > .card");
+			const i = Array.prototype.findIndex.call(els, x => x === el);
+			const hs = history.state;
+			const c = hs.comments[i];
+			const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+			const r = await fetch(`${apiUrl}/articles/${hs.article.slug}/comments/${c.id}`, {
+				method: "DELETE",
+				headers: apiHeaders
+			});
+			if (r.ok)
+				this.dispatchEvent(new CustomEvent("remove-comment", {
+					bubbles: true,
+					detail: { comment: c }
+				}));
+		}
 	}
 
 	handleSubmit = async event => {
-		// console.log("CommentList.handleSubmit", event);
 		event.preventDefault();
-		const rl = this.closest("root-layout");
-		const u = new URL(rl.dataset.apiUrl);
-		const ap = this.closest("article-page");
-		u.pathname += `/articles/${ap.dataset.slug}/comments`;
-		const r = await fetch(u, {
+		const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+		const r = await fetch(`${apiUrl}/articles/${history.state.article.slug}/comments`, {
 			method: "POST",
 			headers: {
-				...rl.state.apiHeaders,
+				...apiHeaders,
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({ comment: Object.fromEntries(new FormData(event.target)) })
 		});
-		const j = await r.json();
-		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
 		if (r.ok) {
 			event.target.elements["body"].value = "";
+			const { comment } = await r.json();
 			this.dispatchEvent(new CustomEvent("add-comment", {
 				bubbles: true,
-				detail: { comment: j.comment }
+				detail: { comment }
 			}));
-		} else
+		} else {
+			const o = await r.json();
+			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
 			this.requestDisplay();
-	}
-
-	async updateDisplay() {
-		// console.log("CommentList.updateDisplay");
-		const rl = this.closest("root-layout");
-		const ap = this.closest("article-page");
-		this.appendChild(this.interpolateDom({
-			$template: "",
-			form: rl.state.currentUser ? {
-				$template: "authenticated",
-				...rl.state.currentUser,
-				errorMessages: this.errorMessages
-			} : { $template: "unauthenticated" },
-			cards: ap.state.comments.map(x => ({
-				$template: "card",
-				...x,
-				modOptions: x.author.username === rl.state.currentUser?.username ? { $template: "mod-options" } : null
-			}))
-		}));
+		}
 	}
 }

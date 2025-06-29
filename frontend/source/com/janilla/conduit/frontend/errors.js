@@ -23,60 +23,35 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class LoginPage extends WebComponent {
+export default class Errors extends WebComponent {
+
+	static get observedAttributes() {
+		return ["data-messages"];
+	}
 
 	static get templateNames() {
-		return ["login-page"];
+		return ["errors"];
 	}
 
 	constructor() {
 		super();
 	}
 
-	connectedCallback() {
-		// console.log("LoginPage.connectedCallback");
-		super.connectedCallback();
-		this.addEventListener("submit", this.handleSubmit);
+	get messages() {
+		return this.dataset.messages?.split(";") ?? [];
 	}
 
-	disconnectedCallback() {
-		// console.log("LoginPage.disconnectedCallback");
-		super.disconnectedCallback();
-		this.removeEventListener("submit", this.handleSubmit);
-	}
-
-	handleSubmit = async event => {
-		// console.log("LoginPage.handleSubmit", event);
-		event.preventDefault();
-		const rl = this.closest("root-layout");
-		const u = new URL(rl.dataset.apiUrl);
-		u.pathname += "/users/login";
-		const u2 = Object.fromEntries(new FormData(event.target));
-		const r = await fetch(u, {
-			method: "POST",
-			headers: {
-				...rl.state.apiHeaders,
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({ user: u2 })
-		});
-		const j = await r.json();
-		this.state.errorMessages = !r.ok && j ? Object.entries(j).flatMap(([k, v]) => v.map(x => `${k} ${x}`)) : null;
-		if (r.ok) {
-			this.dispatchEvent(new CustomEvent("set-current-user", {
-				bubbles: true,
-				detail: { user: j.user }
-			}));
-			location.hash = "#/";
-		} else
-			this.requestDisplay();
+	set messages(x) {
+		this.dataset.messages = x.join(";");
 	}
 
 	async updateDisplay() {
-		// console.log("LoginPage.updateDisplay");
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			errorMessages: this.state.errorMessages?.join(";")
+			items: this.messages.map(x => ({
+				$template: "item",
+				text: x
+			}))
 		}));
 	}
 }

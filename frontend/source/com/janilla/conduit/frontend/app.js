@@ -23,24 +23,17 @@
  */
 import WebComponent from "./web-component.js";
 
-export default class RootLayout extends WebComponent {
+export default class App extends WebComponent {
 
 	static get templateNames() {
-		return ["root-layout"];
+		return ["app"];
 	}
 
 	constructor() {
 		super();
 	}
 
-	get historyState() {
-		return {
-			"root-layout": { currentUser: this.state.currentUser }
-		};
-	}
-
 	connectedCallback() {
-		// console.log("RootLayout.connectedCallback");
 		super.connectedCallback();
 		addEventListener("popstate", this.handlePopState);
 		this.addEventListener("click", this.handleClick);
@@ -50,74 +43,28 @@ export default class RootLayout extends WebComponent {
 	}
 
 	disconnectedCallback() {
-		// console.log("RootLayout.disconnectedCallback");
 		super.disconnectedCallback();
 		removeEventListener("popstate", this.handlePopState);
 		this.removeEventListener("click", this.handleClick);
 		this.removeEventListener("set-current-user", this.handleSetCurrentUser);
 	}
 
-	handleClick = event => {
-		// console.log("RootLayout.handleClick", event);
-		const a = event.composedPath().find(x => x.tagName?.toLowerCase() === "a");
-		if (!a?.href)
-			return;
-		event.preventDefault();
-		const u = new URL(a.href);
-		history.pushState(null, "", u.pathname + u.hash);
-		dispatchEvent(new CustomEvent("popstate"));
-	}
-
-	handlePopState = event => {
-		// console.log("RootLayout.handlePopState", event);
-		const hs = event.state ?? history.state;
-		if (hs) {
-			for (const [k, v] of Object.entries(hs))
-				if (k.includes("-")) {
-					const el = document.querySelector(k);
-					if (el) {
-						el.state = v;
-						el.requestDisplay();
-					}
-				}
-		} else {
-			history.replaceState(this.historyState, "");
-			this.requestDisplay();
-		}
-	}
-
-	handleSetCurrentUser = event => {
-		// console.log("RootLayout.handleSetCurrentUser", event);
-		const u = event.detail.user;
-		const s = this.state;
-		s.currentUser = u;
-		s.apiHeaders = u?.token ? { Authorization: `Token ${u.token}` } : {};
-		history.replaceState(this.historyState, "");
-		if (u?.token)
-			localStorage.setItem("jwtToken", u.token);
-		else
-			localStorage.removeItem("jwtToken");
-	}
-
 	async updateDisplay() {
-		// console.log("RootLayout.updateDisplay");
 		const s = this.state;
-		if (s.currentUser === undefined) {
+		if (!Object.hasOwn(s, "user")) {
 			const t = localStorage.getItem("jwtToken");
-			let u;
 			if (t) {
-				const u2 = new URL(this.dataset.apiUrl);
-				u2.pathname += "/user";
-				const j = await (await fetch(u2, {
+				const { user } = await (await fetch(`${this.dataset.apiUrl}/user`, {
 					headers: { Authorization: `Token ${t}` }
 				})).json();
-				u = j?.user ?? null;
+				s.user = user;
 			} else
-				u = null;
-			s.currentUser = u;
-			s.apiHeaders = u?.token ? { Authorization: `Token ${u.token}` } : {};
-			history.replaceState(this.historyState, "");
+				s.user = null;
+			s.apiHeaders = s.user?.token ? { Authorization: `Token ${s.user.token}` } : {};
 		}
+		const p = location.hash.substring(1);
+		const nn = p.split("/");
+		const hs = history.state ?? {};
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			header: ({
@@ -127,7 +74,7 @@ export default class RootLayout extends WebComponent {
 						href: "#/",
 						text: "Home"
 					}];
-					const u = this.state.currentUser;
+					const u = s.user;
 					if (u)
 						ii.push({
 							href: "#/editor",
@@ -157,8 +104,45 @@ export default class RootLayout extends WebComponent {
 					}));
 				})()
 			}),
-			path: location.hash.substring(1),
+			path: p,
+			loading: (() => {
+				switch (nn[1]) {
+					case "article":
+					case "editor":
+						return !hs.article;
+					default:
+						if (nn[1]?.startsWith("@"))
+							return !hs.profile;
+						return false;
+				}
+			})(),
 			footer: { $template: "footer" }
 		}));
+	}
+
+	handleClick = event => {
+		const a = event.composedPath().find(x => x.tagName?.toLowerCase() === "a");
+		if (!a?.href)
+			return;
+		event.preventDefault();
+		location.hash = new URL(a.href).hash;
+	}
+
+	handlePopState = _ => {
+		this.requestDisplay();
+	}
+
+	handleSetCurrentUser = event => {
+		const { user } = event.detail;
+		const s = this.state;
+		s.user = user;
+		if (user?.token) {
+			localStorage.setItem("jwtToken", user.token);
+			s.apiHeaders = { Authorization: `Token ${user.token}` };
+		} else {
+			localStorage.removeItem("jwtToken");
+			s.apiHeaders = {};
+		}
+		location.hash = "#/";
 	}
 }

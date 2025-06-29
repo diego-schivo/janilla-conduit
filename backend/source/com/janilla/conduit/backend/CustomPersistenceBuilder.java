@@ -29,6 +29,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,31 +42,29 @@ import com.janilla.util.Util;
 
 public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
+	public Properties configuration;
+
 	public CustomPersistenceBuilder(Path databaseFile, Factory factory) {
 		super(databaseFile, factory);
 	}
 
 	@Override
 	public Persistence build() {
-		var cb = (ConduitBackend) factory.source();
-		var s = Boolean.parseBoolean(cb.configuration.getProperty("conduit.database.seed"));
-		var fe = Files.exists(databaseFile);
-		var p = super.build();
-//		p.setTypeResolver(x -> {
-//			try {
-//				return Class.forName(getClass().getPackageName() + "." + x.replace('.', '$'));
-//			} catch (ClassNotFoundException e) {
-//				throw new RuntimeException(e);
-//			}
-//		});
-		if (s && !fe)
-			seed(p);
-		return p;
+//		var cb = (ConduitBackend) factory.source();
+//		var s = Boolean.parseBoolean(cb.configuration.getProperty("conduit.database.seed"));
+		var e = Files.exists(databaseFile);
+		var x = super.build();
+		if (!e) {
+			var s = Boolean.parseBoolean(configuration.getProperty("conduit.database.seed"));
+			if (s)
+				seed(x);
+		}
+		return x;
 	}
 
 	private void seed(Persistence persistence) {
 		var r = ThreadLocalRandom.current();
-		var ww = new ArrayList<>(Validation.safeWords);
+		var ww = new ArrayList<>(Validation.SAFE_WORDS);
 		var tags = Randomize.elements(5, 15, ww).distinct().toList();
 		for (var i = r.nextInt(6, 11); i > 0; i--) {
 			var n = Randomize.phrase(2, 2, () -> Util.capitalizeFirstChar(Randomize.element(ww)));

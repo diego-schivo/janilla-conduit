@@ -42,9 +42,9 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 		exchange.getResponse().getHeaders().add(
 				new HeaderField("access-control-allow-origin", configuration.getProperty("conduit.api.cors.origin")));
 
-//		if (exchange.getRequest().getPath().startsWith("/api"))
+//		if (exchange.getRequest().getPath().startsWith("/api/"))
 //			try {
-//				Thread.sleep(500);
+//				Thread.sleep(1500);
 //			} catch (InterruptedException e) {
 //				e.printStackTrace();
 //			}
@@ -55,9 +55,8 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 	@Override
 	protected Object resolveArgument(Type type, HttpExchange exchange, String[] values,
 			EntryList<String, String> entries, Supplier<String> body, Supplier<TypeResolver> resolver) {
-		if (type == User.class)
-			return ((CustomHttpExchange) exchange).getUser();
-		return super.resolveArgument(type, exchange, values, entries, body, resolver);
+		return type == User.class ? ((CustomHttpExchange) exchange).getUser()
+				: super.resolveArgument(type, exchange, values, entries, body, resolver);
 	}
 
 }

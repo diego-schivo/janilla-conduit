@@ -26,7 +26,6 @@ package com.janilla.conduit.backend;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.json.Jwt;
@@ -40,20 +39,15 @@ public class CustomHttpExchange extends HttpExchange {
 
 	private Map<String, Object> map = new HashMap<>();
 
-	private Supplier<User> user = () -> {
+	public User getUser() {
 		if (!map.containsKey("user")) {
 			var a = getRequest().getHeaderValue("authorization");
 			var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
 			var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
 			var e = p != null ? (String) p.get("loggedInAs") : null;
 			var c = persistence.crud(User.class);
-			var i = e != null ? c.find("email", e) : 0;
-			map.put("user", i > 0 ? c.read(i) : null);
+			map.put("user", c.read(c.find("email", e)) );
 		}
 		return (User) map.get("user");
-	};
-
-	public User getUser() {
-		return user.get();
 	}
 }

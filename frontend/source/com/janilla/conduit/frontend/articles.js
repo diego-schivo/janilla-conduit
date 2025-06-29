@@ -30,7 +30,7 @@ export default class ArticleList extends WebComponent {
 	}
 
 	static get templateNames() {
-		return ["article-list"];
+		return ["articles"];
 	}
 
 	constructor() {
@@ -38,74 +38,75 @@ export default class ArticleList extends WebComponent {
 		this.attachShadow({ mode: "open" });
 	}
 
-	get historyState() {
-		const s = this.state;
-		return {
-			...history.state,
-			"article-list": Object.fromEntries(["apiUrl", "articles", "pagesCount", "pageNumber"].map(x => [x, s[x]]))
-		};
-	}
-
 	connectedCallback() {
-		// console.log("ArticleList.connectedCallback");
 		super.connectedCallback();
-		const s = history.state?.["article-list"];
-		if (s)
-			Object.assign(this.state, s);
 		this.addEventListener("select-page", this.handleSelectPage);
 	}
 
 	disconnectedCallback() {
-		// console.log("ArticleList.disconnectedCallback");
+		super.disconnectedCallback();
 		this.removeEventListener("select-page", this.handleSelectPage);
 	}
 
-	handleSelectPage = event => {
-		// console.log("ArticleList.handleSelectPage", event);
-		dispatchEvent(new CustomEvent("popstate"));
-		const s = this.state;
-		s.apiUrl = null;
-		s.pageNumber = event.detail.pageNumber;
-		history.pushState(this.historyState, "");
-		this.requestDisplay();
+	attributeChangedCallback(name, oldValue, newValue) {
+		if (name === "data-api-url" && newValue !== oldValue)
+			history.replaceState({
+				...history.state,
+				articles: null
+			}, "");
+		super.attributeChangedCallback(name, oldValue, newValue);
 	}
 
 	async updateDisplay() {
-		// console.log("ArticleList.updateDisplay");
-		const s = this.state;
-		const df = this.interpolateDom(this.dataset.apiUrl != s.apiUrl
+		const hs = history.state ?? {};
+		const f = this.interpolateDom(!hs.articles
 			? {
 				$template: "",
 				loadingSlot: "content"
 			}
-			: {
-				$template: "",
-				emptySlot: !s.articles.length ? "content" : null,
-				slot: s.articles.length ? "content" : null,
-				previews: s.articles.map(({ slug }, index) => ({
-					$template: "preview",
-					index,
-					slug
-				})),
-				pagination: s.pagesCount > 1 ? {
-					$template: "pagination",
-					...s
-				} : null
-			});
-		this.shadowRoot.append(...df.querySelectorAll("slot"));
-		this.appendChild(df);
-		if (this.dataset.apiUrl != s.apiUrl) {
+			: !hs.articles.length
+				? {
+					$template: "",
+					emptySlot: "content"
+				}
+				: {
+					$template: "",
+					slot: "content",
+					previews: hs.articles.map(({ slug }, index) => ({
+						$template: "preview",
+						index,
+						slug
+					})),
+					pagination: hs.articlesCount > 10 ? {
+						$template: "pagination",
+						pagesCount: Math.ceil(hs.articlesCount / 10),
+						pageNumber: hs.articlesPage
+					} : null
+				});
+		this.shadowRoot.append(...f.querySelectorAll("slot"));
+		this.appendChild(f);
+
+		if (!hs.articles) {
 			const u = new URL(this.dataset.apiUrl);
-			const pn = s.pageNumber ?? 1;
-			u.searchParams.append("skip", (pn - 1) * 10);
+			u.searchParams.append("skip", ((hs.articlesPage ?? 1) - 1) * 10);
 			u.searchParams.append("limit", 10);
-			const j = await (await fetch(u, { headers: this.closest("root-layout").state.apiHeaders })).json();
-			s.apiUrl = this.dataset.apiUrl;
-			s.articles = j.articles;
-			s.pagesCount = Math.ceil(j.articlesCount / 10);
-			s.pageNumber = pn;
-			history.replaceState(this.historyState, "");
-			this.requestDisplay();
+			const { state: { apiHeaders } } = this.closest("app-element");
+			const { articles, articlesCount } = await (await fetch(u, { headers: apiHeaders })).json();
+			history.replaceState({
+				...history.state,
+				articles,
+				articlesCount
+			}, "");
+			this.requestDisplay(0);
 		}
+	}
+
+	handleSelectPage = event => {
+		history.pushState({
+			...history.state,
+			articles: null,
+			articlesPage: event.detail.pageNumber
+		}, "");
+		this.requestDisplay();
 	}
 }

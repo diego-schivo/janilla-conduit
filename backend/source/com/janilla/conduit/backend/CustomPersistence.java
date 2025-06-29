@@ -43,7 +43,7 @@ public class CustomPersistence extends Persistence {
 	@Override
 	public <K, V> com.janilla.database.Index<K, V> newIndex(KeyAndData<String> keyAndData) {
 		@SuppressWarnings("unchecked")
-		var i = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(keyAndData))
+		var x = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(keyAndData))
 				.orElseGet(() -> (com.janilla.database.Index<K, V>) switch (keyAndData.key()) {
 				case "User.favoriteList",
 						"User.followList" ->
@@ -64,31 +64,26 @@ public class CustomPersistence extends Persistence {
 						ByteConverter.of(Article.class, "-createdAt", "id"));
 				default -> null;
 				});
-		return i;
+		return x;
 	}
 
 	@Override
 	protected void createStoresAndIndexes() {
 		super.createStoresAndIndexes();
-		for (var n : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
+		for (var x : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
 			database.perform((_, ii) -> {
-				ii.create(n);
+				ii.create(x);
 				return null;
 			}, true);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected <E extends Entity<?>> Crud<?, E> newCrud(Class<E> type) {
-		if (type == Article.class) {
-			@SuppressWarnings("unchecked")
-			var c = (Crud<?, E>) new ArticleCrud(this);
-			return c;
-		}
-		if (type == User.class) {
-			@SuppressWarnings("unchecked")
-			var c = (Crud<?, E>) new UserCrud(this);
-			return c;
-		}
+		if (type == Article.class)
+			return (Crud<?, E>) new ArticleCrud(this);
+		if (type == User.class)
+			return (Crud<?, E>) new UserCrud(this);
 		return super.newCrud(type);
 	}
 }

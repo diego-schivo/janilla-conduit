@@ -26,6 +26,7 @@ package com.janilla.conduit.backend;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -57,16 +58,17 @@ public class ConduitBackend {
 					pp.load(Files.newInputStream(Path.of(p)));
 				}
 			}
-			var cb = new ConduitBackend(pp);
+			var x = new ConduitBackend(pp);
+
 			HttpServer s;
 			{
-				SSLContext sc;
+				SSLContext c;
 				try (var is = Net.class.getResourceAsStream("testkeys")) {
-					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+					c = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
 				}
-				s = cb.factory.create(HttpServer.class, Map.of("sslContext", sc, "handler", cb.handler));
+				s = x.factory.create(HttpServer.class, Map.of("sslContext", c, "handler", x.handler));
 			}
-			var p = Integer.parseInt(cb.configuration.getProperty("conduit.backend.server.port"));
+			var p = Integer.parseInt(x.configuration.getProperty("conduit.backend.server.port"));
 			s.serve(new InetSocketAddress(p));
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -87,7 +89,7 @@ public class ConduitBackend {
 
 	public MapAndType.TypeResolver typeResolver;
 
-	public Iterable<Class<?>> types;
+	public List<Class<?>> types;
 
 	public ConduitBackend(Properties configuration) {
 		this.configuration = configuration;
@@ -95,12 +97,13 @@ public class ConduitBackend {
 		types = Util.getPackageClasses(getClass().getPackageName()).toList();
 		factory = new Factory(types, this);
 		typeResolver = factory.create(MapAndType.DollarTypeResolver.class);
+
 		{
-			var p = configuration.getProperty("conduit.database.file");
-			if (p.startsWith("~"))
-				p = System.getProperty("user.home") + p.substring(1);
-			var pb = factory.create(ApplicationPersistenceBuilder.class, Map.of("databaseFile", Path.of(p)));
-			persistence = pb.build();
+			var f = configuration.getProperty("conduit.database.file");
+			if (f.startsWith("~"))
+				f = System.getProperty("user.home") + f.substring(1);
+			var b = factory.create(ApplicationPersistenceBuilder.class, Map.of("databaseFile", Path.of(f)));
+			persistence = b.build();
 		}
 
 		renderableFactory = new RenderableFactory();

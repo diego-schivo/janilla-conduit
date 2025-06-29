@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
@@ -43,17 +44,17 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 
 	public Persistence persistence;
 
-	@Override
-	protected void render(Object object, HttpExchange exchange) {
-		super.render(object, exchange);
-	}
+//	@Override
+//	protected void render(Object object, HttpExchange exchange) {
+//		super.render(object, exchange);
+//	}
 
 	@Override
 	protected Iterator<JsonToken<?>> buildJsonIterator(Object object, HttpExchange exchange) {
-		var i = new CustomReflectionJsonIterator();
-		i.setObject(object);
-		i.user = () -> ((CustomHttpExchange) exchange).getUser();
-		return i;
+		var x = new CustomReflectionJsonIterator();
+		x.setObject(object);
+		x.user = () -> ((CustomHttpExchange) exchange).getUser();
+		return x;
 	}
 
 	protected class CustomReflectionJsonIterator extends ReflectionJsonIterator {
@@ -63,49 +64,44 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 		@Override
 		public Iterator<JsonToken<?>> newValueIterator(Object object) {
 			var o = stack().peek();
-			if (o instanceof Map.Entry e) {
-				var n = (String) e.getKey();
+			if (o instanceof Map.Entry x) {
+				var n = (String) x.getKey();
 				switch (n) {
 				case "article":
-					if (object instanceof Long i)
-						object = persistence.crud(Article.class).read(i);
+					if (object instanceof Long y)
+						object = persistence.crud(Article.class).read(y);
 					break;
 				case "author", "profile":
-					if (object instanceof Long i)
-						object = persistence.crud(User.class).read(i);
+					if (object instanceof Long y)
+						object = persistence.crud(User.class).read(y);
 					break;
 				}
 			}
 			if (object != null)
 				switch (object) {
 				case Article a: {
-					var m = Reflection.properties(Article.class).filter(x -> switch (x.name()) {
-					case "id" -> false;
-					default -> true;
-					}).map(x -> {
+					var m = Reflection.properties(Article.class).filter(x -> !x.name().equals("id")).map(x -> {
 //						System.out.println("k=" + k);
 						var v = x.get(a);
 						return new AbstractMap.SimpleEntry<>(x.name(), v);
-					}).collect(LinkedHashMap::new, (b, f) -> b.put(f.getKey(), f.getValue()), Map::putAll);
+					}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 					var u = user.get();
 					m.put("favorited", u != null && a.id() != null && persistence.crud(Article.class)
-							.filter("favoriteList", u.id()).stream().anyMatch(x -> x == a.id()));
+							.filter("favoriteList", u.id()).stream().anyMatch(x -> x.equals(a.id())));
 					m.put("favoritesCount",
 							a.id() != null ? persistence.crud(User.class).count("favoriteList", a.id()) : 0);
 					object = m;
 				}
 					break;
 				case User u: {
-					var m = Reflection.properties(User.class).filter(x -> switch (x.name()) {
-					case "hash", "id", "salt" -> false;
-					default -> true;
-					}).map(x -> {
-						var w = x.get(u);
-						return new AbstractMap.SimpleEntry<>(x.name(), w);
-					}).collect(LinkedHashMap::new, (a, g) -> a.put(g.getKey(), g.getValue()), Map::putAll);
+					var m = Reflection.properties(User.class)
+							.filter(x -> !Set.of("hash", "id", "salt").contains(x.name())).map(x -> {
+								var v = x.get(u);
+								return new AbstractMap.SimpleEntry<>(x.name(), v);
+							}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 					var v = user.get();
 					m.put("following", v != null && persistence.crud(User.class).filter("followList", v.id()).stream()
-							.anyMatch(x -> x == u.id()));
+							.anyMatch(x -> x.equals(u.id())));
 					object = m;
 				}
 					break;

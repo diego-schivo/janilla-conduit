@@ -23,7 +23,7 @@
  */
 package com.janilla.conduit.backend;
 
-import java.io.IOException;
+import java.util.List;
 
 import com.janilla.persistence.Persistence;
 import com.janilla.web.Handle;
@@ -33,12 +33,12 @@ public class TagApi {
 	public Persistence persistence;
 
 	@Handle(method = "GET", path = "/api/tags")
-	public Tags tags() throws IOException {
-		var l = persistence.database().perform(
+	public Tags tags() {
+		var tt = persistence.database().perform(
 				(_, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
-		return new Tags(l);
+		return new Tags(tt);
 	}
 
-	public record Tags(Iterable<String> tags) {
+	public record Tags(List<String> tags) {
 	}
 }
