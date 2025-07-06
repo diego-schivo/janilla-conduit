@@ -100,8 +100,10 @@ export default class Home extends WebComponent {
 		history.pushState({
 			...history.state,
 			tab: "tag",
-			tag
+			tag,
+			articlesPage: undefined
 		}, "");
+		console.log(history.state);
 		this.requestDisplay();
 	}
 }

@@ -80,13 +80,13 @@ export default class PopularTags extends WebComponent {
 
 	handleClick = event => {
 		const el = event.target.closest(".tag-default");
-		if (!el)
-			return;
-		event.preventDefault();
-		event.stopPropagation();
-		this.dispatchEvent(new CustomEvent("select-tag", {
-			bubbles: true,
-			detail: { tag: el.textContent.trim() }
-		}));
+		if (el) {
+			event.preventDefault();
+			event.stopPropagation();
+			this.dispatchEvent(new CustomEvent("select-tag", {
+				bubbles: true,
+				detail: { tag: el.textContent.trim() }
+			}));
+		}
 	}
 }
