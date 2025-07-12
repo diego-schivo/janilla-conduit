@@ -23,6 +23,7 @@
  */
 package com.janilla.conduit.backend;
 
+import com.janilla.reflect.Factory;
 import com.janilla.web.ApplicationHandlerBuilder;
 import com.janilla.web.MethodHandlerFactory;
 import com.janilla.web.WebHandlerFactory;
@@ -30,6 +31,10 @@ import com.janilla.web.WebHandlerFactory;
 public class CustomHandlerBuilder extends ApplicationHandlerBuilder {
 
 	public ConduitBackend application;
+
+	public CustomHandlerBuilder(Factory factory) {
+		super(factory);
+	}
 
 	@Override
 	protected WebHandlerFactory buildMethodHandlerFactory() {

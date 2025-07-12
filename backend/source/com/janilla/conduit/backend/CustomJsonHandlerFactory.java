@@ -83,7 +83,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					var m = Reflection.properties(Article.class).filter(x -> !x.name().equals("id")).map(x -> {
 //						System.out.println("k=" + k);
 						var v = x.get(a);
-						return new AbstractMap.SimpleEntry<>(x.name(), v);
+						return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
 					}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 					var u = user.get();
 					m.put("favorited", u != null && a.id() != null && persistence.crud(Article.class)
@@ -97,7 +97,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 					var m = Reflection.properties(User.class)
 							.filter(x -> !Set.of("hash", "id", "salt").contains(x.name())).map(x -> {
 								var v = x.get(u);
-								return new AbstractMap.SimpleEntry<>(x.name(), v);
+								return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
 							}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 					var v = user.get();
 					m.put("following", v != null && persistence.crud(User.class).filter("followList", v.id()).stream()

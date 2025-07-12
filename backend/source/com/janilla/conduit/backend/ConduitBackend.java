@@ -26,9 +26,10 @@ package com.janilla.conduit.backend;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
@@ -81,22 +82,22 @@ public class ConduitBackend {
 
 	public Factory factory;
 
-	public Persistence persistence;
-
-	public RenderableFactory renderableFactory;
-
 	public HttpHandler handler;
 
 	public MethodHandlerFactory methodHandlerFactory;
 
+	public Persistence persistence;
+
+	public RenderableFactory renderableFactory;
+
 	public MapAndType.TypeResolver typeResolver;
 
-	public List<Class<?>> types;
+	public Set<Class<?>> types;
 
 	public ConduitBackend(Properties configuration) {
 		this.configuration = configuration;
 
-		types = Util.getPackageClasses(getClass().getPackageName()).toList();
+		types = Util.getPackageClasses(getClass().getPackageName()).collect(Collectors.toSet());
 		factory = new Factory(types, this);
 		typeResolver = factory.create(MapAndType.DollarTypeResolver.class);
 

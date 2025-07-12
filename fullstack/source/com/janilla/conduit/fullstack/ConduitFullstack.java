@@ -26,15 +26,15 @@ package com.janilla.conduit.fullstack;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
 import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.conduit.frontend.ConduitFrontend;
-import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
@@ -88,25 +88,24 @@ public class ConduitFullstack {
 
 	public MapAndType.TypeResolver typeResolver;
 
-	public List<Class<?>> types;
+	public Set<Class<?>> types;
 
 	public ConduitFullstack(Properties configuration) {
 		this.configuration = configuration;
 
-		types = Util.getPackageClasses(getClass().getPackageName()).toList();
+		types = Util.getPackageClasses(getClass().getPackageName()).collect(Collectors.toSet());
 		factory = new Factory(types, this);
 		typeResolver = factory.create(MapAndType.DollarTypeResolver.class);
 
 		handler = x -> {
-			var ex = (HttpExchange) x;
-//			System.out.println("ConduitFullstack, " + hx.getRequest().getPath());
-			var o = ex.getException() != null ? ex.getException() : ex.getRequest();
+//			System.out.println("ConduitFullstack, " + x.getRequest().getPath());
+			var o = x.getException() != null ? x.getException() : x.getRequest();
 			var h = switch (o) {
 			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;
 			case Exception _ -> backend.handler;
 			default -> null;
 			};
-			return h.handle(ex);
+			return h.handle(x);
 		};
 
 		backend = new ConduitBackend(configuration);

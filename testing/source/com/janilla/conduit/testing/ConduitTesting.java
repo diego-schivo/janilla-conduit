@@ -26,9 +26,10 @@ package com.janilla.conduit.testing;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
@@ -87,12 +88,12 @@ public class ConduitTesting {
 
 	public MapAndType.TypeResolver typeResolver;
 
-	public List<Class<?>> types;
+	public Set<Class<?>> types;
 
 	public ConduitTesting(Properties configuration) {
 		this.configuration = configuration;
 
-		types = Util.getPackageClasses(getClass().getPackageName()).toList();
+		types = Util.getPackageClasses(getClass().getPackageName()).collect(Collectors.toSet());
 		factory = new Factory(types, this);
 		typeResolver = factory.create(MapAndType.DollarTypeResolver.class);
 

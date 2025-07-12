@@ -26,8 +26,9 @@ package com.janilla.conduit.frontend;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 
@@ -83,12 +84,12 @@ public class ConduitFrontend {
 
 	public MapAndType.TypeResolver typeResolver;
 
-	public List<Class<?>> types;
+	public Set<Class<?>> types;
 
 	public ConduitFrontend(Properties configuration) {
 		this.configuration = configuration;
 
-		types = Util.getPackageClasses(getClass().getPackageName()).toList();
+		types = Util.getPackageClasses(getClass().getPackageName()).collect(Collectors.toSet());
 		factory = new Factory(types, this);
 		typeResolver = factory.create(MapAndType.DollarTypeResolver.class);
 

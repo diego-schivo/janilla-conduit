@@ -24,23 +24,33 @@
 package com.janilla.conduit.backend;
 
 import java.lang.reflect.Type;
+import java.util.Comparator;
 import java.util.Properties;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.janilla.http.HeaderField;
 import com.janilla.http.HttpExchange;
 import com.janilla.json.MapAndType.TypeResolver;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodHandlerFactory;
+import com.janilla.web.RenderableFactory;
+import com.janilla.web.WebHandlerFactory;
 
 public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	public Properties configuration;
 
+	public CustomMethodHandlerFactory(Set<Class<?>> types, Function<Class<?>, Object> targetResolver,
+			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
+			WebHandlerFactory rootFactory) {
+		super(types, targetResolver, invocationComparator, renderableFactory, rootFactory);
+	}
+
 	@Override
-	protected void handle(Invocation invocation, HttpExchange exchange) {
-		exchange.getResponse().getHeaders().add(
-				new HeaderField("access-control-allow-origin", configuration.getProperty("conduit.api.cors.origin")));
+	protected boolean handle(Invocation invocation, HttpExchange exchange) {
+		exchange.getResponse().setHeaderValue("access-control-allow-origin",
+				configuration.getProperty("conduit.api.cors.origin"));
 
 //		if (exchange.getRequest().getPath().startsWith("/api/"))
 //			try {
@@ -49,7 +59,7 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 //				e.printStackTrace();
 //			}
 
-		super.handle(invocation, exchange);
+		return super.handle(invocation, exchange);
 	}
 
 	@Override
