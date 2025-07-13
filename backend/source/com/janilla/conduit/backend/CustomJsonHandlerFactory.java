@@ -51,15 +51,17 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 
 	@Override
 	protected Iterator<JsonToken<?>> buildJsonIterator(Object object, HttpExchange exchange) {
-		var x = new CustomReflectionJsonIterator();
-		x.setObject(object);
-		x.user = () -> ((CustomHttpExchange) exchange).getUser();
-		return x;
+		return new CustomReflectionJsonIterator(object, false, () -> ((CustomHttpExchange) exchange).getUser());
 	}
 
 	protected class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 
-		private Supplier<User> user;
+		protected final Supplier<User> user;
+
+		public CustomReflectionJsonIterator(Object object, boolean includeType, Supplier<User> user) {
+			super(object, includeType);
+			this.user = user;
+		}
 
 		@Override
 		public Iterator<JsonToken<?>> newValueIterator(Object object) {

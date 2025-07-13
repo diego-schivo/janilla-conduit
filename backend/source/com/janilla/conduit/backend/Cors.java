@@ -43,7 +43,7 @@ public class Cors {
 		var o = configuration.getProperty("conduit.api.cors.origin");
 		var m = methodHandlerFactory.resolveInvocables(request.getPath())
 				.flatMap(x -> x.methodHandles().keySet().stream()).map(x -> x.getAnnotation(Handle.class).method())
-				.collect(Collectors.toSet());
+				.toList();
 		var h = configuration.getProperty("conduit.api.cors.headers");
 
 		response.setStatus(204);

@@ -23,12 +23,15 @@
  */
 package com.janilla.conduit.testing;
 
+import java.util.Map;
+
 import javax.net.ssl.SSLContext;
 
 import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpResponse;
 import com.janilla.http.HttpServer;
 
 public class CustomHttpServer extends HttpServer {
@@ -40,9 +43,9 @@ public class CustomHttpServer extends HttpServer {
 	}
 
 	@Override
-	protected HttpExchange createExchange(HttpRequest request) {
+	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
 		return Test.ongoing.get() && request.getPath().startsWith("/api/")
-				? fullstack.backend.factory.create(HttpExchange.class)
-				: super.createExchange(request);
+				? fullstack.backend.factory.create(HttpExchange.class, Map.of("request", request, "response", response))
+				: super.createExchange(request, response);
 	}
 }

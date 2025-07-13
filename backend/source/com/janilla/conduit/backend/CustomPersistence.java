@@ -23,21 +23,22 @@
  */
 package com.janilla.conduit.backend;
 
+import java.util.Collection;
 import java.util.Optional;
-import java.util.Set;
 
 import com.janilla.database.BTree;
 import com.janilla.database.Database;
 import com.janilla.database.KeyAndData;
 import com.janilla.io.ByteConverter;
-import com.janilla.json.MapAndType.TypeResolver;
+import com.janilla.json.TypeResolver;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Entity;
 import com.janilla.persistence.Persistence;
 
 public class CustomPersistence extends Persistence {
 
-	public CustomPersistence(Database database, Set<Class<? extends Entity<?>>> types, TypeResolver typeResolver) {
+	public CustomPersistence(Database database, Collection<Class<? extends Entity<?>>> types,
+			TypeResolver typeResolver) {
 		super(database, types, typeResolver);
 	}
 

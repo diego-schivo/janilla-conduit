@@ -23,11 +23,14 @@
  */
 package com.janilla.conduit.backend;
 
+import java.util.Map;
+
 import javax.net.ssl.SSLContext;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpResponse;
 import com.janilla.http.HttpServer;
 import com.janilla.reflect.Factory;
 
@@ -40,7 +43,7 @@ public class CustomHttpServer extends HttpServer {
 	}
 
 	@Override
-	protected HttpExchange createExchange(HttpRequest request) {
-		return factory.create(HttpExchange.class);
+	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
+		return factory.create(HttpExchange.class, Map.of("request", request, "response", response));
 	}
 }

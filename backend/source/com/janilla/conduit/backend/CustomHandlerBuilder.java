@@ -23,21 +23,25 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.reflect.Factory;
-import com.janilla.web.ApplicationHandlerBuilder;
-import com.janilla.web.MethodHandlerFactory;
-import com.janilla.web.WebHandlerFactory;
+import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.util.Collection;
 
-public class CustomHandlerBuilder extends ApplicationHandlerBuilder {
+import com.janilla.http.HttpHandlerFactory;
+import com.janilla.reflect.Factory;
+import com.janilla.web.ApplicationHandlerFactory;
+import com.janilla.web.MethodHandlerFactory;
+
+public class CustomHandlerBuilder extends ApplicationHandlerFactory {
 
 	public ConduitBackend application;
 
-	public CustomHandlerBuilder(Factory factory) {
-		super(factory);
+	public CustomHandlerBuilder(Factory factory, Collection<Method> methods, Collection<Path> files) {
+		super(factory, methods, files);
 	}
 
 	@Override
-	protected WebHandlerFactory buildMethodHandlerFactory() {
+	protected HttpHandlerFactory buildMethodHandlerFactory() {
 		var x = (MethodHandlerFactory) super.buildMethodHandlerFactory();
 		application.methodHandlerFactory = x;
 		return x;

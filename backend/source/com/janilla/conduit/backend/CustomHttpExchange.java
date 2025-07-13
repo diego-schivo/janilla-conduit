@@ -28,10 +28,12 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpResponse;
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
 
-public class CustomHttpExchange extends HttpExchange {
+public class CustomHttpExchange extends HttpExchange.Base {
 
 	public Properties configuration;
 
@@ -39,15 +41,25 @@ public class CustomHttpExchange extends HttpExchange {
 
 	private Map<String, Object> map = new HashMap<>();
 
+	public CustomHttpExchange(HttpRequest request, HttpResponse response) {
+		super(request, response);
+	}
+
 	public User getUser() {
 		if (!map.containsKey("user")) {
-			var a = getRequest().getHeaderValue("authorization");
+			var a = request().getHeaderValue("authorization");
 			var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
 			var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
 			var e = p != null ? (String) p.get("loggedInAs") : null;
 			var c = persistence.crud(User.class);
-			map.put("user", c.read(c.find("email", e)) );
+			map.put("user", c.read(c.find("email", e)));
 		}
 		return (User) map.get("user");
+	}
+
+	@Override
+	public HttpExchange withException(Exception exception) {
+		this.exception = exception;
+		return this;
 	}
 }

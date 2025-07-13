@@ -23,36 +23,37 @@
  */
 package com.janilla.conduit.backend;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
-import com.janilla.json.MapAndType.TypeResolver;
+import com.janilla.http.HttpHandlerFactory;
+import com.janilla.json.TypeResolver;
 import com.janilla.util.EntryList;
 import com.janilla.web.MethodHandlerFactory;
 import com.janilla.web.RenderableFactory;
-import com.janilla.web.WebHandlerFactory;
 
 public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	public Properties configuration;
 
-	public CustomMethodHandlerFactory(Set<Class<?>> types, Function<Class<?>, Object> targetResolver,
+	public CustomMethodHandlerFactory(Collection<Method> methods, Function<Class<?>, Object> targetResolver,
 			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
-			WebHandlerFactory rootFactory) {
-		super(types, targetResolver, invocationComparator, renderableFactory, rootFactory);
+			HttpHandlerFactory rootFactory) {
+		super(methods, targetResolver, invocationComparator, renderableFactory, rootFactory);
 	}
 
 	@Override
 	protected boolean handle(Invocation invocation, HttpExchange exchange) {
-		exchange.getResponse().setHeaderValue("access-control-allow-origin",
+		exchange.response().setHeaderValue("access-control-allow-origin",
 				configuration.getProperty("conduit.api.cors.origin"));
 
-//		if (exchange.getRequest().getPath().startsWith("/api/"))
+//		if (exchange.request().getPath().startsWith("/api/"))
 //			try {
 //				Thread.sleep(1500);
 //			} catch (InterruptedException e) {
