@@ -31,15 +31,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.web.Handle;
 
+@Handle(path = "/test")
 public class Test {
 
 	public ConduitFullstack fullstack;
 
 	static final AtomicBoolean ongoing = new AtomicBoolean();
 
-	@Handle(method = "POST", path = "/test/start")
+	@Handle(method = "POST", path = "start")
 	public void start() throws IOException {
-//		System.out.println("Test.start, this=" + this);
+//		IO.println("Test.start, this=" + this);
 		if (ongoing.getAndSet(true))
 			throw new RuntimeException();
 		var fch = (FileChannel) fullstack.backend.persistence.database().channel().channel();
@@ -49,9 +50,9 @@ public class Test {
 		}
 	}
 
-	@Handle(method = "POST", path = "/test/stop")
+	@Handle(method = "POST", path = "stop")
 	public void stop() {
-//		System.out.println("Test.stop, this=" + this);
+//		IO.println("Test.stop, this=" + this);
 		if (!ongoing.getAndSet(false))
 			throw new RuntimeException();
 	}

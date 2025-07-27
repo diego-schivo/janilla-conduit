@@ -37,8 +37,6 @@ import java.util.stream.Stream;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Factory;
-import com.janilla.util.Randomize;
-import com.janilla.util.Util;
 
 public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
@@ -67,14 +65,14 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 		var ww = new ArrayList<>(Validation.SAFE_WORDS);
 		var tags = Randomize.elements(5, 15, ww).distinct().toList();
 		for (var i = r.nextInt(6, 11); i > 0; i--) {
-			var n = Randomize.phrase(2, 2, () -> Util.capitalizeFirstChar(Randomize.element(ww)));
+			var n = Randomize.phrase(2, 2, () -> Randomize.capitalizeFirstChar(Randomize.element(ww)));
 			var u = new User(null, n.toLowerCase().replace(' ', '.') + "@lorem.ipsum", null, null, n, null,
 					"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text x='2' y='12.5' font-size='12'>"
 							+ new String(Character.toChars(0x1F600 + r.nextInt(0x50))) + "</text></svg>");
 			u = UserApi.setHashAndSalt(u, n.toLowerCase().substring(0, n.indexOf(' ')));
 			u = persistence.crud(User.class).create(u);
 			for (var j = r.nextInt(0, 5); j > 0; j--) {
-				var t = Util.capitalizeFirstChar(Randomize.phrase(2, 6, () -> Randomize.element(ww)));
+				var t = Randomize.capitalizeFirstChar(Randomize.phrase(2, 6, () -> Randomize.element(ww)));
 				var c = Randomize.instant(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant(),
 						OffsetDateTime.now(ZoneOffset.UTC).toInstant());
 				var a = new Article(null, t.toLowerCase().replace(' ', '-'), t,
@@ -105,10 +103,11 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 		var r = ThreadLocalRandom.current();
 		var b = Stream.<String>builder();
 		if (r.nextBoolean())
-			b.add("# " + Util.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(words))) + "\n");
+			b.add("# " + Randomize.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(words))) + "\n");
 		for (var i = r.nextInt(1, 6); i > 0; i--) {
 			if (r.nextBoolean())
-				b.add("### " + Util.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(words))) + "\n");
+				b.add("### " + Randomize.capitalizeFirstChar(Randomize.phrase(3, 7, () -> Randomize.element(words)))
+						+ "\n");
 			if (r.nextInt(3) == 2)
 				b.add(Stream.iterate("", _ -> "- " + Randomize.phrase(5, 11, () -> Randomize.element(words))).skip(1)
 						.limit(r.nextInt(2, 6)).collect(Collectors.joining("\n")) + "\n");

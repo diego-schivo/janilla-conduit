@@ -23,20 +23,21 @@
  */
 package com.janilla.conduit.backend;
 
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Collection;
 
 import com.janilla.http.HttpHandlerFactory;
+import com.janilla.reflect.ClassAndMethod;
 import com.janilla.reflect.Factory;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.MethodHandlerFactory;
 
-public class CustomHandlerBuilder extends ApplicationHandlerFactory {
+public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
 	public ConduitBackend application;
 
-	public CustomHandlerBuilder(Factory factory, Collection<Method> methods, Collection<Path> files) {
+	public CustomHandlerFactory(Factory factory, Collection<ClassAndMethod> methods,
+			Collection<Path> files) {
 		super(factory, methods, files);
 	}
 

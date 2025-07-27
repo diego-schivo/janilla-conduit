@@ -41,6 +41,7 @@ import com.janilla.reflect.Reflection;
 import com.janilla.web.ForbiddenException;
 import com.janilla.web.Handle;
 
+@Handle(path = "/api/articles")
 public class ArticleApi {
 
 	public Properties configuration;
@@ -49,7 +50,7 @@ public class ArticleApi {
 
 	public Persistence persistence;
 
-	@Handle(method = "POST", path = "/api/articles")
+	@Handle(method = "POST")
 	public Object create(Form form, User user) {
 		var s = toSlug(form.article.title);
 		validate(null, s, form.article);
@@ -72,14 +73,14 @@ public class ArticleApi {
 		return Map.of("article", a);
 	}
 
-	@Handle(method = "GET", path = "/api/articles/([^/]+)")
+	@Handle(method = "GET", path = "([^/]+)")
 	public Object read(String slug) {
 		var c = persistence.crud(Article.class);
 		var x = c.read(c.find("slug", slug));
 		return Collections.singletonMap("article", x);
 	}
 
-	@Handle(method = "PUT", path = "/api/articles/([^/]+)")
+	@Handle(method = "PUT", path = "([^/]+)")
 	public Object update(String slug, Form form, User user) {
 		var s = Objects.requireNonNullElse(toSlug(form.article.title), slug);
 		validate(slug, s, form.article);
@@ -97,13 +98,13 @@ public class ArticleApi {
 		return Collections.singletonMap("article", a);
 	}
 
-	@Handle(method = "DELETE", path = "/api/articles/([^/]+)")
+	@Handle(method = "DELETE", path = "([^/]+)")
 	public void delete(String slug) {
 		var c = persistence.crud(Article.class);
 		c.delete(c.find("slug", slug));
 	}
 
-	@Handle(method = "GET", path = "/api/articles")
+	@Handle(method = "GET")
 	public Object list(Filter filter, Range range) {
 		var t = Stream.of(filter != null ? filter.tag : null).filter(x -> x != null && !x.isBlank()).toArray();
 		var a = Stream.of(filter != null ? filter.author : null).filter(x -> x != null && !x.isBlank())
@@ -116,7 +117,7 @@ public class ArticleApi {
 		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
 	}
 
-	@Handle(method = "GET", path = "/api/articles/feed")
+	@Handle(method = "GET", path = "feed")
 	public Object listFeed(Range range, User user) {
 		var u = persistence.crud(User.class).filter("followList", user.id());
 		var c = persistence.crud(Article.class);
@@ -126,7 +127,7 @@ public class ArticleApi {
 		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
 	}
 
-	@Handle(method = "POST", path = "/api/articles/([^/]+)/comments")
+	@Handle(method = "POST", path = "([^/]+)/comments")
 	public Object createComment(String slug, CommentForm form, User user) {
 		var v = factory.create(Validation.class);
 		if (v.isNotBlank("body", form.comment.body))
@@ -150,7 +151,7 @@ public class ArticleApi {
 		return Map.of("comment", c);
 	}
 
-	@Handle(method = "DELETE", path = "/api/articles/([^/]+)/comments/([^/]+)")
+	@Handle(method = "DELETE", path = "([^/]+)/comments/([^/]+)")
 	public void deleteComment(String slug, Long id, User user) {
 		var c = persistence.crud(Comment.class);
 		var x = c.read(id);
@@ -160,14 +161,14 @@ public class ArticleApi {
 			throw new ForbiddenException();
 	}
 
-	@Handle(method = "GET", path = "/api/articles/([^/]+)/comments")
+	@Handle(method = "GET", path = "([^/]+)/comments")
 	public Object listComments(String slug) {
 		var a = persistence.crud(Article.class).find("slug", slug);
 		var c = persistence.crud(Comment.class);
 		return Map.of("comments", c.read(c.filter("article", a)));
 	}
 
-	@Handle(method = "POST", path = "/api/articles/([^/]+)/favorite")
+	@Handle(method = "POST", path = "([^/]+)/favorite")
 	public Object favorite(String slug, User user) {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
@@ -177,7 +178,7 @@ public class ArticleApi {
 		return Map.of("article", a.id());
 	}
 
-	@Handle(method = "DELETE", path = "/api/articles/([^/]+)/favorite")
+	@Handle(method = "DELETE", path = "([^/]+)/favorite")
 	public Object unfavorite(String slug, User user) {
 		if (user == null)
 			throw new NullPointerException("user=" + user);

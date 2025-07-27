@@ -37,11 +37,11 @@ import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
+import com.janilla.java.Java;
 import com.janilla.json.DollarTypeResolver;
 import com.janilla.json.TypeResolver;
 import com.janilla.net.Net;
 import com.janilla.reflect.Factory;
-import com.janilla.util.Util;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Handle;
 import com.janilla.web.NotFoundException;
@@ -52,29 +52,34 @@ public class ConduitTesting {
 
 	public static void main(String[] args) {
 		try {
-			var pp = new Properties();
-			try (var s1 = ConduitTesting.class.getResourceAsStream("configuration.properties")) {
-				pp.load(s1);
+			ConduitTesting a;
+			{
+				var c = new Properties();
+				try (var x = ConduitTesting.class.getResourceAsStream("configuration.properties")) {
+					c.load(x);
+				}
 				if (args.length > 0) {
-					var p = args[0];
-					if (p.startsWith("~"))
-						p = System.getProperty("user.home") + p.substring(1);
-					try (var s2 = Files.newInputStream(Path.of(p))) {
-						pp.load(s2);
+					var f = args[0];
+					if (f.startsWith("~"))
+						f = System.getProperty("user.home") + f.substring(1);
+					try (var x = Files.newInputStream(Path.of(f))) {
+						c.load(x);
 					}
 				}
+				a = new ConduitTesting(c);
 			}
-			var ct = new ConduitTesting(pp);
+
 			HttpServer s;
 			{
-				SSLContext sc;
-				try (var is = Net.class.getResourceAsStream("testkeys")) {
-					sc = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+				SSLContext c;
+				try (var x = Net.class.getResourceAsStream("testkeys")) {
+					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
 				}
-				s = ct.factory.create(HttpServer.class, Map.of("sslContext", sc, "handler", ct.handler));
+				var p = Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"));
+				s = a.factory.create(HttpServer.class,
+						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}
-			var p = Integer.parseInt(ct.configuration.getProperty("conduit.testing.server.port"));
-			s.serve(new InetSocketAddress(p));
+			s.serve();
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -95,7 +100,7 @@ public class ConduitTesting {
 	public ConduitTesting(Properties configuration) {
 		this.configuration = configuration;
 
-		types = Util.getPackageClasses(getClass().getPackageName()).toList();
+		types = Java.getPackageClasses(ConduitTesting.class.getPackageName());
 		factory = new Factory(types, this);
 		typeResolver = factory.create(DollarTypeResolver.class);
 
@@ -105,7 +110,7 @@ public class ConduitTesting {
 			var f = factory.create(ApplicationHandlerFactory.class);
 			handler = x -> {
 				var hx = (HttpExchange) x;
-//				System.out.println(
+//				IO.println(
 //						"ConduitTesting, " + hx.request().getPath() + ", Test.ongoing=" + Test.ongoing.get());
 				var h2 = Test.ongoing.get() && !hx.request().getPath().startsWith("/test/") ? fullstack.handler
 						: (HttpHandler) y -> {

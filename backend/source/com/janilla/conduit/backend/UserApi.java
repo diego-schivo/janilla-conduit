@@ -40,6 +40,7 @@ import com.janilla.reflect.Factory;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.Handle;
 
+@Handle(path = "/api/users")
 public class UserApi {
 
 	public Properties configuration;
@@ -59,7 +60,7 @@ public class UserApi {
 				user != null ? new CurrentUser(user.email(), t, user.username(), user.bio(), user.image()) : null);
 	}
 
-	@Handle(method = "POST", path = "/api/users/login")
+	@Handle(method = "POST", path = "login")
 	public Object authenticate(Authenticate authenticate) {
 		var v = factory.create(Validation.class);
 		v.isNotBlank("email", authenticate.user.email);
@@ -79,7 +80,7 @@ public class UserApi {
 		return getCurrent(u);
 	}
 
-	@Handle(method = "POST", path = "/api/users")
+	@Handle(method = "POST")
 	public Object register(Register register) {
 		var u = register.user;
 		var v = factory.create(Validation.class);
@@ -116,7 +117,7 @@ public class UserApi {
 
 	@Handle(method = "PUT", path = "/api/user")
 	public Object update(Update update, User user) {
-//		System.out.println("update=" + update);
+//		IO.println("update=" + update);
 		var u = update.user;
 		var v = factory.create(Validation.class);
 		var c = persistence.crud(User.class);

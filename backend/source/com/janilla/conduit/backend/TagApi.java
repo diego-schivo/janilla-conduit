@@ -28,11 +28,12 @@ import java.util.List;
 import com.janilla.persistence.Persistence;
 import com.janilla.web.Handle;
 
+@Handle(path = "/api/tags")
 public class TagApi {
 
 	public Persistence persistence;
 
-	@Handle(method = "GET", path = "/api/tags")
+	@Handle(method = "GET")
 	public Tags tags() {
 		var tt = persistence.database().perform(
 				(_, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);

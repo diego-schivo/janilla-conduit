@@ -23,6 +23,7 @@
  */
 package com.janilla.conduit.backend;
 
+import java.net.SocketAddress;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
@@ -38,8 +39,8 @@ public class CustomHttpServer extends HttpServer {
 
 	public Factory factory;
 
-	public CustomHttpServer(SSLContext sslContext, HttpHandler handler) {
-		super(sslContext, handler);
+	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler) {
+		super(sslContext, endpoint, handler);
 	}
 
 	@Override

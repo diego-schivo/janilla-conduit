@@ -121,7 +121,7 @@ export default class App extends WebComponent {
 	}
 
 	handleClick = event => {
-		const a = event.composedPath().find(x => x.tagName?.toLowerCase() === "a");
+		const a = event.composedPath().find(x => x instanceof Element && x.matches("a"));
 		if (!a?.href)
 			return;
 		event.preventDefault();

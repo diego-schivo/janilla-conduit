@@ -37,40 +37,44 @@ import com.janilla.conduit.frontend.ConduitFrontend;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
+import com.janilla.java.Java;
 import com.janilla.json.DollarTypeResolver;
 import com.janilla.json.TypeResolver;
 import com.janilla.net.Net;
 import com.janilla.reflect.Factory;
-import com.janilla.util.Util;
 
 public class ConduitFullstack {
 
 	public static void main(String[] args) {
 		try {
-			var pp = new Properties();
-			try (var s1 = ConduitFullstack.class.getResourceAsStream("configuration.properties")) {
-				pp.load(s1);
+			ConduitFullstack a;
+			{
+				var c = new Properties();
+				try (var x = ConduitFullstack.class.getResourceAsStream("configuration.properties")) {
+					c.load(x);
+				}
 				if (args.length > 0) {
-					var p = args[0];
-					if (p.startsWith("~"))
-						p = System.getProperty("user.home") + p.substring(1);
-					try (var s2 = Files.newInputStream(Path.of(p))) {
-						pp.load(s2);
+					var f = args[0];
+					if (f.startsWith("~"))
+						f = System.getProperty("user.home") + f.substring(1);
+					try (var x = Files.newInputStream(Path.of(f))) {
+						c.load(x);
 					}
 				}
+				a = new ConduitFullstack(c);
 			}
-			var x = new ConduitFullstack(pp);
 
 			HttpServer s;
 			{
 				SSLContext c;
-				try (var is = Net.class.getResourceAsStream("testkeys")) {
-					c = Net.getSSLContext("JKS", is, "passphrase".toCharArray());
+				try (var x = Net.class.getResourceAsStream("testkeys")) {
+					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
 				}
-				s = x.factory.create(HttpServer.class, Map.of("sslContext", c, "handler", x.handler));
+				var p = Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"));
+				s = a.factory.create(HttpServer.class,
+						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}
-			var p = Integer.parseInt(x.configuration.getProperty("conduit.fullstack.server.port"));
-			s.serve(new InetSocketAddress(p));
+			s.serve();
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -93,12 +97,12 @@ public class ConduitFullstack {
 	public ConduitFullstack(Properties configuration) {
 		this.configuration = configuration;
 
-		types = Util.getPackageClasses(getClass().getPackageName()).toList();
+		types = Java.getPackageClasses(ConduitFullstack.class.getPackageName());
 		factory = new Factory(types, this);
 		typeResolver = factory.create(DollarTypeResolver.class);
 
 		handler = x -> {
-//			System.out.println("ConduitFullstack, " + x.request().getPath());
+//			IO.println("ConduitFullstack, " + x.request().getPath());
 			var o = x.exception() != null ? x.exception() : x.request();
 			var h = switch (o) {
 			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;

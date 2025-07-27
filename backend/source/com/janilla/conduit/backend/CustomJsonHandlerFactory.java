@@ -23,26 +23,26 @@
  */
 package com.janilla.conduit.backend;
 
-import java.util.AbstractMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
+import com.janilla.java.Java;
 import com.janilla.json.JsonToken;
 import com.janilla.json.ReflectionJsonIterator;
-import com.janilla.persistence.Persistence;
-import com.janilla.reflect.Reflection;
+import com.janilla.reflect.Factory;
 import com.janilla.web.JsonHandlerFactory;
 
 public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 
-	public Properties configuration;
+//	public Properties configuration;
+//
+//	public Persistence persistence;
 
-	public Persistence persistence;
+	protected final Factory factory;
+
+	public CustomJsonHandlerFactory(Factory factory) {
+		this.factory = factory;
+	}
 
 //	@Override
 //	protected void render(Object object, HttpExchange exchange) {
@@ -51,66 +51,7 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 
 	@Override
 	protected Iterator<JsonToken<?>> buildJsonIterator(Object object, HttpExchange exchange) {
-		return new CustomReflectionJsonIterator(object, false, () -> ((CustomHttpExchange) exchange).getUser());
-	}
-
-	protected class CustomReflectionJsonIterator extends ReflectionJsonIterator {
-
-		protected final Supplier<User> user;
-
-		public CustomReflectionJsonIterator(Object object, boolean includeType, Supplier<User> user) {
-			super(object, includeType);
-			this.user = user;
-		}
-
-		@Override
-		public Iterator<JsonToken<?>> newValueIterator(Object object) {
-			var o = stack().peek();
-			if (o instanceof Map.Entry x) {
-				var n = (String) x.getKey();
-				switch (n) {
-				case "article":
-					if (object instanceof Long y)
-						object = persistence.crud(Article.class).read(y);
-					break;
-				case "author", "profile":
-					if (object instanceof Long y)
-						object = persistence.crud(User.class).read(y);
-					break;
-				}
-			}
-			if (object != null)
-				switch (object) {
-				case Article a: {
-					var m = Reflection.properties(Article.class).filter(x -> !x.name().equals("id")).map(x -> {
-//						System.out.println("k=" + k);
-						var v = x.get(a);
-						return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
-					}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
-					var u = user.get();
-					m.put("favorited", u != null && a.id() != null && persistence.crud(Article.class)
-							.filter("favoriteList", u.id()).stream().anyMatch(x -> x.equals(a.id())));
-					m.put("favoritesCount",
-							a.id() != null ? persistence.crud(User.class).count("favoriteList", a.id()) : 0);
-					object = m;
-				}
-					break;
-				case User u: {
-					var m = Reflection.properties(User.class)
-							.filter(x -> !Set.of("hash", "id", "salt").contains(x.name())).map(x -> {
-								var v = x.get(u);
-								return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
-							}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
-					var v = user.get();
-					m.put("following", v != null && persistence.crud(User.class).filter("followList", v.id()).stream()
-							.anyMatch(x -> x.equals(u.id())));
-					object = m;
-				}
-					break;
-				default:
-					break;
-				}
-			return super.newValueIterator(object);
-		}
+//		return new CustomReflectionJsonIterator(object, false, () -> ((CustomHttpExchange) exchange).getUser());
+		return factory.create(ReflectionJsonIterator.class, Java.hashMap("object", object, "includeType", false));
 	}
 }

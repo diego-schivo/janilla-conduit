@@ -29,18 +29,19 @@ import java.util.Map;
 import com.janilla.persistence.Persistence;
 import com.janilla.web.Handle;
 
+@Handle(path = "/api/profiles")
 public class ProfileApi {
 
 	public Persistence persistence;
 
-	@Handle(method = "GET", path = "/api/profiles/([^/]+)")
+	@Handle(method = "GET", path = "([^/]+)")
 	public Object read(String username) {
 		var c = persistence.crud(User.class);
 		var u = c.read(c.find("username", username));
 		return Collections.singletonMap("profile", u);
 	}
 
-	@Handle(method = "POST", path = "/api/profiles/([^/]+)/follow")
+	@Handle(method = "POST", path = "([^/]+)/follow")
 	public Object follow(String username, User user) {
 		var c = (UserCrud) persistence.crud(User.class);
 		var u = c.read(c.find("username", username));
@@ -48,7 +49,7 @@ public class ProfileApi {
 		return Map.of("profile", u.id());
 	}
 
-	@Handle(method = "DELETE", path = "/api/profiles/([^/]+)/follow")
+	@Handle(method = "DELETE", path = "([^/]+)/follow")
 	public Object unfollow(String username, User user) {
 		var c = (UserCrud) persistence.crud(User.class);
 		var u = c.read(c.find("username", username));
