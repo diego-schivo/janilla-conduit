@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -50,6 +51,8 @@ import com.janilla.web.Render;
 
 @Render(template = "index.html")
 public class ConduitFrontend {
+
+	public static final AtomicReference<ConduitFrontend> INSTANCE = new AtomicReference<>();
 
 	public static void main(String[] args) {
 		try {
@@ -97,20 +100,20 @@ public class ConduitFrontend {
 	public List<Class<?>> types;
 
 	public ConduitFrontend(Properties configuration) {
+		if (!INSTANCE.compareAndSet(null, this))
+			throw new IllegalStateException();
 		this.configuration = configuration;
 
 		types = Java.getPackageClasses(ConduitFrontend.class.getPackageName());
-		factory = new Factory(types, this);
+		factory = new Factory(types, INSTANCE::get);
 		typeResolver = factory.create(DollarTypeResolver.class);
 
 		{
-			var f = factory.create(ApplicationHandlerFactory.class,
-					Map.of("methods", types.stream().flatMap(
-							x -> Arrays.stream(x.getMethods()).map(y -> new ClassAndMethod(x, y)))
-							.toList(), "files",
-							Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
-									.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile))
-									.toList()));
+			var f = factory.create(ApplicationHandlerFactory.class, Map.of("methods",
+					types.stream().flatMap(x -> Arrays.stream(x.getMethods()).map(y -> new ClassAndMethod(x, y)))
+							.toList(),
+					"files", Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
+							.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList()));
 			handler = x -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
 				if (h == null)

@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLContext;
 
@@ -44,6 +45,8 @@ import com.janilla.net.Net;
 import com.janilla.reflect.Factory;
 
 public class ConduitFullstack {
+
+	public static final AtomicReference<ConduitFullstack> INSTANCE = new AtomicReference<>();
 
 	public static void main(String[] args) {
 		try {
@@ -95,10 +98,12 @@ public class ConduitFullstack {
 	public List<Class<?>> types;
 
 	public ConduitFullstack(Properties configuration) {
+		if (!INSTANCE.compareAndSet(null, this))
+			throw new IllegalStateException();
 		this.configuration = configuration;
 
 		types = Java.getPackageClasses(ConduitFullstack.class.getPackageName());
-		factory = new Factory(types, this);
+		factory = new Factory(types, INSTANCE::get);
 		typeResolver = factory.create(DollarTypeResolver.class);
 
 		handler = x -> {
