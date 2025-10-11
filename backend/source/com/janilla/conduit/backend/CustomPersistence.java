@@ -24,59 +24,52 @@
 package com.janilla.conduit.backend;
 
 import java.util.Collection;
-import java.util.Optional;
 
-import com.janilla.database.BTree;
-import com.janilla.database.Database;
-import com.janilla.database.KeyAndData;
-import com.janilla.io.ByteConverter;
 import com.janilla.json.TypeResolver;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Entity;
 import com.janilla.persistence.Persistence;
+import com.janilla.sqlite.SQLiteDatabase;
 
 public class CustomPersistence extends Persistence {
 
-	public CustomPersistence(Database database, Collection<Class<? extends Entity<?>>> types,
+	public CustomPersistence(SQLiteDatabase database, Collection<Class<? extends Entity<?>>> types,
 			TypeResolver typeResolver) {
 		super(database, types, typeResolver);
 	}
 
-	@Override
-	public <K, V> com.janilla.database.Index<K, V> newIndex(KeyAndData<String> keyAndData) {
-		@SuppressWarnings("unchecked")
-		var x = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(keyAndData))
-				.orElseGet(() -> (com.janilla.database.Index<K, V>) switch (keyAndData.key()) {
-				case "User.favoriteList",
-						"User.followList" ->
-					new com.janilla.database.Index<Long, Long>(
-							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-									KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
-							ByteConverter.LONG);
-				case "Tag.count" ->
-					new com.janilla.database.Index<Object[], String>(
-							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-									KeyAndData.getByteConverter(ByteConverter.of(new ByteConverter.TypeAndOrder(
-											Long.class, ByteConverter.SortOrder.DESCENDING))),
-									keyAndData.bTree()),
-							ByteConverter.STRING);
-				case "Article.favoriteList" -> new com.janilla.database.Index<Long, Object[]>(
-						new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-								KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
-						ByteConverter.of(Article.class, "-createdAt", "id"));
-				default -> null;
-				});
-		return x;
-	}
+//	@Override
+//	public <K, V> com.janilla.database.Index<K, V> newIndex(KeyAndData<String> keyAndData) {
+//		@SuppressWarnings("unchecked")
+//		var x = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(keyAndData))
+//				.orElseGet(() -> (com.janilla.database.Index<K, V>) switch (keyAndData.key()) {
+//				case "User.favoriteList",
+//						"User.followList" ->
+//					new com.janilla.database.Index<Long, Long>(
+//							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
+//									KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
+//							ByteConverter.LONG);
+//				case "Tag.count" ->
+//					new com.janilla.database.Index<Object[], String>(
+//							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
+//									KeyAndData.getByteConverter(ByteConverter.of(new ByteConverter.TypeAndOrder(
+//											Long.class, ByteConverter.SortOrder.DESCENDING))),
+//									keyAndData.bTree()),
+//							ByteConverter.STRING);
+//				case "Article.favoriteList" -> new com.janilla.database.Index<Long, Object[]>(
+//						new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
+//								KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
+//						ByteConverter.of(Article.class, "-createdAt", "id"));
+//				default -> null;
+//				});
+//		return x;
+//	}
 
 	@Override
 	protected void createStoresAndIndexes() {
 		super.createStoresAndIndexes();
 		for (var x : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
-			database.perform((_, ii) -> {
-				ii.create(x);
-				return null;
-			}, true);
+			database.perform(() -> database.createIndex(x, "foo"), true);
 	}
 
 	@SuppressWarnings("unchecked")

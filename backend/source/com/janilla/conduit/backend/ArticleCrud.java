@@ -33,39 +33,34 @@ import com.janilla.persistence.Persistence;
 class ArticleCrud extends Crud<Long, Article> {
 
 	public ArticleCrud(Persistence persistence) {
-		super(Article.class, x -> {
-			var v = x.get("nextId");
-			var l = v != null ? (long) v : 1L;
-			x.put("nextId", l + 1);
-			return l;
-		}, persistence);
+		super(Article.class, persistence.nextId(Article.class), persistence);
 	}
 
 	public boolean favorite(Long id, Instant createdAt, Long user) {
-		return persistence.database().perform((_, ii) -> {
-			var x = ii.perform("User.favoriteList", i -> i.add(id, new Long[] { user }));
-			ii.perform("Article.favoriteList", i -> i.add(user, new Object[][] { { createdAt, id } }));
+		return persistence.database().perform(() -> {
+			var x = persistence.database().indexBTree("User.favoriteList").insert(id, user);
+			persistence.database().indexBTree("Article.favoriteList").insert(user, createdAt.toString(), id);
 			return x;
 		}, true);
 	}
 
 	public boolean unfavorite(Long id, Instant createdAt, Long user) {
-		return persistence.database().perform((_, ii) -> {
-			var x = ii.perform("User.favoriteList", i -> i.remove(id, new Long[] { user }));
-			ii.perform("Article.favoriteList", i -> i.remove(user, new Object[][] { { createdAt, id } }));
-			return x;
+		return persistence.database().perform(() -> {
+			var x = persistence.database().indexBTree("User.favoriteList").delete(id, user);
+			persistence.database().indexBTree("Article.favoriteList").delete(user, createdAt.toString(), id);
+			return x != null;
 		}, true);
 	}
 
 	@Override
 	protected void updateIndex(String name, Map<Object, Object> remove, Map<Object, Object> add) {
-//		IO.println("ArticleCrud.updateIndex, name=" + name + ", remove=" + remove + ", add" + add);
-		persistence.database().perform((_, ii) -> {
+		persistence.database().perform(() -> {
 			super.updateIndex(name, remove, add);
 
 			if (name != null && name.equals("Article.tagList")) {
 				var m = new LinkedHashMap<String, long[]>();
-				ii.perform("Article.tagList", i -> {
+				{
+					var i = persistence.database().indexBTree("Article.tagList");
 					if (remove != null)
 						for (var x : remove.keySet()) {
 							var c = i.count(x);
@@ -76,22 +71,20 @@ class ArticleCrud extends Crud<Long, Article> {
 							var c = i.count(x);
 							m.put((String) x, new long[] { c - 1, c });
 						}
-					return null;
-				});
-				if (!m.isEmpty())
-					ii.perform("Tag.count", i -> {
-						for (var x : m.entrySet()) {
-							var t = x.getKey();
-							var c = x.getValue();
+				}
+				if (!m.isEmpty()) {
+					var i = persistence.database().indexBTree("Tag.count");
+					for (var x : m.entrySet()) {
+						var t = x.getKey();
+						var c = x.getValue();
 //							IO.println(
 //									"ArticleCrud.updateIndex, Tag.count, t=" + t + ", c=" + Arrays.toString(c));
-							if (c[0] > 0)
-								i.remove(new Object[] { c[0] }, new String[] { t });
-							if (c[1] > 0)
-								i.add(new Object[] { c[1] }, new String[] { t });
-						}
-						return null;
-					});
+						if (c[0] > 0)
+							i.delete(c[0], t);
+						if (c[1] > 0)
+							i.insert(c[1], t);
+					}
+				}
 			}
 			return null;
 		}, true);

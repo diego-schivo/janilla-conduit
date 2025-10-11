@@ -34,10 +34,11 @@ import com.janilla.web.MethodHandlerFactory;
 
 public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
-	public ConduitBackend application;
+	protected final ConduitBackend application;
 
-	public CustomHandlerFactory(Factory factory, Collection<ClassAndMethod> methods,
-			Collection<Path> files) {
+	public CustomHandlerFactory(Factory factory, Collection<ClassAndMethod> methods, Collection<Path> files,
+			ConduitBackend application) {
+		this.application = application;
 		super(factory, methods, files);
 	}
 

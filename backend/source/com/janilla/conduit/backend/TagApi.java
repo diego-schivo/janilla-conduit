@@ -36,7 +36,8 @@ public class TagApi {
 	@Handle(method = "GET")
 	public Tags tags() {
 		var tt = persistence.database().perform(
-				(_, ii) -> ii.perform("Tag.count", i -> i.values().limit(10).map(x -> (String) x).toList()), false);
+				() -> persistence.database().indexBTree("Tag.count").rows().limit(10).map(x -> (String) x[1]).toList(),
+				false);
 		return new Tags(tt);
 	}
 

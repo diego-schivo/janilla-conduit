@@ -51,8 +51,13 @@ public class CustomHttpExchange extends HttpExchange.Base {
 			var t = a != null && a.startsWith("Token ") ? a.substring("Token ".length()) : null;
 			var p = t != null ? Jwt.verifyToken(t, configuration.getProperty("conduit.jwt.key")) : null;
 			var e = p != null ? (String) p.get("loggedInAs") : null;
-			var c = persistence.crud(User.class);
-			session.put("user", c.read(c.find("email", e)));
+			User u;
+			if (e != null) {
+				var c = persistence.crud(User.class);
+				u = c.read(c.find("email", e));
+			} else
+				u = null;
+			session.put("user", u);
 		}
 		return (User) session.get("user");
 	}
