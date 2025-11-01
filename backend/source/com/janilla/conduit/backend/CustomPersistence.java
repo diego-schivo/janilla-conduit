@@ -29,11 +29,11 @@ import com.janilla.json.TypeResolver;
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Entity;
 import com.janilla.persistence.Persistence;
-import com.janilla.sqlite.SQLiteDatabase;
+import com.janilla.sqlite.SqliteDatabase;
 
 public class CustomPersistence extends Persistence {
 
-	public CustomPersistence(SQLiteDatabase database, Collection<Class<? extends Entity<?>>> types,
+	public CustomPersistence(SqliteDatabase database, Collection<Class<? extends Entity<?>>> types,
 			TypeResolver typeResolver) {
 		super(database, types, typeResolver);
 	}

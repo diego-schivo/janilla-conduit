@@ -23,6 +23,7 @@
  */
 package com.janilla.conduit.backend;
 
+import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -125,10 +126,11 @@ public class ConduitBackend {
 		renderableFactory = new RenderableFactory();
 
 		{
-			var f = factory.create(ApplicationHandlerFactory.class,
-					Map.of("methods", types.stream()
-							.flatMap(x -> Arrays.stream(x.getMethods()).map(y -> new ClassAndMethod(x, y))).toList(),
-							"files", List.of()));
+			var f = factory.create(ApplicationHandlerFactory.class, Map.of("methods",
+					types.stream().flatMap(x -> Arrays.stream(x.getMethods())
+							.filter(y -> !Modifier.isStatic(y.getModifiers())).map(y -> new ClassAndMethod(x, y)))
+							.toList(),
+					"files", List.of()));
 			handler = x -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
 				if (h == null)

@@ -29,16 +29,18 @@ import com.janilla.persistence.Persistence;
 public class UserCrud extends Crud<Long, User> {
 
 	public UserCrud(Persistence persistence) {
-		super(User.class, persistence.nextId(User.class), persistence);
+		super(User.class, persistence.idConverter(User.class), persistence);
 	}
 
 	public boolean follow(Long profile, Long user) {
-		return persistence.database()
-				.perform(() -> persistence.database().indexBTree("User.followList").insert(user, profile), true);
+		return persistence.database().perform(
+				() -> persistence.database().index("User.followList").insert(new Object[] { user, profile }, null),
+				true);
 	}
 
 	public boolean unfollow(Long profile, Long user) {
 		return persistence.database().perform(
-				() -> persistence.database().indexBTree("User.followList").delete(user, profile), true) != null;
+				() -> persistence.database().index("User.followList").delete(new Object[] { user, profile }, null),
+				true) != null;
 	}
 }

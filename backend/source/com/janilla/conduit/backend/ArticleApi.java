@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.janilla.persistence.Crud;
+import com.janilla.persistence.IdPage;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.Factory;
 import com.janilla.reflect.Reflection;
@@ -123,7 +123,7 @@ public class ArticleApi {
 		var c = persistence.crud(Article.class);
 		var p = !u.isEmpty()
 				? c.filter("author", range != null ? range.skip : 0, range != null ? range.limit : -1, u.toArray())
-				: Crud.IdPage.<Long>empty();
+				: IdPage.<Long>empty();
 		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
 	}
 

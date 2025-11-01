@@ -23,6 +23,7 @@
  */
 package com.janilla.conduit.frontend;
 
+import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -109,10 +110,11 @@ public class ConduitFrontend {
 		typeResolver = factory.create(DollarTypeResolver.class);
 
 		{
-			var f = factory.create(ApplicationHandlerFactory.class, Map.of("methods",
-					types.stream().flatMap(x -> Arrays.stream(x.getMethods()).map(y -> new ClassAndMethod(x, y)))
-							.toList(),
-					"files", Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
+			var f = factory.create(ApplicationHandlerFactory.class, Map.of("methods", types.stream()
+					.flatMap(x -> Arrays.stream(x.getMethods()).filter(y -> !Modifier.isStatic(y.getModifiers()))
+							.map(y -> new ClassAndMethod(x, y)))
+					.toList(), "files",
+					Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
 							.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList()));
 			handler = x -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));

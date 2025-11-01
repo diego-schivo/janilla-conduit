@@ -33,22 +33,24 @@ import com.janilla.persistence.Persistence;
 class ArticleCrud extends Crud<Long, Article> {
 
 	public ArticleCrud(Persistence persistence) {
-		super(Article.class, persistence.nextId(Article.class), persistence);
+		super(Article.class, persistence.idConverter(Article.class), persistence);
 	}
 
 	public boolean favorite(Long id, Instant createdAt, Long user) {
 		return persistence.database().perform(() -> {
-			var x = persistence.database().indexBTree("User.favoriteList").insert(id, user);
-			persistence.database().indexBTree("Article.favoriteList").insert(user, createdAt.toString(), id);
+			var x = persistence.database().index("User.favoriteList").insert(new Object[] { id, user }, null);
+			persistence.database().index("Article.favoriteList")
+					.insert(new Object[] { user, createdAt.toString(), id }, null);
 			return x;
 		}, true);
 	}
 
 	public boolean unfavorite(Long id, Instant createdAt, Long user) {
 		return persistence.database().perform(() -> {
-			var x = persistence.database().indexBTree("User.favoriteList").delete(id, user);
-			persistence.database().indexBTree("Article.favoriteList").delete(user, createdAt.toString(), id);
-			return x != null;
+			var x = persistence.database().index("User.favoriteList").delete(new Object[] { id, user }, null);
+			persistence.database().index("Article.favoriteList")
+					.delete(new Object[] { user, createdAt.toString(), id }, null);
+			return x;
 		}, true);
 	}
 
@@ -60,7 +62,7 @@ class ArticleCrud extends Crud<Long, Article> {
 			if (name != null && name.equals("Article.tagList")) {
 				var m = new LinkedHashMap<String, long[]>();
 				{
-					var i = persistence.database().indexBTree("Article.tagList");
+					var i = persistence.database().index("Article.tagList");
 					if (remove != null)
 						for (var x : remove.keySet()) {
 							var c = i.count(x);
@@ -73,16 +75,16 @@ class ArticleCrud extends Crud<Long, Article> {
 						}
 				}
 				if (!m.isEmpty()) {
-					var i = persistence.database().indexBTree("Tag.count");
+					var i = persistence.database().index("Tag.count");
 					for (var x : m.entrySet()) {
 						var t = x.getKey();
 						var c = x.getValue();
 //							IO.println(
 //									"ArticleCrud.updateIndex, Tag.count, t=" + t + ", c=" + Arrays.toString(c));
 						if (c[0] > 0)
-							i.delete(c[0], t);
+							i.delete(new Object[] { c[0], t }, null);
 						if (c[1] > 0)
-							i.insert(c[1], t);
+							i.insert(new Object[] { c[1], t }, null);
 					}
 				}
 			}
