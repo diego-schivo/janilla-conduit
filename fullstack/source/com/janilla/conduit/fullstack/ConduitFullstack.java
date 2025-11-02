@@ -24,12 +24,12 @@
 package com.janilla.conduit.fullstack;
 
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
@@ -39,8 +39,6 @@ import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
 import com.janilla.java.Java;
-import com.janilla.json.DollarTypeResolver;
-import com.janilla.json.TypeResolver;
 import com.janilla.net.Net;
 import com.janilla.reflect.Factory;
 
@@ -52,19 +50,14 @@ public class ConduitFullstack {
 		try {
 			ConduitFullstack a;
 			{
-				var c = new Properties();
-				try (var x = ConduitFullstack.class.getResourceAsStream("configuration.properties")) {
-					c.load(x);
-				}
-				if (args.length > 0) {
-					var f = args[0];
-					if (f.startsWith("~"))
-						f = System.getProperty("user.home") + f.substring(1);
-					try (var x = Files.newInputStream(Path.of(f))) {
-						c.load(x);
-					}
-				}
-				a = new ConduitFullstack(c);
+				var f = new Factory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
+						ConduitFullstack.INSTANCE::get);
+				a = f.create(ConduitFullstack.class,
+						Java.hashMap("factory", f, "configurationFile",
+								args.length > 0 ? Path.of(
+										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
+												: args[0])
+										: null));
 			}
 
 			HttpServer s;
@@ -83,45 +76,69 @@ public class ConduitFullstack {
 		}
 	}
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public Factory factory;
+	protected final Factory factory;
 
-	public HttpHandler handler;
+	protected final HttpHandler handler;
 
-	public ConduitBackend backend;
+	protected final ConduitBackend backend;
 
-	public ConduitFrontend frontend;
+	protected final ConduitFrontend frontend;
 
-	public TypeResolver typeResolver;
+//	protected final TypeResolver typeResolver;
 
-	public List<Class<?>> types;
-
-	public ConduitFullstack(Properties configuration) {
+	public ConduitFullstack(Factory factory, Path configurationFile) {
+		this.factory = factory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
-		this.configuration = configuration;
+		configuration = factory.create(Properties.class, Collections.singletonMap("file", configurationFile));
+//		typeResolver = factory.create(DollarTypeResolver.class);
 
-		types = Java.getPackageClasses(ConduitFullstack.class.getPackageName());
-		factory = new Factory(types, INSTANCE::get);
-		typeResolver = factory.create(DollarTypeResolver.class);
+		backend = factory.create(ConduitBackend.class,
+				Java.hashMap("factory", new Factory(Stream.of("fullstack", "backend", "base").flatMap(x -> Java
+						.getPackageClasses(ConduitBackend.class.getPackageName().replace(".backend", "." + x)).stream())
+						.toList(), ConduitBackend.INSTANCE::get), "configurationFile", configurationFile));
+		frontend = factory.create(ConduitFrontend.class,
+				Java.hashMap("factory", new Factory(Stream.of("fullstack", "frontend")
+						.flatMap(x -> Java
+								.getPackageClasses(ConduitFrontend.class.getPackageName().replace(".frontend", "." + x))
+								.stream())
+						.toList(), ConduitFrontend.INSTANCE::get), "configurationFile", configurationFile));
 
 		handler = x -> {
 //			IO.println("ConduitFullstack, " + x.request().getPath());
 			var o = x.exception() != null ? x.exception() : x.request();
 			var h = switch (o) {
-			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler : frontend.handler;
-			case Exception _ -> backend.handler;
+			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler() : frontend.handler();
+			case Exception _ -> backend.handler();
 			default -> null;
 			};
 			return h.handle(x);
 		};
-
-		backend = new ConduitBackend(configuration);
-		frontend = new ConduitFrontend(configuration);
 	}
 
 	public ConduitFullstack application() {
 		return this;
+	}
+
+	public ConduitBackend backend() {
+		return backend;
+	}
+
+	public Properties configuration() {
+		return configuration;
+	}
+
+	public Factory factory() {
+		return factory;
+	}
+
+	public ConduitFrontend frontend() {
+		return frontend;
+	}
+
+	public HttpHandler handler() {
+		return handler;
 	}
 }

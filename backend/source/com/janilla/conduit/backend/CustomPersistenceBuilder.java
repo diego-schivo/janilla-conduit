@@ -78,8 +78,6 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 				var a = new Article(null, t.toLowerCase().replace(' ', '-'), t,
 						Randomize.sentence(3, 10, () -> Randomize.element(ww)), randomMarkdown(ww),
 						Randomize.elements(1, 5, tags).distinct().toList(), c, c, u.id());
-//				var z = persistence.crud(Article.class).create(a);
-//				persistence.crud(Article.class).read(z.id());
 				persistence.crud(Article.class).create(a);
 			}
 		}

@@ -24,9 +24,9 @@
 package com.janilla.conduit.testing;
 
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -57,19 +57,14 @@ public class ConduitTesting {
 		try {
 			ConduitTesting a;
 			{
-				var c = new Properties();
-				try (var x = ConduitTesting.class.getResourceAsStream("configuration.properties")) {
-					c.load(x);
-				}
-				if (args.length > 0) {
-					var f = args[0];
-					if (f.startsWith("~"))
-						f = System.getProperty("user.home") + f.substring(1);
-					try (var x = Files.newInputStream(Path.of(f))) {
-						c.load(x);
-					}
-				}
-				a = new ConduitTesting(c);
+				var f = new Factory(Java.getPackageClasses(ConduitTesting.class.getPackageName()),
+						ConduitTesting.INSTANCE::get);
+				a = f.create(ConduitTesting.class,
+						Java.hashMap("factory", f, "configurationFile",
+								args.length > 0 ? Path.of(
+										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
+												: args[0])
+										: null));
 			}
 
 			HttpServer s;
@@ -88,28 +83,26 @@ public class ConduitTesting {
 		}
 	}
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public Factory factory;
+	protected final Factory factory;
 
-	public ConduitFullstack fullstack;
+	protected final ConduitFullstack fullstack;
 
-	public HttpHandler handler;
+	protected final HttpHandler handler;
 
-	public TypeResolver typeResolver;
+	protected final TypeResolver typeResolver;
 
-	public List<Class<?>> types;
-
-	public ConduitTesting(Properties configuration) {
+	public ConduitTesting(Factory factory, Path configurationFile) {
+		this.factory = factory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
-		this.configuration = configuration;
-
-		types = Java.getPackageClasses(ConduitTesting.class.getPackageName());
-		factory = new Factory(types, INSTANCE::get);
+		configuration = factory.create(Properties.class, Collections.singletonMap("file", configurationFile));
 		typeResolver = factory.create(DollarTypeResolver.class);
 
-		fullstack = new ConduitFullstack(configuration);
+		fullstack = factory.create(ConduitFullstack.class,
+				Map.of("factory", new Factory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
+						ConduitFullstack.INSTANCE::get)));
 
 		{
 			var f = factory.create(ApplicationHandlerFactory.class);
@@ -117,7 +110,7 @@ public class ConduitTesting {
 				var hx = (HttpExchange) x;
 //				IO.println(
 //						"ConduitTesting, " + hx.request().getPath() + ", Test.ongoing=" + Test.ongoing.get());
-				var h2 = Test.ongoing.get() && !hx.request().getPath().startsWith("/test/") ? fullstack.handler
+				var h2 = Test.ongoing.get() && !hx.request().getPath().startsWith("/test/") ? fullstack.handler()
 						: (HttpHandler) y -> {
 							var h = f.createHandler(Objects.requireNonNullElse(y.exception(), y.request()));
 							if (h == null)
@@ -132,5 +125,25 @@ public class ConduitTesting {
 	@Handle(method = "GET", path = "/")
 	public ConduitTesting application() {
 		return this;
+	}
+
+	public Properties configuration() {
+		return configuration;
+	}
+
+	public Factory factory() {
+		return factory;
+	}
+
+	public ConduitFullstack fullstack() {
+		return fullstack;
+	}
+
+	public HttpHandler handler() {
+		return handler;
+	}
+
+	public Collection<Class<?>> types() {
+		return factory.types();
 	}
 }

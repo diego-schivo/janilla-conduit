@@ -43,7 +43,7 @@ public class Test {
 //		IO.println("Test.start, this=" + this);
 		if (ongoing.getAndSet(true))
 			throw new RuntimeException();
-		var fch = (FileChannel) fullstack.backend.persistence.database().channel().channel();
+		var fch = (FileChannel) fullstack.backend().persistence().database().channel().channel();
 		try (var ch = Channels.newChannel(getClass().getResourceAsStream("conduit-test.database"))) {
 			var s = fch.transferFrom(ch, 0, Long.MAX_VALUE);
 			fch.truncate(s);

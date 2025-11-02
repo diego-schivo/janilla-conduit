@@ -45,8 +45,8 @@ public class CustomHttpServer extends HttpServer {
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
-		return Test.ongoing.get() && request.getPath().startsWith("/api/")
-				? fullstack.backend.factory.create(HttpExchange.class, Map.of("request", request, "response", response))
+		return Test.ongoing.get() && request.getPath().startsWith("/api/") ? fullstack.backend().factory()
+				.create(HttpExchange.class, Map.of("request", request, "response", response))
 				: super.createExchange(request, response);
 	}
 }
