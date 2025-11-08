@@ -40,6 +40,7 @@ import javax.net.ssl.SSLContext;
 
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
+import com.janilla.ioc.DependencyInjector;
 import com.janilla.java.Java;
 import com.janilla.json.DollarTypeResolver;
 import com.janilla.json.TypeResolver;
@@ -47,7 +48,6 @@ import com.janilla.net.Net;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
 import com.janilla.reflect.ClassAndMethod;
-import com.janilla.reflect.Factory;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.MethodHandlerFactory;
 import com.janilla.web.NotFoundException;
@@ -61,7 +61,7 @@ public class ConduitBackend {
 		try {
 			ConduitBackend a;
 			{
-				var f = new Factory(Stream.of("backend", "base")
+				var f = new DependencyInjector(Stream.of("backend", "base")
 						.flatMap(x -> Java
 								.getPackageClasses(ConduitBackend.class.getPackageName().replace(".backend", "." + x))
 								.stream())
@@ -81,7 +81,7 @@ public class ConduitBackend {
 					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("conduit.backend.server.port"));
-				s = a.factory.create(HttpServer.class,
+				s = a.injector.create(HttpServer.class,
 						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}
 			s.serve();
@@ -92,7 +92,7 @@ public class ConduitBackend {
 
 	protected final Properties configuration;
 
-	protected final Factory factory;
+	protected final DependencyInjector injector;
 
 	protected final HttpHandler handler;
 
@@ -104,25 +104,25 @@ public class ConduitBackend {
 
 	protected final TypeResolver typeResolver;
 
-	public ConduitBackend(Factory factory, Path configurationFile) {
-		this.factory = factory;
+	public ConduitBackend(DependencyInjector injector, Path configurationFile) {
+		this.injector = injector;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
-		configuration = factory.create(Properties.class, Collections.singletonMap("file", configurationFile));
-		typeResolver = factory.create(DollarTypeResolver.class);
+		configuration = injector.create(Properties.class, Collections.singletonMap("file", configurationFile));
+		typeResolver = injector.create(DollarTypeResolver.class);
 
 		{
 			var f = configuration.getProperty("conduit.database.file");
 			if (f.startsWith("~"))
 				f = System.getProperty("user.home") + f.substring(1);
-			var b = factory.create(ApplicationPersistenceBuilder.class, Map.of("databaseFile", Path.of(f)));
+			var b = injector.create(ApplicationPersistenceBuilder.class, Map.of("databaseFile", Path.of(f)));
 			persistence = b.build();
 		}
 
 		renderableFactory = new RenderableFactory();
 
 		{
-			var f = factory.create(ApplicationHandlerFactory.class, Map.of("methods",
+			var f = injector.create(ApplicationHandlerFactory.class, Map.of("methods",
 					types().stream().flatMap(x -> Arrays.stream(x.getMethods())
 							.filter(y -> !Modifier.isStatic(y.getModifiers())).map(y -> new ClassAndMethod(x, y)))
 							.toList(),
@@ -144,8 +144,8 @@ public class ConduitBackend {
 		return configuration;
 	}
 
-	public Factory factory() {
-		return factory;
+	public DependencyInjector injector() {
+		return injector;
 	}
 
 	public HttpHandler handler() {
@@ -169,6 +169,6 @@ public class ConduitBackend {
 	}
 
 	public Collection<Class<?>> types() {
-		return factory.types();
+		return injector.types();
 	}
 }

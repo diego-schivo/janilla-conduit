@@ -34,9 +34,9 @@ import java.util.Random;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import com.janilla.ioc.DependencyInjector;
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
-import com.janilla.reflect.Factory;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.Handle;
 
@@ -45,7 +45,7 @@ public class UserApi {
 
 	public Properties configuration;
 
-	public Factory factory;
+	public DependencyInjector injector;
 
 	public Persistence persistence;
 
@@ -62,7 +62,7 @@ public class UserApi {
 
 	@Handle(method = "POST", path = "login")
 	public Object authenticate(Authenticate authenticate) {
-		var v = factory.create(Validation.class);
+		var v = injector.create(Validation.class);
 		v.isNotBlank("email", authenticate.user.email);
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
@@ -83,7 +83,7 @@ public class UserApi {
 	@Handle(method = "POST")
 	public Object register(Register register) {
 		var u = register.user;
-		var v = factory.create(Validation.class);
+		var v = injector.create(Validation.class);
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
 			var c = persistence.crud(User.class);
 			var x = c.read(c.find("username", u.username));
@@ -119,7 +119,7 @@ public class UserApi {
 	public Object update(Update update, User user) {
 //		IO.println("update=" + update);
 		var u = update.user;
-		var v = factory.create(Validation.class);
+		var v = injector.create(Validation.class);
 		var c = persistence.crud(User.class);
 //		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 		if (u.username != null && !u.username.isBlank() && v.isSafe("username", u.username)

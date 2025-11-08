@@ -34,9 +34,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.janilla.ioc.DependencyInjector;
 import com.janilla.persistence.IdPage;
 import com.janilla.persistence.Persistence;
-import com.janilla.reflect.Factory;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.ForbiddenException;
 import com.janilla.web.Handle;
@@ -46,7 +46,7 @@ public class ArticleApi {
 
 	public Properties configuration;
 
-	public Factory factory;
+	public DependencyInjector injector;
 
 	public Persistence persistence;
 
@@ -129,7 +129,7 @@ public class ArticleApi {
 
 	@Handle(method = "POST", path = "([^/]+)/comments")
 	public Object createComment(String slug, CommentForm form, User user) {
-		var v = factory.create(Validation.class);
+		var v = injector.create(Validation.class);
 		if (v.isNotBlank("body", form.comment.body))
 			v.isSafe("body", form.comment.body);
 		v.orThrow();
@@ -197,7 +197,7 @@ public class ArticleApi {
 	}
 
 	protected void validate(String slug1, String slug2, Form.Article article) {
-		var v = factory.create(Validation.class);
+		var v = injector.create(Validation.class);
 		var c = persistence.crud(Article.class);
 		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
 				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {

@@ -27,19 +27,20 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 import com.janilla.http.HttpHandlerFactory;
+import com.janilla.ioc.DependencyInjector;
 import com.janilla.reflect.ClassAndMethod;
-import com.janilla.reflect.Factory;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.MethodHandlerFactory;
+import com.janilla.web.RenderableFactory;
 
 public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
 	protected final ConduitBackend application;
 
-	public CustomHandlerFactory(Factory factory, Collection<ClassAndMethod> methods, Collection<Path> files,
+	public CustomHandlerFactory(DependencyInjector injector, Collection<ClassAndMethod> methods, RenderableFactory renderableFactory, Collection<Path> files,
 			ConduitBackend application) {
 		this.application = application;
-		super(factory, methods, files);
+		super(injector, methods, renderableFactory, files);
 	}
 
 	@Override

@@ -33,11 +33,11 @@ import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.http.HttpServer;
-import com.janilla.reflect.Factory;
+import com.janilla.ioc.DependencyInjector;
 
 public class CustomHttpServer extends HttpServer {
 
-	public Factory factory;
+	public DependencyInjector injector;
 
 	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler) {
 		super(sslContext, endpoint, handler);
@@ -45,6 +45,6 @@ public class CustomHttpServer extends HttpServer {
 
 	@Override
 	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
-		return factory.create(HttpExchange.class, Map.of("request", request, "response", response));
+		return injector.create(HttpExchange.class, Map.of("request", request, "response", response));
 	}
 }

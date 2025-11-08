@@ -38,11 +38,11 @@ import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
+import com.janilla.ioc.DependencyInjector;
 import com.janilla.java.Java;
 import com.janilla.json.DollarTypeResolver;
 import com.janilla.json.TypeResolver;
 import com.janilla.net.Net;
-import com.janilla.reflect.Factory;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Handle;
 import com.janilla.web.NotFoundException;
@@ -57,7 +57,7 @@ public class ConduitTesting {
 		try {
 			ConduitTesting a;
 			{
-				var f = new Factory(Java.getPackageClasses(ConduitTesting.class.getPackageName()),
+				var f = new DependencyInjector(Java.getPackageClasses(ConduitTesting.class.getPackageName()),
 						ConduitTesting.INSTANCE::get);
 				a = f.create(ConduitTesting.class,
 						Java.hashMap("factory", f, "configurationFile",
@@ -74,7 +74,7 @@ public class ConduitTesting {
 					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"));
-				s = a.factory.create(HttpServer.class,
+				s = a.injector.create(HttpServer.class,
 						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}
 			s.serve();
@@ -85,7 +85,7 @@ public class ConduitTesting {
 
 	protected final Properties configuration;
 
-	protected final Factory factory;
+	protected final DependencyInjector injector;
 
 	protected final ConduitFullstack fullstack;
 
@@ -93,19 +93,19 @@ public class ConduitTesting {
 
 	protected final TypeResolver typeResolver;
 
-	public ConduitTesting(Factory factory, Path configurationFile) {
-		this.factory = factory;
+	public ConduitTesting(DependencyInjector injector, Path configurationFile) {
+		this.injector = injector;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
-		configuration = factory.create(Properties.class, Collections.singletonMap("file", configurationFile));
-		typeResolver = factory.create(DollarTypeResolver.class);
+		configuration = injector.create(Properties.class, Collections.singletonMap("file", configurationFile));
+		typeResolver = injector.create(DollarTypeResolver.class);
 
-		fullstack = factory.create(ConduitFullstack.class,
-				Map.of("factory", new Factory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
+		fullstack = injector.create(ConduitFullstack.class,
+				Map.of("factory", new DependencyInjector(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
 						ConduitFullstack.INSTANCE::get)));
 
 		{
-			var f = factory.create(ApplicationHandlerFactory.class);
+			var f = injector.create(ApplicationHandlerFactory.class);
 			handler = x -> {
 				var hx = (HttpExchange) x;
 //				IO.println(
@@ -131,8 +131,8 @@ public class ConduitTesting {
 		return configuration;
 	}
 
-	public Factory factory() {
-		return factory;
+	public DependencyInjector injector() {
+		return injector;
 	}
 
 	public ConduitFullstack fullstack() {
@@ -144,6 +144,6 @@ public class ConduitTesting {
 	}
 
 	public Collection<Class<?>> types() {
-		return factory.types();
+		return injector.types();
 	}
 }
