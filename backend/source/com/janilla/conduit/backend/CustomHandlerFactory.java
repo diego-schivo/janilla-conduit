@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 import com.janilla.http.HttpHandlerFactory;
-import com.janilla.ioc.DependencyInjector;
+import com.janilla.ioc.DiFactory;
 import com.janilla.reflect.ClassAndMethod;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.MethodHandlerFactory;
@@ -37,10 +37,10 @@ public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
 	protected final ConduitBackend application;
 
-	public CustomHandlerFactory(DependencyInjector injector, Collection<ClassAndMethod> methods, RenderableFactory renderableFactory, Collection<Path> files,
+	public CustomHandlerFactory(DiFactory diFactory, Collection<ClassAndMethod> methods, RenderableFactory renderableFactory, Collection<Path> files,
 			ConduitBackend application) {
 		this.application = application;
-		super(injector, methods, renderableFactory, files);
+		super(diFactory, methods, renderableFactory, files);
 	}
 
 	@Override

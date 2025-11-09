@@ -48,7 +48,7 @@ public class CustomHttpServer extends HttpServer {
 	@Override
 	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
 		return request.getPath().startsWith("/api/")
-				? backend.injector().create(HttpExchange.class, Map.of("request", request, "response", response))
+				? backend.diFactory().create(HttpExchange.class, Map.of("request", request, "response", response))
 				: super.createExchange(request, response);
 	}
 }

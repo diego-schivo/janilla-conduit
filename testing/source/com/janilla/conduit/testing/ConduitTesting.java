@@ -60,7 +60,7 @@ public class ConduitTesting {
 				var f = new DependencyInjector(Java.getPackageClasses(ConduitTesting.class.getPackageName()),
 						ConduitTesting.INSTANCE::get);
 				a = f.create(ConduitTesting.class,
-						Java.hashMap("factory", f, "configurationFile",
+						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
 										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
 												: args[0])
@@ -74,7 +74,7 @@ public class ConduitTesting {
 					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"));
-				s = a.injector.create(HttpServer.class,
+				s = a.diFactory.create(HttpServer.class,
 						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}
 			s.serve();
@@ -85,7 +85,7 @@ public class ConduitTesting {
 
 	protected final Properties configuration;
 
-	protected final DependencyInjector injector;
+	protected final DependencyInjector diFactory;
 
 	protected final ConduitFullstack fullstack;
 
@@ -93,19 +93,19 @@ public class ConduitTesting {
 
 	protected final TypeResolver typeResolver;
 
-	public ConduitTesting(DependencyInjector injector, Path configurationFile) {
-		this.injector = injector;
+	public ConduitTesting(DependencyInjector diFactory, Path configurationFile) {
+		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
-		configuration = injector.create(Properties.class, Collections.singletonMap("file", configurationFile));
-		typeResolver = injector.create(DollarTypeResolver.class);
+		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
+		typeResolver = diFactory.create(DollarTypeResolver.class);
 
-		fullstack = injector.create(ConduitFullstack.class,
-				Map.of("factory", new DependencyInjector(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
+		fullstack = diFactory.create(ConduitFullstack.class,
+				Map.of("diFactory", new DependencyInjector(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
 						ConduitFullstack.INSTANCE::get)));
 
 		{
-			var f = injector.create(ApplicationHandlerFactory.class);
+			var f = diFactory.create(ApplicationHandlerFactory.class);
 			handler = x -> {
 				var hx = (HttpExchange) x;
 //				IO.println(
@@ -131,8 +131,8 @@ public class ConduitTesting {
 		return configuration;
 	}
 
-	public DependencyInjector injector() {
-		return injector;
+	public DependencyInjector diFactory() {
+		return diFactory;
 	}
 
 	public ConduitFullstack fullstack() {
@@ -144,6 +144,6 @@ public class ConduitTesting {
 	}
 
 	public Collection<Class<?>> types() {
-		return injector.types();
+		return diFactory.types();
 	}
 }

@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.janilla.ioc.DependencyInjector;
+import com.janilla.ioc.DiFactory;
 import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
 
@@ -42,13 +42,13 @@ public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
 	public Properties configuration;
 
-	public CustomPersistenceBuilder(Path databaseFile, DependencyInjector injector) {
-		super(databaseFile, injector);
+	public CustomPersistenceBuilder(Path databaseFile, DiFactory diFactory) {
+		super(databaseFile, diFactory);
 	}
 
 	@Override
 	public Persistence build() {
-//		var cb = (ConduitBackend) injector.source();
+//		var cb = (ConduitBackend) diFactory.source();
 //		var s = Boolean.parseBoolean(cb.configuration.getProperty("conduit.database.seed"));
 		var e = Files.exists(databaseFile);
 		var x = super.build();

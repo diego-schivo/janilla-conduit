@@ -26,7 +26,7 @@ package com.janilla.conduit.backend;
 import java.util.Iterator;
 
 import com.janilla.http.HttpExchange;
-import com.janilla.ioc.DependencyInjector;
+import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
 import com.janilla.json.JsonToken;
 import com.janilla.json.ReflectionJsonIterator;
@@ -38,10 +38,10 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 //
 //	public Persistence persistence;
 
-	protected final DependencyInjector injector;
+	protected final DiFactory diFactory;
 
-	public CustomJsonHandlerFactory(DependencyInjector injector) {
-		this.injector = injector;
+	public CustomJsonHandlerFactory(DiFactory diFactory) {
+		this.diFactory = diFactory;
 	}
 
 //	@Override
@@ -52,6 +52,6 @@ public class CustomJsonHandlerFactory extends JsonHandlerFactory {
 	@Override
 	protected Iterator<JsonToken<?>> buildJsonIterator(Object object, HttpExchange exchange) {
 //		return new CustomReflectionJsonIterator(object, false, () -> ((CustomHttpExchange) exchange).getUser());
-		return injector.create(ReflectionJsonIterator.class, Java.hashMap("object", object, "includeType", false));
+		return diFactory.create(ReflectionJsonIterator.class, Java.hashMap("object", object, "includeType", false));
 	}
 }

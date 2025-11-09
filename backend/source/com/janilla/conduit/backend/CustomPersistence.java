@@ -67,9 +67,12 @@ public class CustomPersistence extends Persistence {
 
 	@Override
 	protected void createStoresAndIndexes() {
-		super.createStoresAndIndexes();
-		for (var x : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
-			database.perform(() -> database.createIndex(x, "foo"), true);
+		database.perform(() -> {
+			super.createStoresAndIndexes();
+			for (var x : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
+				database.createIndex(x, "foo");
+			return null;
+		}, true);
 	}
 
 	@SuppressWarnings("unchecked")
