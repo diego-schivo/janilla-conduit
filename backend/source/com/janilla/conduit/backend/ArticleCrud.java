@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.janilla.persistence.Crud;
 import com.janilla.persistence.Persistence;
+import com.janilla.sqlite.IndexBTree;
 
 class ArticleCrud extends Crud<Long, Article> {
 
@@ -55,39 +56,39 @@ class ArticleCrud extends Crud<Long, Article> {
 	}
 
 	@Override
-	protected void updateIndex(String name, Map<Object, Object> remove, Map<Object, Object> add) {
+	protected void updateIndex(IndexBTree index, Map<Object, Object> remove, Map<Object, Object> add) {
 		persistence.database().perform(() -> {
-			super.updateIndex(name, remove, add);
+			super.updateIndex(index, remove, add);
 
-			if (name != null && name.equals("Article.tagList")) {
-				var m = new LinkedHashMap<String, long[]>();
-				{
-					var i = persistence.database().index("Article.tagList");
-					if (remove != null)
-						for (var x : remove.keySet()) {
-							var c = i.count(x);
-							m.put((String) x, new long[] { c + 1, c });
-						}
-					if (add != null)
-						for (var x : add.keySet()) {
-							var c = i.count(x);
-							m.put((String) x, new long[] { c - 1, c });
-						}
-				}
-				if (!m.isEmpty()) {
-					var i = persistence.database().index("Tag.count");
-					for (var x : m.entrySet()) {
-						var t = x.getKey();
-						var c = x.getValue();
-//							IO.println(
-//									"ArticleCrud.updateIndex, Tag.count, t=" + t + ", c=" + Arrays.toString(c));
-						if (c[0] > 0)
-							i.delete(new Object[] { c[0], t }, null);
-						if (c[1] > 0)
-							i.insert(new Object[] { c[1], t }, null);
-					}
-				}
-			}
+//			if (name != null && name.equals("Article.tagList")) {
+//				var m = new LinkedHashMap<String, long[]>();
+//				{
+//					var i = persistence.database().index("Article.tagList");
+//					if (remove != null)
+//						for (var x : remove.keySet()) {
+//							var c = i.count(x);
+//							m.put((String) x, new long[] { c + 1, c });
+//						}
+//					if (add != null)
+//						for (var x : add.keySet()) {
+//							var c = i.count(x);
+//							m.put((String) x, new long[] { c - 1, c });
+//						}
+//				}
+//				if (!m.isEmpty()) {
+//					var i = persistence.database().index("Tag.count");
+//					for (var x : m.entrySet()) {
+//						var t = x.getKey();
+//						var c = x.getValue();
+////							IO.println(
+////									"ArticleCrud.updateIndex, Tag.count, t=" + t + ", c=" + Arrays.toString(c));
+//						if (c[0] > 0)
+//							i.delete(new Object[] { c[0], t }, null);
+//						if (c[1] > 0)
+//							i.insert(new Object[] { c[1], t }, null);
+//					}
+//				}
+//			}
 			return null;
 		}, true);
 	}

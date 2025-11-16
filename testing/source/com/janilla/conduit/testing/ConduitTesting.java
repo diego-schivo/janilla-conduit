@@ -38,7 +38,7 @@ import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
-import com.janilla.ioc.DependencyInjector;
+import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
 import com.janilla.json.DollarTypeResolver;
 import com.janilla.json.TypeResolver;
@@ -57,7 +57,7 @@ public class ConduitTesting {
 		try {
 			ConduitTesting a;
 			{
-				var f = new DependencyInjector(Java.getPackageClasses(ConduitTesting.class.getPackageName()),
+				var f = new DiFactory(Java.getPackageClasses(ConduitTesting.class.getPackageName()),
 						ConduitTesting.INSTANCE::get);
 				a = f.create(ConduitTesting.class,
 						Java.hashMap("diFactory", f, "configurationFile",
@@ -85,7 +85,7 @@ public class ConduitTesting {
 
 	protected final Properties configuration;
 
-	protected final DependencyInjector diFactory;
+	protected final DiFactory diFactory;
 
 	protected final ConduitFullstack fullstack;
 
@@ -93,7 +93,7 @@ public class ConduitTesting {
 
 	protected final TypeResolver typeResolver;
 
-	public ConduitTesting(DependencyInjector diFactory, Path configurationFile) {
+	public ConduitTesting(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
@@ -101,7 +101,7 @@ public class ConduitTesting {
 		typeResolver = diFactory.create(DollarTypeResolver.class);
 
 		fullstack = diFactory.create(ConduitFullstack.class,
-				Map.of("diFactory", new DependencyInjector(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
+				Map.of("diFactory", new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
 						ConduitFullstack.INSTANCE::get)));
 
 		{
@@ -131,7 +131,7 @@ public class ConduitTesting {
 		return configuration;
 	}
 
-	public DependencyInjector diFactory() {
+	public DiFactory diFactory() {
 		return diFactory;
 	}
 
