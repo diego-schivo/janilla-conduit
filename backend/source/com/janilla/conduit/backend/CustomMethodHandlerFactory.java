@@ -33,8 +33,9 @@ import java.util.function.Supplier;
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.java.Java;
-import com.janilla.json.TypeResolver;
-import com.janilla.reflect.ClassAndMethod;
+import com.janilla.java.TypeResolver;
+import com.janilla.web.Invocable;
+import com.janilla.web.Invocation;
 import com.janilla.web.MethodHandlerFactory;
 import com.janilla.web.RenderableFactory;
 
@@ -42,7 +43,7 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 
 	public Properties configuration;
 
-	public CustomMethodHandlerFactory(Collection<ClassAndMethod> methods, Function<Class<?>, Object> targetResolver,
+	public CustomMethodHandlerFactory(Collection<Invocable> methods, Function<Class<?>, Object> targetResolver,
 			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
 			HttpHandlerFactory rootFactory) {
 		super(methods, targetResolver, invocationComparator, renderableFactory, rootFactory);
@@ -63,11 +64,10 @@ public class CustomMethodHandlerFactory extends MethodHandlerFactory {
 		return super.handle(invocation, exchange);
 	}
 
-	@Override
-	protected Object resolveArgument(Type type, HttpExchange exchange, String[] values,
-			Java.EntryList<String, String> entries, Supplier<String> body, Supplier<TypeResolver> resolver) {
-		return type == User.class ? ((CustomHttpExchange) exchange).getUser()
-				: super.resolveArgument(type, exchange, values, entries, body, resolver);
-	}
-
+//	@Override
+//	protected Object resolveArgument(Type type, HttpExchange exchange, String[] values,
+//			Java.EntryList<String, String> entries, Supplier<String> body, Supplier<TypeResolver> resolver) {
+//		return type == User.class ? ((CustomHttpExchange) exchange).getUser()
+//				: super.resolveArgument(type, exchange, values, entries, body, resolver);
+//	}
 }

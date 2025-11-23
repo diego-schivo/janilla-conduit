@@ -28,8 +28,8 @@ import java.util.Collection;
 
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.ioc.DiFactory;
-import com.janilla.reflect.ClassAndMethod;
 import com.janilla.web.ApplicationHandlerFactory;
+import com.janilla.web.Invocable;
 import com.janilla.web.MethodHandlerFactory;
 import com.janilla.web.RenderableFactory;
 
@@ -37,7 +37,7 @@ public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
 	protected final ConduitBackend application;
 
-	public CustomHandlerFactory(DiFactory diFactory, Collection<ClassAndMethod> methods, RenderableFactory renderableFactory, Collection<Path> files,
+	public CustomHandlerFactory(DiFactory diFactory, Collection<Invocable> methods, RenderableFactory renderableFactory, Collection<Path> files,
 			ConduitBackend application) {
 		this.application = application;
 		super(diFactory, methods, renderableFactory, files);
