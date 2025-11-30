@@ -23,29 +23,23 @@
  */
 package com.janilla.conduit.backend;
 
-import java.nio.file.Path;
-import java.util.Collection;
-
 import com.janilla.http.HttpHandlerFactory;
 import com.janilla.ioc.DiFactory;
 import com.janilla.web.ApplicationHandlerFactory;
-import com.janilla.web.Invocable;
-import com.janilla.web.MethodHandlerFactory;
-import com.janilla.web.RenderableFactory;
+import com.janilla.web.InvocationHandlerFactory;
 
 public class CustomHandlerFactory extends ApplicationHandlerFactory {
 
 	protected final ConduitBackend application;
 
-	public CustomHandlerFactory(DiFactory diFactory, Collection<Invocable> methods, RenderableFactory renderableFactory, Collection<Path> files,
-			ConduitBackend application) {
+	public CustomHandlerFactory(DiFactory diFactory, ConduitBackend application) {
 		this.application = application;
-		super(diFactory, methods, renderableFactory, files);
+		super(diFactory);
 	}
 
 	@Override
-	protected HttpHandlerFactory buildMethodHandlerFactory() {
-		var x = (MethodHandlerFactory) super.buildMethodHandlerFactory();
+	protected HttpHandlerFactory buildInvocationHandlerFactory() {
+		var x = (InvocationHandlerFactory) super.buildInvocationHandlerFactory();
 		application.methodHandlerFactory = x;
 		return x;
 	}

@@ -49,7 +49,7 @@ import com.janilla.persistence.ApplicationPersistenceBuilder;
 import com.janilla.persistence.Persistence;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Invocable;
-import com.janilla.web.MethodHandlerFactory;
+import com.janilla.web.InvocationHandlerFactory;
 import com.janilla.web.NotFoundException;
 import com.janilla.web.RenderableFactory;
 
@@ -96,7 +96,7 @@ public class ConduitBackend {
 
 	protected final HttpHandler handler;
 
-	protected MethodHandlerFactory methodHandlerFactory;
+	protected InvocationHandlerFactory methodHandlerFactory;
 
 	protected final Persistence persistence;
 
@@ -152,7 +152,7 @@ public class ConduitBackend {
 		return handler;
 	}
 
-	public MethodHandlerFactory methodHandlerFactory() {
+	public InvocationHandlerFactory methodHandlerFactory() {
 		return methodHandlerFactory;
 	}
 
