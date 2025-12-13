@@ -30,7 +30,6 @@ import java.util.function.Function;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandlerFactory;
-import com.janilla.web.Handle;
 import com.janilla.web.Invocable;
 import com.janilla.web.Invocation;
 import com.janilla.web.InvocationHandlerFactory;
@@ -69,7 +68,6 @@ public class CustomMethodHandlerFactory extends InvocationHandlerFactory {
 //	}
 
 	protected List<String> handleMethods(String path) {
-		return invocationGroups(path).flatMap(x -> x.methods().stream())
-				.map(x -> x.getAnnotation(Handle.class).method()).toList();
+		return invocationGroups(path).flatMap(x -> x.methods().keySet().stream()).toList();
 	}
 }
