@@ -31,8 +31,6 @@ import com.janilla.persistence.Index;
 import com.janilla.persistence.Store;
 
 @Store
-@Index(sort = "-createdAt")
 public record Article(Long id, @Index String slug, String title, String description, String body,
-		@Index(sort = "-createdAt") List<String> tagList, Instant createdAt, Instant updatedAt,
-		@Index(sort = "-createdAt") Long author) implements Entity<Long> {
+		@Index List<String> tagList, Instant createdAt, Instant updatedAt, @Index Long author) implements Entity<Long> {
 }

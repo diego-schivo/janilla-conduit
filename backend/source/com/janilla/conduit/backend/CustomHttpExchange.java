@@ -27,14 +27,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.janilla.http.BaseHttpExchange;
-import com.janilla.http.HttpExchange;
+import com.janilla.http.SimpleHttpExchange;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
 
-public class CustomHttpExchange extends BaseHttpExchange {
+public class CustomHttpExchange extends SimpleHttpExchange {
 
 	public Properties configuration;
 
@@ -61,11 +60,5 @@ public class CustomHttpExchange extends BaseHttpExchange {
 			session.put("user", u);
 		}
 		return (User) session.get("user");
-	}
-
-	@Override
-	public HttpExchange withException(Exception exception) {
-		this.exception = exception;
-		return this;
 	}
 }
