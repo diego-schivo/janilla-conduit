@@ -40,7 +40,7 @@ public class Cors {
 	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
 		var o = configuration.getProperty("conduit.api.cors.origin");
-		var m = ((CustomMethodHandlerFactory) methodHandlerFactory).handleMethods(request.getPath());
+		var m = ((CustomInvocationHandlerFactory) methodHandlerFactory).handleMethods(request.getPath());
 		var h = configuration.getProperty("conduit.api.cors.headers");
 
 		response.setStatus(204);
