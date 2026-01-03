@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ import com.janilla.http.HttpResponse;
 import com.janilla.json.Jwt;
 import com.janilla.persistence.Persistence;
 
-public class CustomHttpExchange extends SimpleHttpExchange {
+public class BackendExchange extends SimpleHttpExchange {
 
 	public Properties configuration;
 
@@ -41,7 +41,7 @@ public class CustomHttpExchange extends SimpleHttpExchange {
 
 	protected final Map<String, Object> session = new HashMap<>();
 
-	public CustomHttpExchange(HttpRequest request, HttpResponse response) {
+	public BackendExchange(HttpRequest request, HttpResponse response) {
 		super(request, response);
 	}
 

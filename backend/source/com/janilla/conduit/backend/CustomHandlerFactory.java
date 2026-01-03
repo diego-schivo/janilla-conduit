@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ public class CustomHandlerFactory extends ApplicationHandlerFactory {
 	@Override
 	protected HttpHandlerFactory buildInvocationHandlerFactory() {
 		var x = (InvocationHandlerFactory) super.buildInvocationHandlerFactory();
-		application.methodHandlerFactory = x;
+		application.invocationHandlerFactory = x;
 		return x;
 	}
 }

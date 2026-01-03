@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -105,24 +105,23 @@ public class ArticleApi {
 	}
 
 	@Handle(method = "GET")
-	public Object list(Filter filter, Range range) {
-		var t = Stream.of(filter != null ? filter.tag : null).filter(x -> x != null && !x.isBlank()).toArray();
-		var a = Stream.of(filter != null ? filter.author : null).filter(x -> x != null && !x.isBlank())
+	public Object list(String tag, String author, String favorited, Long skip, Long limit) {
+		var t = Stream.of(tag).filter(x -> x != null && !x.isBlank()).toArray();
+		var a = Stream.of(author).filter(x -> x != null && !x.isBlank())
 				.map(x -> persistence.crud(User.class).find("username", x)).toArray();
-		var f = Stream.of(filter != null ? filter.favorited : null).filter(x -> x != null && !x.isBlank())
+		var f = Stream.of(favorited).filter(x -> x != null && !x.isBlank())
 				.map(x -> persistence.crud(User.class).find("username", x)).toArray();
 		var c = persistence.crud(Article.class);
-		var p = c.filter(Map.of("tagList", t, "author", a, "favoriteList", f), range != null ? range.skip : 0,
-				range != null ? range.limit : -1);
+		var p = c.filter(Map.of("tagList", t, "author", a, "favoriteList", f), skip != null ? skip : 0,
+				limit != null ? limit : -1);
 		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
 	}
 
 	@Handle(method = "GET", path = "feed")
-	public Object listFeed(Range range, User user) {
+	public Object listFeed(Long skip, Long limit, User user) {
 		var u = persistence.crud(User.class).filter("followList", user.id());
 		var c = persistence.crud(Article.class);
-		var p = !u.isEmpty()
-				? c.filter("author", range != null ? range.skip : 0, range != null ? range.limit : -1, u.toArray())
+		var p = !u.isEmpty() ? c.filter("author", skip != null ? skip : 0, limit != null ? limit : -1, u.toArray())
 				: IdPage.<Long>empty();
 		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
 	}
@@ -218,11 +217,11 @@ public class ArticleApi {
 		v.orThrow();
 	}
 
-	public record Filter(String tag, String author, String favorited) {
-	}
-
-	public record Range(long skip, long limit) {
-	}
+//	public record Filter(String tag, String author, String favorited) {
+//	}
+//
+//	public record Range(long skip, long limit) {
+//	}
 
 	public record Form(Article article) {
 

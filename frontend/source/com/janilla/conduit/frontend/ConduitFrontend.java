@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -41,15 +42,14 @@ import javax.net.ssl.SSLContext;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
-import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
-import com.janilla.java.TypeResolver;
 import com.janilla.net.Net;
 import com.janilla.web.ApplicationHandlerFactory;
-import com.janilla.web.Invocable;
 import com.janilla.web.Handle;
+import com.janilla.web.Invocable;
 import com.janilla.web.NotFoundException;
 import com.janilla.web.Render;
+import com.janilla.web.RenderableFactory;
 
 @Render(template = "index.html")
 public class ConduitFrontend {
@@ -60,8 +60,7 @@ public class ConduitFrontend {
 		try {
 			ConduitFrontend a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(ConduitFrontend.class.getPackageName()),
-						ConduitFrontend.INSTANCE::get);
+				var f = new DiFactory(Java.getPackageClasses(ConduitFrontend.class.getPackageName()), INSTANCE::get);
 				a = f.create(ConduitFrontend.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -90,24 +89,30 @@ public class ConduitFrontend {
 
 	protected final DiFactory diFactory;
 
+	protected final List<Path> files;
+
 	protected final HttpHandler handler;
 
-	protected final TypeResolver typeResolver;
+	protected final List<Invocable> invocables;
+
+	protected final RenderableFactory renderableFactory;
 
 	public ConduitFrontend(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
-		typeResolver = diFactory.create(DollarTypeResolver.class);
 
+		invocables = types().stream()
+				.flatMap(x -> Arrays.stream(x.getMethods())
+						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
+						.map(y -> new Invocable(x, y)))
+				.toList();
+		files = Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
+				.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList();
+		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
-			var f = diFactory.create(ApplicationHandlerFactory.class, Map.of("methods", types().stream()
-					.flatMap(x -> Arrays.stream(x.getMethods()).filter(y -> !Modifier.isStatic(y.getModifiers()))
-							.map(y -> new Invocable(x, y)))
-					.toList(), "files",
-					Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
-							.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList()));
+			var f = diFactory.create(ApplicationHandlerFactory.class);
 			handler = x -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
 				if (h == null)
@@ -134,8 +139,20 @@ public class ConduitFrontend {
 		return diFactory;
 	}
 
+	public List<Path> files() {
+		return files;
+	}
+
 	public HttpHandler handler() {
 		return handler;
+	}
+
+	public List<Invocable> invocables() {
+		return invocables;
+	}
+
+	public RenderableFactory renderableFactory() {
+		return renderableFactory;
 	}
 
 	public Collection<Class<?>> types() {

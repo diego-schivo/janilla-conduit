@@ -10,7 +10,7 @@
 		<dependency>
 			<groupId>com.janilla</groupId>
 			<artifactId>janilla</artifactId>
-			<version>8.0.0-SNAPSHOT</version>
+			<version>8.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
@@ -39,7 +39,6 @@
 		<module>testing</module>
 	</modules>
 	<properties>
-		<maven.compiler.enablePreview>false</maven.compiler.enablePreview>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<maven.compiler.release>25</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

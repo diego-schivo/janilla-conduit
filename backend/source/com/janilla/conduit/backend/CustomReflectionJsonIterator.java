@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -77,7 +77,7 @@ public class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 						return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
 					}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 //					var u = user.get();
-					var u = ((CustomHttpExchange) HttpServer.HTTP_EXCHANGE.get()).getUser();
+					var u = ((BackendExchange) HttpServer.HTTP_EXCHANGE.get()).getUser();
 					m.put("favorited", u != null && a.id() != null && persistence.crud(Article.class)
 							.filter("favoriteList", u.id()).stream().anyMatch(x -> x.equals(a.id())));
 					m.put("favoritesCount",
@@ -92,7 +92,7 @@ public class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 								return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
 							}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 //					var v = user.get();
-					var v = ((CustomHttpExchange) HttpServer.HTTP_EXCHANGE.get()).getUser();
+					var v = ((BackendExchange) HttpServer.HTTP_EXCHANGE.get()).getUser();
 					m.put("following", v != null && persistence.crud(User.class).filter("followList", v.id()).stream()
 							.anyMatch(x -> x.equals(u.id())));
 					object = m;

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,8 +57,7 @@ public class ConduitTesting {
 		try {
 			ConduitTesting a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(ConduitTesting.class.getPackageName()),
-						ConduitTesting.INSTANCE::get);
+				var f = new DiFactory(Java.getPackageClasses(ConduitTesting.class.getPackageName()), INSTANCE::get);
 				a = f.create(ConduitTesting.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(

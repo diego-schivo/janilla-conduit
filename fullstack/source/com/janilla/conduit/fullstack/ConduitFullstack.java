@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025 Diego Schivo
+ * Copyright (c) 2024-2026 Diego Schivo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,21 @@
 package com.janilla.conduit.fullstack;
 
 import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
+import com.janilla.conduit.backend.BackendExchange;
 import com.janilla.conduit.backend.ConduitBackend;
 import com.janilla.conduit.frontend.ConduitFrontend;
 import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
@@ -50,8 +52,7 @@ public class ConduitFullstack {
 		try {
 			ConduitFullstack a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()),
-						ConduitFullstack.INSTANCE::get);
+				var f = new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()), INSTANCE::get);
 				a = f.create(ConduitFullstack.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -86,34 +87,46 @@ public class ConduitFullstack {
 
 	protected final ConduitFrontend frontend;
 
-//	protected final TypeResolver typeResolver;
-
 	public ConduitFullstack(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		if (!INSTANCE.compareAndSet(null, this))
 			throw new IllegalStateException();
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
-//		typeResolver = diFactory.create(DollarTypeResolver.class);
 
-		backend = diFactory.create(ConduitBackend.class,
-				Java.hashMap("diFactory", new DiFactory(Stream.of("fullstack", "backend", "base").flatMap(x -> Java
-						.getPackageClasses(ConduitBackend.class.getPackageName().replace(".backend", "." + x)).stream())
-						.toList(), ConduitBackend.INSTANCE::get), "configurationFile", configurationFile));
-		frontend = diFactory.create(ConduitFrontend.class,
-				Java.hashMap("diFactory", new DiFactory(Stream.of("fullstack", "frontend")
-						.flatMap(x -> Java
-								.getPackageClasses(ConduitFrontend.class.getPackageName().replace(".frontend", "." + x))
-								.stream())
-						.toList(), ConduitFrontend.INSTANCE::get), "configurationFile", configurationFile));
+		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
+			try {
+				return Path.of(ConduitFullstack.class.getResource("configuration.properties").toURI());
+			} catch (URISyntaxException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		backend = diFactory
+				.create(ConduitBackend.class,
+						Java.hashMap("diFactory",
+								new DiFactory(
+										Stream.concat(
+												Stream.of("fullstack", "backend")
+														.map(x -> ConduitBackend.class.getPackageName()
+																.replace(".backend", "." + x)),
+												Stream.of("com.janilla.web"))
+												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
+										ConduitBackend.INSTANCE::get, "backend"),
+								"configurationFile", cf));
+		frontend = diFactory
+				.create(ConduitFrontend.class,
+						Java.hashMap("diFactory",
+								new DiFactory(
+										Stream.concat(
+												Stream.of("fullstack", "frontend")
+														.map(x -> ConduitFrontend.class.getPackageName()
+																.replace(".frontend", "." + x)),
+												Stream.of("com.janilla.web"))
+												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
+										ConduitFrontend.INSTANCE::get, "frontend"),
+								"configurationFile", cf));
 
 		handler = x -> {
-//			IO.println("ConduitFullstack, " + x.request().getPath());
-			var o = x.exception() != null ? x.exception() : x.request();
-			var h = switch (o) {
-			case HttpRequest rq -> rq.getPath().startsWith("/api/") ? backend.handler() : frontend.handler();
-			case Exception _ -> backend.handler();
-			default -> null;
-			};
+			var h = x instanceof BackendExchange ? backend.handler() : frontend.handler();
 			return h.handle(x);
 		};
 	}
