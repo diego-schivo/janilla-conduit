@@ -47,8 +47,9 @@ public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
 
 	@Override
 	protected boolean handle(Invocation invocation, HttpExchange exchange) {
-		exchange.response().setHeaderValue("access-control-allow-origin",
-				configuration.getProperty("conduit.api.cors.origin"));
+		var o = configuration.getProperty("conduit.api.cors.origin");
+		if (o != null && !o.isEmpty())
+			exchange.response().setHeaderValue("access-control-allow-origin", o);
 
 //		if (exchange.request().getPath().startsWith("/api/"))
 //			try {

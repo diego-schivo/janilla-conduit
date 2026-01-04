@@ -22,7 +22,6 @@
 				<configuration>
 					<executable>java</executable>
 					<arguments>
-						<!--argument>--><!--enable-preview</argument-->
 						<argument>-p</argument>
 						<modulepath/>
 						<argument>-m</argument>
