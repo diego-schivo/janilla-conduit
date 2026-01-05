@@ -74,7 +74,7 @@ export default class Profile extends WebComponent {
 					active: x.href.substring(1) === hs.profileTab ? "active" : null
 				})),
 				articlesUrl: (() => {
-					const x = new URL(`${apiUrl}/articles`);
+					const x = new URL(`${apiUrl}/articles`, location.href);
 					x.searchParams.append(hs.profileTab, hs.profile.username);
 					return x;
 				})()

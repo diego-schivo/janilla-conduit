@@ -87,7 +87,7 @@ export default class ArticleList extends WebComponent {
 		this.appendChild(f);
 
 		if (!hs.articles) {
-			const u = new URL(this.dataset.apiUrl);
+			const u = new URL(this.dataset.apiUrl, location.href);
 			u.searchParams.append("skip", ((hs.articlesPage ?? 1) - 1) * 10);
 			u.searchParams.append("limit", 10);
 			const { state: { apiHeaders } } = this.closest("app-element");

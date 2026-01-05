@@ -84,7 +84,7 @@ export default class Editor extends WebComponent {
 			return x;
 		}, {});
 		const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
-		const r = await fetch(new URL([apiUrl, "articles", this.dataset.slug].filter(x => x).join("/")), {
+		const r = await fetch(new URL([apiUrl, "articles", this.dataset.slug].filter(x => x).join("/"), location.href), {
 			method: this.dataset.slug ? "PUT" : "POST",
 			headers: {
 				...apiHeaders,

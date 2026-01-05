@@ -71,7 +71,7 @@ export default class Home extends WebComponent {
 				active: x.href.substring(1) === hs.tab ? "active" : null,
 			})),
 			articlesUrl: (() => {
-				const x = new URL([apiUrl, "articles", hs.tab === "feed" ? "feed" : null].filter(x => x).join("/"));
+				const x = new URL([apiUrl, "articles", hs.tab === "feed" ? "feed" : null].filter(x => x).join("/"), location.href);
 				if (hs.tab === "tag")
 					x.searchParams.append("tag", hs.tag);
 				return x;
