@@ -10,7 +10,7 @@
 		<dependency>
 			<groupId>com.janilla</groupId>
 			<artifactId>janilla</artifactId>
-			<version>8.1.3</version>
+			<version>8.1.4-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
