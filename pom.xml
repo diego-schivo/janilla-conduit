@@ -6,32 +6,6 @@
 	<artifactId>janilla-conduit</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<dependencies>
-		<dependency>
-			<groupId>com.janilla</groupId>
-			<artifactId>janilla</artifactId>
-			<version>8.2.0</version>
-		</dependency>
-	</dependencies>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.janilla</groupId>
-				<artifactId>janilla-conduit-backend</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>com.janilla</groupId>
-				<artifactId>janilla-conduit-frontend</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>com.janilla</groupId>
-				<artifactId>janilla-conduit-fullstack</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<modules>
 		<module>backend</module>
 		<module>frontend</module>

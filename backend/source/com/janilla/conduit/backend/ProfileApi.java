@@ -26,7 +26,7 @@ package com.janilla.conduit.backend;
 import java.util.Collections;
 import java.util.Map;
 
-import com.janilla.persistence.Persistence;
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/profiles")

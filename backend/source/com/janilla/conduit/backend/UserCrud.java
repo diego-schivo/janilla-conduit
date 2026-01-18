@@ -23,8 +23,8 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.persistence.Crud;
-import com.janilla.persistence.Persistence;
+import com.janilla.backend.persistence.Crud;
+import com.janilla.backend.persistence.Persistence;
 
 public class UserCrud extends Crud<Long, User> {
 

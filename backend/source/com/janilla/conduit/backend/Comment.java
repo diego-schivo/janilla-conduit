@@ -25,9 +25,9 @@ package com.janilla.conduit.backend;
 
 import java.time.Instant;
 
-import com.janilla.persistence.Entity;
-import com.janilla.persistence.Index;
-import com.janilla.persistence.Store;
+import com.janilla.backend.persistence.Entity;
+import com.janilla.backend.persistence.Index;
+import com.janilla.backend.persistence.Store;
 
 @Store
 public record Comment(Long id, Instant createdAt, Instant updatedAt, String body, Long author, @Index Long article)

@@ -27,9 +27,9 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.janilla.persistence.Crud;
-import com.janilla.persistence.Persistence;
-import com.janilla.sqlite.IndexBTree;
+import com.janilla.backend.persistence.Crud;
+import com.janilla.backend.persistence.Persistence;
+import com.janilla.backend.sqlite.IndexBTree;
 
 class ArticleCrud extends Crud<Long, Article> {
 

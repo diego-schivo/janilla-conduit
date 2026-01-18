@@ -23,9 +23,9 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.persistence.Entity;
-import com.janilla.persistence.Index;
-import com.janilla.persistence.Store;
+import com.janilla.backend.persistence.Entity;
+import com.janilla.backend.persistence.Index;
+import com.janilla.backend.persistence.Store;
 
 @Store
 public record User(Long id, @Index String email, String hash, String salt, @Index String username, String bio,

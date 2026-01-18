@@ -7,6 +7,7 @@
 		<dependency>
 			<groupId>com.janilla</groupId>
 			<artifactId>janilla-conduit-fullstack</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<parent>

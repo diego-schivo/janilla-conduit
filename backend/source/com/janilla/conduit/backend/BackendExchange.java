@@ -31,7 +31,7 @@ import com.janilla.http.SimpleHttpExchange;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.json.Jwt;
-import com.janilla.persistence.Persistence;
+import com.janilla.backend.persistence.Persistence;
 
 public class BackendExchange extends SimpleHttpExchange {
 

@@ -36,7 +36,7 @@ import javax.crypto.spec.PBEKeySpec;
 
 import com.janilla.ioc.DiFactory;
 import com.janilla.json.Jwt;
-import com.janilla.persistence.Persistence;
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.reflect.Reflection;
 import com.janilla.web.Handle;
 
