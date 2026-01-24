@@ -52,7 +52,7 @@ export default class Comments extends WebComponent {
 			form: user ? {
 				$template: "authenticated",
 				...user,
-				errorMessages: this.state.errorMessages
+				errorMessages: this.customState.errorMessages
 			} : { $template: "unauthenticated" },
 			cards: history.state.comments.map(x => ({
 				$template: "card",
@@ -105,7 +105,7 @@ export default class Comments extends WebComponent {
 			}));
 		} else {
 			const o = await r.json();
-			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
+			this.customState.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
 			this.requestDisplay();
 		}
 	}

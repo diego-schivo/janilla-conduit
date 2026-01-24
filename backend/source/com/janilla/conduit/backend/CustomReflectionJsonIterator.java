@@ -31,10 +31,10 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.janilla.http.HttpServer;
+import com.janilla.java.Reflection;
 import com.janilla.json.JsonToken;
 import com.janilla.json.ReflectionJsonIterator;
 import com.janilla.backend.persistence.Persistence;
-import com.janilla.reflect.Reflection;
 
 public class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 

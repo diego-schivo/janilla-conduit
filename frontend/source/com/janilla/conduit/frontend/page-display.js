@@ -111,7 +111,7 @@ export default class PageDisplay extends WebComponent {
 		};
 
 		const ce = Object.entries(o).find(([k, v]) => k !== "$template" && v.slot === "content");
-		const s = this.state;
+		const s = this.customState;
 		if (ce)
 			s.contentEntry = ce;
 		else if (s.contentEntry && !o[s.contentEntry[0]].slot)

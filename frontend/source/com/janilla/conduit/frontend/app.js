@@ -50,7 +50,7 @@ export default class App extends WebComponent {
 	}
 
 	async updateDisplay() {
-		const s = this.state;
+		const s = this.customState;
 		if (!Object.hasOwn(s, "user")) {
 			const t = localStorage.getItem("jwtToken");
 			if (t) {
@@ -134,7 +134,7 @@ export default class App extends WebComponent {
 
 	handleSetCurrentUser = event => {
 		const { user } = event.detail;
-		const s = this.state;
+		const s = this.customState;
 		s.user = user;
 		if (user?.token) {
 			localStorage.setItem("jwtToken", user.token);

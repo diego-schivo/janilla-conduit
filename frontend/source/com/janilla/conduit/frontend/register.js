@@ -46,7 +46,7 @@ export default class Register extends WebComponent {
 	async updateDisplay() {
 		this.appendChild(this.interpolateDom({
 			$template: "",
-			errorMessages: this.state.errorMessages?.join(";")
+			errorMessages: this.customState.errorMessages?.join(";")
 		}));
 	}
 
@@ -69,7 +69,7 @@ export default class Register extends WebComponent {
 			}));
 		} else {
 			const o = await r.json();
-			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
+			this.customState.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
 			this.requestDisplay();
 		}
 	}

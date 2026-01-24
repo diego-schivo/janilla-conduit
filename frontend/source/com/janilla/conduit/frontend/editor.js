@@ -54,7 +54,7 @@ export default class Editor extends WebComponent {
 				$template: "",
 				...hs.article,
 				tagList: hs.article.tagList?.join(),
-				errorMessages: this.state.errorMessages?.join(";")
+				errorMessages: this.customState.errorMessages?.join(";")
 			}));
 		} else {
 			if (this.dataset.slug) {
@@ -98,7 +98,7 @@ export default class Editor extends WebComponent {
 			location.hash = `#/article/${article.slug}`;
 		} else {
 			const o = await r.json();
-			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
+			this.customState.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
 			this.requestDisplay();
 		}
 	}

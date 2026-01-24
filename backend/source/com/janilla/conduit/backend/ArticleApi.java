@@ -35,9 +35,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.janilla.ioc.DiFactory;
+import com.janilla.java.Reflection;
 import com.janilla.backend.persistence.IdPage;
 import com.janilla.backend.persistence.Persistence;
-import com.janilla.reflect.Reflection;
 import com.janilla.web.ForbiddenException;
 import com.janilla.web.Handle;
 

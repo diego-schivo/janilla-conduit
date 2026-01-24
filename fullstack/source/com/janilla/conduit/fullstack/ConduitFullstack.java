@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -42,17 +41,15 @@ import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
-import com.janilla.net.Net;
+import com.janilla.net.SecureServer;
 
 public class ConduitFullstack {
-
-	public static final AtomicReference<ConduitFullstack> INSTANCE = new AtomicReference<>();
 
 	public static void main(String[] args) {
 		try {
 			ConduitFullstack a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()), INSTANCE::get);
+				var f = new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()));
 				a = f.create(ConduitFullstack.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -64,8 +61,8 @@ public class ConduitFullstack {
 			HttpServer s;
 			{
 				SSLContext c;
-				try (var x = Net.class.getResourceAsStream("localhost")) {
-					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
+				try (var x = SecureServer.class.getResourceAsStream("localhost")) {
+					c = Java.sslContext(x, "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("conduit.fullstack.server.port"));
 				s = a.diFactory.create(HttpServer.class,
@@ -89,8 +86,7 @@ public class ConduitFullstack {
 
 	public ConduitFullstack(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
-		if (!INSTANCE.compareAndSet(null, this))
-			throw new IllegalStateException();
+		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
 
 		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
@@ -103,26 +99,22 @@ public class ConduitFullstack {
 		backend = diFactory
 				.create(ConduitBackend.class,
 						Java.hashMap("diFactory",
-								new DiFactory(
-										Stream.concat(
-												Stream.of("fullstack", "backend")
+								new DiFactory(Stream
+										.concat(Stream.of("com.janilla.web"),
+												Stream.of("backend", "fullstack")
 														.map(x -> ConduitBackend.class.getPackageName()
-																.replace(".backend", "." + x)),
-												Stream.of("com.janilla.web"))
-												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
-										ConduitBackend.INSTANCE::get, "backend"),
+																.replace(".backend", "." + x)))
+										.flatMap(x -> Java.getPackageClasses(x).stream()).toList(), "backend"),
 								"configurationFile", cf));
 		frontend = diFactory
 				.create(ConduitFrontend.class,
 						Java.hashMap("diFactory",
-								new DiFactory(
-										Stream.concat(
-												Stream.of("fullstack", "frontend")
+								new DiFactory(Stream
+										.concat(Stream.of("com.janilla.web"),
+												Stream.of("frontend", "fullstack")
 														.map(x -> ConduitFrontend.class.getPackageName()
-																.replace(".frontend", "." + x)),
-												Stream.of("com.janilla.web"))
-												.flatMap(x -> Java.getPackageClasses(x).stream()).toList(),
-										ConduitFrontend.INSTANCE::get, "frontend"),
+																.replace(".frontend", "." + x)))
+										.flatMap(x -> Java.getPackageClasses(x).stream()).toList(), "frontend"),
 								"configurationFile", cf));
 
 		handler = x -> {

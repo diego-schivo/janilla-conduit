@@ -50,7 +50,7 @@ export default class Settings extends WebComponent {
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...user,
-			errorMessages: this.state.errorMessages?.join(";")
+			errorMessages: this.customState.errorMessages?.join(";")
 		}));
 	}
 
@@ -83,7 +83,7 @@ export default class Settings extends WebComponent {
 			}));
 		} else {
 			const o = await r.json();
-			this.state.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
+			this.customState.errorMessages = Object.entries(o).flatMap(([k, v]) => v.map(x => `${k} ${x}`));
 			this.requestDisplay();
 		}
 	}

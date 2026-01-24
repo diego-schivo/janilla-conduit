@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -43,7 +42,7 @@ import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
-import com.janilla.net.Net;
+import com.janilla.net.SecureServer;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Handle;
 import com.janilla.web.Invocable;
@@ -54,13 +53,11 @@ import com.janilla.web.RenderableFactory;
 @Render(template = "index.html")
 public class ConduitFrontend {
 
-	public static final AtomicReference<ConduitFrontend> INSTANCE = new AtomicReference<>();
-
 	public static void main(String[] args) {
 		try {
 			ConduitFrontend a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(ConduitFrontend.class.getPackageName()), INSTANCE::get);
+				var f = new DiFactory(Java.getPackageClasses(ConduitFrontend.class.getPackageName()));
 				a = f.create(ConduitFrontend.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -72,8 +69,8 @@ public class ConduitFrontend {
 			HttpServer s;
 			{
 				SSLContext c;
-				try (var x = Net.class.getResourceAsStream("localhost")) {
-					c = Net.getSSLContext(Map.entry("JKS", x), "passphrase".toCharArray());
+				try (var x = SecureServer.class.getResourceAsStream("localhost")) {
+					c = Java.sslContext(x, "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("conduit.frontend.server.port"));
 				s = a.diFactory.create(HttpServer.class,
@@ -99,8 +96,7 @@ public class ConduitFrontend {
 
 	public ConduitFrontend(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
-		if (!INSTANCE.compareAndSet(null, this))
-			throw new IllegalStateException();
+		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
 
 		invocables = types().stream()

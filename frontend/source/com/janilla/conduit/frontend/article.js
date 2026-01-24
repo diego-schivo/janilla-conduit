@@ -59,7 +59,7 @@ export default class Article extends WebComponent {
 	async updateDisplay() {
 		const hs = history.state ?? {};
 		if (hs.article) {
-			const s = this.state;
+			const s = this.customState;
 			s.body ??= (() => {
 				const x = document.createElement("template");
 				x.innerHTML = formatMarkdownAsHtml(parseMarkdown(hs.article.body));
@@ -73,7 +73,7 @@ export default class Article extends WebComponent {
 				meta: Array.from({ length: 2 }, () => ({
 					$template: "meta",
 					...hs.article,
-					content: hs.article.author.username === this.closest("app-element").state.user?.username
+					content: hs.article.author.username === this.closest("app-element").customState.user?.username
 						? ({ $template: "can-modify" })
 						: ({
 							$template: "cannot-modify",
@@ -90,7 +90,7 @@ export default class Article extends WebComponent {
 			const [{ article }, { comments }] = await Promise.all([
 				`${a.dataset.apiUrl}/articles/${this.dataset.slug}`,
 				`${a.dataset.apiUrl}/articles/${this.dataset.slug}/comments`,
-			].map(x => fetch(x, { headers: a.state.apiHeaders }).then(y => y.json())));
+			].map(x => fetch(x, { headers: a.customState.apiHeaders }).then(y => y.json())));
 			Object.assign(hs, { article, comments });
 			history.replaceState(hs, "");
 			dispatchEvent(new CustomEvent("popstate"));

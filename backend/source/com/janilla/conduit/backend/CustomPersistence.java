@@ -23,19 +23,19 @@
  */
 package com.janilla.conduit.backend;
 
-import java.util.Collection;
+import java.util.List;
 
-import com.janilla.java.TypeResolver;
 import com.janilla.backend.persistence.Crud;
 import com.janilla.backend.persistence.Entity;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.backend.sqlite.SqliteDatabase;
+import com.janilla.java.TypeResolver;
 
 public class CustomPersistence extends Persistence {
 
-	public CustomPersistence(SqliteDatabase database, Collection<Class<? extends Entity<?>>> types,
+	public CustomPersistence(SqliteDatabase database, List<Class<? extends Entity<?>>> storables,
 			TypeResolver typeResolver) {
-		super(database, types, typeResolver);
+		super(database, storables, typeResolver);
 	}
 
 //	@Override

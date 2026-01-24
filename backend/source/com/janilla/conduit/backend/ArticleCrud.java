@@ -24,7 +24,6 @@
 package com.janilla.conduit.backend;
 
 import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.janilla.backend.persistence.Crud;
@@ -40,8 +39,8 @@ class ArticleCrud extends Crud<Long, Article> {
 	public boolean favorite(Long id, Instant createdAt, Long user) {
 		return persistence.database().perform(() -> {
 			var x = persistence.database().index("User.favoriteList").insert(new Object[] { id, user }, null);
-			persistence.database().index("Article.favoriteList")
-					.insert(new Object[] { user, createdAt.toString(), id }, null);
+			persistence.database().index("Article.favoriteList").insert(new Object[] { user, createdAt.toString(), id },
+					null);
 			return x;
 		}, true);
 	}
@@ -49,8 +48,8 @@ class ArticleCrud extends Crud<Long, Article> {
 	public boolean unfavorite(Long id, Instant createdAt, Long user) {
 		return persistence.database().perform(() -> {
 			var x = persistence.database().index("User.favoriteList").delete(new Object[] { id, user }, null);
-			persistence.database().index("Article.favoriteList")
-					.delete(new Object[] { user, createdAt.toString(), id }, null);
+			persistence.database().index("Article.favoriteList").delete(new Object[] { user, createdAt.toString(), id },
+					null);
 			return x;
 		}, true);
 	}
@@ -80,8 +79,8 @@ class ArticleCrud extends Crud<Long, Article> {
 //					for (var x : m.entrySet()) {
 //						var t = x.getKey();
 //						var c = x.getValue();
-////							IO.println(
-////									"ArticleCrud.updateIndex, Tag.count, t=" + t + ", c=" + Arrays.toString(c));
+			//// IO.println( "ArticleCrud.updateIndex, Tag.count, t=" + t + ", c="
+			/// + Arrays.toString(c));
 //						if (c[0] > 0)
 //							i.delete(new Object[] { c[0], t }, null);
 //						if (c[1] > 0)
