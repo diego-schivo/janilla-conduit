@@ -54,7 +54,7 @@ public class ConduitTesting {
 		try {
 			ConduitTesting a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(ConduitTesting.class.getPackageName()));
+				var f = new DiFactory(Java.getPackageClasses(ConduitTesting.class.getPackageName(), true));
 				a = f.create(ConduitTesting.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -96,7 +96,7 @@ public class ConduitTesting {
 		typeResolver = diFactory.create(DollarTypeResolver.class);
 
 		fullstack = diFactory.create(ConduitFullstack.class,
-				Map.of("diFactory", new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName()))));
+				Map.of("diFactory", new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName(), true))));
 
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);

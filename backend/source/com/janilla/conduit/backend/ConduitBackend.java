@@ -58,7 +58,7 @@ public class ConduitBackend {
 			ConduitBackend a;
 			{
 				var f = new DiFactory(Stream.of("com.janilla.web", ConduitBackend.class.getPackageName())
-						.flatMap(x -> Java.getPackageClasses(x).stream()).toList());
+						.flatMap(x -> Java.getPackageClasses(x, true).stream()).toList());
 				a = f.create(ConduitBackend.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(

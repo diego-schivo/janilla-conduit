@@ -57,7 +57,7 @@ public class ConduitFrontend {
 		try {
 			ConduitFrontend a;
 			{
-				var f = new DiFactory(Java.getPackageClasses(ConduitFrontend.class.getPackageName()));
+				var f = new DiFactory(Java.getPackageClasses(ConduitFrontend.class.getPackageName(), true));
 				a = f.create(ConduitFrontend.class,
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
@@ -105,7 +105,7 @@ public class ConduitFrontend {
 						.map(y -> new Invocable(x, y)))
 				.toList();
 		files = Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackagePaths(x).stream().filter(Files::isRegularFile)).toList();
+				.flatMap(x -> Java.getPackagePaths(x, true).filter(Files::isRegularFile)).toList();
 		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);
