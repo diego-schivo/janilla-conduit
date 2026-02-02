@@ -21,26 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.backend;
-
-import com.janilla.http.HttpHandlerFactory;
-import com.janilla.ioc.DiFactory;
-import com.janilla.web.ApplicationHandlerFactory;
-import com.janilla.web.InvocationHandlerFactory;
-
-public class CustomHandlerFactory extends ApplicationHandlerFactory {
-
-	protected final ConduitBackend application;
-
-	public CustomHandlerFactory(DiFactory diFactory, ConduitBackend application) {
-		this.application = application;
-		super(diFactory);
-	}
-
-	@Override
-	protected HttpHandlerFactory buildInvocationHandlerFactory() {
-		var x = (InvocationHandlerFactory) super.buildInvocationHandlerFactory();
-		application.invocationHandlerFactory = x;
-		return x;
-	}
-}
+//package com.janilla.conduit.backend;
+//
+//import com.janilla.http.HttpHandlerFactory;
+//import com.janilla.ioc.DiFactory;
+//import com.janilla.web.ApplicationHandlerFactory;
+//import com.janilla.web.InvocationHandlerFactory;
+//
+//public class CustomHandlerFactory extends ApplicationHandlerFactory {
+//
+//	protected final ConduitBackend application;
+//
+//	public CustomHandlerFactory(DiFactory diFactory, ConduitBackend application) {
+//		this.application = application;
+//		super(diFactory);
+//	}
+//
+//	@Override
+//	protected HttpHandlerFactory buildInvocationHandlerFactory() {
+//		var x = (InvocationHandlerFactory) super.buildInvocationHandlerFactory();
+//		application.invocationHandlerFactory = x;
+//		return x;
+//	}
+//}

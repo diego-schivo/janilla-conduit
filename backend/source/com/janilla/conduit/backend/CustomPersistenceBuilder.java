@@ -34,16 +34,17 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.janilla.ioc.DiFactory;
 import com.janilla.backend.persistence.ApplicationPersistenceBuilder;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.ioc.DiFactory;
 
 public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public CustomPersistenceBuilder(Path databaseFile, DiFactory diFactory) {
+	public CustomPersistenceBuilder(Path databaseFile, DiFactory diFactory, Properties configuration) {
 		super(databaseFile, diFactory);
+		this.configuration = configuration;
 	}
 
 	@Override

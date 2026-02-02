@@ -27,18 +27,20 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
 import com.janilla.backend.persistence.ApplicationPersistenceBuilder;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.backend.persistence.Store;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
@@ -48,7 +50,6 @@ import com.janilla.java.TypeResolver;
 import com.janilla.net.SecureServer;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Invocable;
-import com.janilla.web.InvocationHandlerFactory;
 import com.janilla.web.NotFoundException;
 
 public class ConduitBackend {
@@ -87,17 +88,15 @@ public class ConduitBackend {
 
 	protected final DiFactory diFactory;
 
-	protected final List<Path> files;
-
 	protected final HttpHandler handler;
 
 	protected final List<Invocable> invocables;
 
-	protected InvocationHandlerFactory invocationHandlerFactory;
-
 	protected final Persistence persistence;
 
-//	protected final RenderableFactory renderableFactory;
+	protected final List<Class<?>> resolvables;
+
+	protected final List<Class<?>> storables;
 
 	protected final TypeResolver typeResolver;
 
@@ -105,8 +104,16 @@ public class ConduitBackend {
 		this.diFactory = diFactory;
 		diFactory.context(this);
 		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
+
+		{
+			Map<String, Class<?>> m = diFactory.types().stream().collect(Collectors.toMap(x -> x.getSimpleName(),
+					x -> x, (x, y) -> x.getName().length() <= y.getName().length() ? x : y, LinkedHashMap::new));
+			IO.println("m=" + m);
+			resolvables = m.values().stream().toList();
+		}
 		typeResolver = diFactory.create(DollarTypeResolver.class);
 
+		storables = resolvables.stream().filter(x -> x.isAnnotationPresent(Store.class)).toList();
 		{
 			var f = configuration.getProperty("conduit.database.file");
 			if (f.startsWith("~"))
@@ -115,13 +122,11 @@ public class ConduitBackend {
 			persistence = b.build();
 		}
 
-		invocables = types().stream()
+		invocables = diFactory.types().stream()
 				.flatMap(x -> Arrays.stream(x.getMethods())
 						.filter(y -> !Modifier.isStatic(y.getModifiers()) && !y.isBridge())
 						.map(y -> new Invocable(x, y)))
 				.toList();
-		files = List.of();
-//		renderableFactory = diFactory.create(RenderableFactory.class);
 		{
 			var f = diFactory.create(ApplicationHandlerFactory.class);
 			handler = x -> {
@@ -133,20 +138,12 @@ public class ConduitBackend {
 		}
 	}
 
-	public ConduitBackend application() {
-		return this;
-	}
-
 	public Properties configuration() {
 		return configuration;
 	}
 
 	public DiFactory diFactory() {
 		return diFactory;
-	}
-
-	public List<Path> files() {
-		return files;
 	}
 
 	public HttpHandler handler() {
@@ -157,23 +154,19 @@ public class ConduitBackend {
 		return invocables;
 	}
 
-	public InvocationHandlerFactory invocationHandlerFactory() {
-		return invocationHandlerFactory;
-	}
-
 	public Persistence persistence() {
 		return persistence;
 	}
 
-//	public RenderableFactory renderableFactory() {
-//		return renderableFactory;
-//	}
+	public List<Class<?>> resolvables() {
+		return resolvables;
+	}
+
+	public List<Class<?>> storables() {
+		return storables;
+	}
 
 	public TypeResolver typeResolver() {
 		return typeResolver;
-	}
-
-	public Collection<Class<?>> types() {
-		return diFactory.types();
 	}
 }
