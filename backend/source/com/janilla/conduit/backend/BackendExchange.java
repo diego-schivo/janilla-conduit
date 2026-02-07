@@ -27,22 +27,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.janilla.http.SimpleHttpExchange;
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
+import com.janilla.http.SimpleHttpExchange;
 import com.janilla.json.Jwt;
-import com.janilla.backend.persistence.Persistence;
 
 public class BackendExchange extends SimpleHttpExchange {
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public Persistence persistence;
+	protected final Persistence persistence;
 
 	protected final Map<String, Object> session = new HashMap<>();
 
-	public BackendExchange(HttpRequest request, HttpResponse response) {
+	public BackendExchange(HttpRequest request, HttpResponse response, Properties configuration,
+			Persistence persistence) {
 		super(request, response);
+		this.configuration = configuration;
+		this.persistence = persistence;
 	}
 
 	public User getUser() {

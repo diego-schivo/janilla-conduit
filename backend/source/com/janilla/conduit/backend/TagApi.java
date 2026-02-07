@@ -31,7 +31,11 @@ import com.janilla.web.Handle;
 @Handle(path = "/api/tags")
 public class TagApi {
 
-	public Persistence persistence;
+	protected final Persistence persistence;
+
+	public TagApi(Persistence persistence) {
+		this.persistence = persistence;
+	}
 
 	@Handle(method = "GET")
 	public Tags tags() {

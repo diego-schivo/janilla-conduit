@@ -23,9 +23,9 @@
 				<configuration>
 					<executable>java</executable>
 					<arguments>
-						<argument>-p</argument>
+						<argument>--module-path</argument>
 						<modulepath/>
-						<argument>-m</argument>
+						<argument>--module</argument>
 						<argument>com.janilla.conduit.backend/com.janilla.conduit.backend.ConduitBackend</argument>
 					</arguments>
 				</configuration>

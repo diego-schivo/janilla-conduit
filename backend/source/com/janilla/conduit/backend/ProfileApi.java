@@ -32,7 +32,11 @@ import com.janilla.web.Handle;
 @Handle(path = "/api/profiles")
 public class ProfileApi {
 
-	public Persistence persistence;
+	protected final Persistence persistence;
+
+	public ProfileApi(Persistence persistence) {
+		this.persistence = persistence;
+	}
 
 	@Handle(method = "GET", path = "([^/]+)")
 	public Object read(String username) {

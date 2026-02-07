@@ -29,18 +29,23 @@ import java.util.stream.Collectors;
 import com.janilla.http.HttpRequest;
 import com.janilla.http.HttpResponse;
 import com.janilla.web.Handle;
-import com.janilla.web.InvocationHandlerFactory;
+import com.janilla.web.InvocationResolver;
 
 public class Cors {
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public InvocationHandlerFactory methodHandlerFactory;
+	protected final InvocationResolver invocationResolver;
+
+	public Cors(Properties configuration, InvocationResolver invocationResolver) {
+		this.configuration = configuration;
+		this.invocationResolver = invocationResolver;
+	}
 
 	@Handle(method = "OPTIONS", path = "/api/(.*)")
 	public void allow(HttpRequest request, HttpResponse response) {
 		var o = configuration.getProperty("conduit.api.cors.origin");
-		var m = ((CustomInvocationHandlerFactory) methodHandlerFactory).handleMethods(request.getPath());
+		var m = invocationResolver.groups(request.getPath()).flatMap(x -> x.methods().keySet().stream()).toList();
 		var h = configuration.getProperty("conduit.api.cors.headers");
 
 		response.setStatus(204);

@@ -34,20 +34,26 @@ import java.util.Random;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import com.janilla.backend.persistence.Persistence;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Reflection;
 import com.janilla.json.Jwt;
-import com.janilla.backend.persistence.Persistence;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/users")
 public class UserApi {
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public DiFactory diFactory;
+	protected final DiFactory diFactory;
 
-	public Persistence persistence;
+	protected final Persistence persistence;
+
+	public UserApi(Properties configuration, Persistence persistence, DiFactory diFactory) {
+		this.configuration = configuration;
+		this.persistence = persistence;
+		this.diFactory = diFactory;
+	}
 
 	@Handle(method = "GET", path = "/api/user")
 	public Object getCurrent(User user) {

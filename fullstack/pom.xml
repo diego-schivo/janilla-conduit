@@ -20,21 +20,29 @@
 		<artifactId>janilla-conduit</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<configuration>
-					<executable>java</executable>
-					<arguments>
-						<argument>-p</argument>
-						<modulepath/>
-						<argument>-m</argument>
-						<argument>com.janilla.conduit.fullstack/com.janilla.conduit.fullstack.ConduitFullstack</argument>
-					</arguments>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<properties>
+		<exec.mainClass>com.janilla.conduit.fullstack.ConduitFullstack</exec.mainClass>
+	</properties>
+	<profiles>
+		<profile>
+			<id>execute</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<configuration>
+							<executable>java</executable>
+							<arguments>
+								<argument>--module-path</argument>
+								<modulepath/>
+								<argument>--module</argument>
+								<argument>com.janilla.conduit.fullstack/com.janilla.conduit.fullstack.ConduitFullstack</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

@@ -46,7 +46,7 @@ export default class Settings extends WebComponent {
 	}
 
 	async updateDisplay() {
-		const { state: { user } } = this.closest("app-element");
+		const { customState: { user } } = this.closest("app-element");
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			...user,
@@ -65,7 +65,7 @@ export default class Settings extends WebComponent {
 	handleSubmit = async event => {
 		event.preventDefault();
 
-		const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+		const { dataset: { apiUrl }, customState: { apiHeaders } } = this.closest("app-element");
 		const r = await fetch(`${apiUrl}/user`, {
 			method: "PUT",
 			headers: {

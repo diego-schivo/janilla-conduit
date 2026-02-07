@@ -34,25 +34,25 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.janilla.backend.persistence.ApplicationPersistenceBuilder;
+import com.janilla.backend.persistence.PersistenceBuilder;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.ioc.DiFactory;
 
-public class CustomPersistenceBuilder extends ApplicationPersistenceBuilder {
+public class CustomPersistenceBuilder extends PersistenceBuilder {
 
 	protected final Properties configuration;
 
-	public CustomPersistenceBuilder(Path databaseFile, DiFactory diFactory, Properties configuration) {
-		super(databaseFile, diFactory);
+	public CustomPersistenceBuilder(Path databaseFile, Properties configuration) {
+		super(databaseFile);
 		this.configuration = configuration;
 	}
 
 	@Override
-	public Persistence build() {
+	public Persistence build(DiFactory diFactory) {
 //		var cb = (ConduitBackend) diFactory.source();
 //		var s = Boolean.parseBoolean(cb.configuration.getProperty("conduit.database.seed"));
 		var e = Files.exists(databaseFile);
-		var x = super.build();
+		var x = super.build(diFactory);
 		if (!e) {
 			var s = Boolean.parseBoolean(configuration.getProperty("conduit.database.seed"));
 			if (s)

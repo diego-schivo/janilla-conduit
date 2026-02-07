@@ -33,9 +33,13 @@ import java.util.stream.Collectors;
 
 public class Validation {
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	protected Map<String, Set<String>> errors = new LinkedHashMap<>();
+	protected final Map<String, Set<String>> errors = new LinkedHashMap<>();
+
+	public Validation(Properties configuration) {
+		this.configuration = configuration;
+	}
 
 	public boolean hasNotBeenTaken(String name, Object value) {
 		if (value == null)

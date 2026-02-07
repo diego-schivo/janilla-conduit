@@ -23,26 +23,23 @@
  */
 package com.janilla.conduit.backend;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Properties;
-import java.util.function.Function;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandlerFactory;
-import com.janilla.web.Invocable;
 import com.janilla.web.Invocation;
+import com.janilla.web.InvocationResolver;
 import com.janilla.web.InvocationHandlerFactory;
 import com.janilla.web.RenderableFactory;
 
 public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public CustomInvocationHandlerFactory(List<Invocable> invocables, Function<Class<?>, Object> instanceResolver,
-			Comparator<Invocation> invocationComparator, RenderableFactory renderableFactory,
-			HttpHandlerFactory rootFactory) {
-		super(invocables, instanceResolver, invocationComparator, renderableFactory, rootFactory);
+	public CustomInvocationHandlerFactory(InvocationResolver invocationResolver, RenderableFactory renderableFactory,
+			HttpHandlerFactory rootFactory, Properties configuration) {
+		super(invocationResolver, renderableFactory, rootFactory);
+		this.configuration = configuration;
 	}
 
 	@Override
@@ -68,7 +65,7 @@ public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
 //				: super.resolveArgument(type, exchange, values, entries, body, resolver);
 //	}
 
-	protected List<String> handleMethods(String path) {
-		return invocationGroups(path).flatMap(x -> x.methods().keySet().stream()).toList();
-	}
+//	protected List<String> handleMethods(String path) {
+//		return invocationGroups(path).flatMap(x -> x.methods().keySet().stream()).toList();
+//	}
 }

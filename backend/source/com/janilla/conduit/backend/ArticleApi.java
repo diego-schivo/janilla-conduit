@@ -34,21 +34,27 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.janilla.ioc.DiFactory;
-import com.janilla.java.Reflection;
 import com.janilla.backend.persistence.IdPage;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.ioc.DiFactory;
+import com.janilla.java.Reflection;
 import com.janilla.web.ForbiddenException;
 import com.janilla.web.Handle;
 
 @Handle(path = "/api/articles")
 public class ArticleApi {
 
-	public Properties configuration;
+	protected final Properties configuration;
 
-	public DiFactory diFactory;
+	protected final DiFactory diFactory;
 
-	public Persistence persistence;
+	protected final Persistence persistence;
+
+	public ArticleApi(Properties configuration, Persistence persistence, DiFactory diFactory) {
+		this.configuration = configuration;
+		this.persistence = persistence;
+		this.diFactory = diFactory;
+	}
 
 	@Handle(method = "POST")
 	public Object create(Form form, User user) {

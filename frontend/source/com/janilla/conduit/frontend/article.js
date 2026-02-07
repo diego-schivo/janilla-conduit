@@ -111,7 +111,7 @@ export default class Article extends WebComponent {
 			if (el.matches("a"))
 				location.hash = `#/editor/${this.dataset.slug}`;
 			else {
-				const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+				const { dataset: { apiUrl }, customState: { apiHeaders } } = this.closest("app-element");
 				const r = await fetch(`${apiUrl}/articles/${this.dataset.slug}`, {
 					method: "DELETE",
 					headers: apiHeaders

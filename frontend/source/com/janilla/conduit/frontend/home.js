@@ -47,7 +47,7 @@ export default class Home extends WebComponent {
 
 	async updateDisplay() {
 		const hs = history.state ?? {};
-		const { dataset: { apiUrl }, state: { user } } = this.closest("app-element");
+		const { dataset: { apiUrl }, customState: { user } } = this.closest("app-element");
 		if (!hs.tab) {
 			hs.tab = user ? "feed" : "all";
 			history.replaceState(hs, "");

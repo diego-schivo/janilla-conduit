@@ -46,7 +46,7 @@ export default class Comments extends WebComponent {
 	}
 
 	async updateDisplay() {
-		const { state: { user } } = this.closest("app-element");
+		const { customState: { user } } = this.closest("app-element");
 		this.appendChild(this.interpolateDom({
 			$template: "",
 			form: user ? {
@@ -72,7 +72,7 @@ export default class Comments extends WebComponent {
 			const i = Array.prototype.findIndex.call(els, x => x === el);
 			const hs = history.state;
 			const c = hs.comments[i];
-			const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+			const { dataset: { apiUrl }, customState: { apiHeaders } } = this.closest("app-element");
 			const r = await fetch(`${apiUrl}/articles/${hs.article.slug}/comments/${c.id}`, {
 				method: "DELETE",
 				headers: apiHeaders
@@ -87,7 +87,7 @@ export default class Comments extends WebComponent {
 
 	handleSubmit = async event => {
 		event.preventDefault();
-		const { dataset: { apiUrl }, state: { apiHeaders } } = this.closest("app-element");
+		const { dataset: { apiUrl }, customState: { apiHeaders } } = this.closest("app-element");
 		const r = await fetch(`${apiUrl}/articles/${history.state.article.slug}/comments`, {
 			method: "POST",
 			headers: {
