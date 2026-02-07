@@ -69,7 +69,7 @@ public class ConduitTesting {
 				try (var x = SecureServer.class.getResourceAsStream("localhost")) {
 					c = Java.sslContext(x, "passphrase".toCharArray());
 				}
-				var p = Integer.parseInt(a.configuration.getProperty("conduit.testing.server.port"));
+				var p = Integer.parseInt(a.configuration.getProperty("conduit.server.port"));
 				s = a.diFactory.create(HttpServer.class,
 						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}

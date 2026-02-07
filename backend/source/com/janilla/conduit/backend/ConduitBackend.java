@@ -78,8 +78,8 @@ public class ConduitBackend {
 
 		SSLContext c;
 		{
-			var p = a.configuration.getProperty("conduit.backend.server.keystore.path");
-			var w = a.configuration.getProperty("conduit.backend.server.keystore.password");
+			var p = a.configuration.getProperty("conduit.server.keystore.path");
+			var w = a.configuration.getProperty("conduit.server.keystore.password");
 			if (p.startsWith("~"))
 				p = System.getProperty("user.home") + p.substring(1);
 			var f = Path.of(p);
@@ -94,7 +94,7 @@ public class ConduitBackend {
 
 		HttpServer s;
 		{
-			var p = Integer.parseInt(a.configuration.getProperty("conduit.backend.server.port"));
+			var p = Integer.parseInt(a.configuration.getProperty("conduit.server.port"));
 			s = a.diFactory.create(HttpServer.class,
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}

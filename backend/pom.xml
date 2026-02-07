@@ -7,7 +7,7 @@
 		<dependency>
 			<groupId>com.janilla</groupId>
 			<artifactId>janilla-backend</artifactId>
-			<version>9.0.0-SNAPSHOT</version>
+			<version>9.0.0</version>
 		</dependency>
 	</dependencies>
 	<parent>
