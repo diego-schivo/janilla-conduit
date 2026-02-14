@@ -24,11 +24,13 @@
 package com.janilla.conduit.backend;
 
 import java.time.Instant;
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.janilla.backend.persistence.Crud;
 import com.janilla.backend.persistence.Persistence;
-import com.janilla.backend.sqlite.IndexBTree;
 
 class ArticleCrud extends Crud<Long, Article> {
 
@@ -54,10 +56,10 @@ class ArticleCrud extends Crud<Long, Article> {
 		}, true);
 	}
 
-	@Override
-	protected void updateIndex(IndexBTree index, Map<Object, Object> remove, Map<Object, Object> add) {
-		persistence.database().perform(() -> {
-			super.updateIndex(index, remove, add);
+//	@Override
+//	protected void updateIndex(IndexBTree index, Map<Object, Object> remove, Map<Object, Object> add) {
+//		persistence.database().perform(() -> {
+//			super.updateIndex(index, remove, add);
 
 //			if (name != null && name.equals("Article.tagList")) {
 //				var m = new LinkedHashMap<String, long[]>();
@@ -79,8 +81,8 @@ class ArticleCrud extends Crud<Long, Article> {
 //					for (var x : m.entrySet()) {
 //						var t = x.getKey();
 //						var c = x.getValue();
-			//// IO.println( "ArticleCrud.updateIndex, Tag.count, t=" + t + ", c="
-			/// + Arrays.toString(c));
+	//// IO.println( "ArticleCrud.updateIndex, Tag.count, t=" + t + ", c="
+	/// + Arrays.toString(c));
 //						if (c[0] > 0)
 //							i.delete(new Object[] { c[0], t }, null);
 //						if (c[1] > 0)
@@ -88,7 +90,33 @@ class ArticleCrud extends Crud<Long, Article> {
 //					}
 //				}
 //			}
-			return null;
-		}, true);
+//			return null;
+//		}, true);
+//	}
+
+	@Override
+	protected void updateIndexes(Article entity1, Article entity2) {
+		super.updateIndexes(entity1, entity2);
+
+		var dd = Stream.of(entity1, entity2).filter(Objects::nonNull).flatMap(x -> x.tagList().stream())
+				.collect(Collectors.toMap(x -> x, _ -> 0, (x, _) -> x, LinkedHashMap::new));
+		if (entity1 != null)
+			for (var t : entity1.tagList())
+				dd.compute(t, (_, x) -> x - 1);
+		if (entity2 != null)
+			for (var t : entity2.tagList())
+				dd.compute(t, (_, x) -> x + 1);
+		var i = persistence.database().index("TagCount", "table");
+		dd.entrySet().forEach(td -> {
+			var t = td.getKey();
+			var d = td.getValue().intValue();
+			if (d != 0) {
+				var k = new Object[] { toDatabaseValue(t) };
+				var a = new int[1];
+				i.delete(k, x -> x.forEach(y -> a[0] = fromDatabaseValue(y.reduce((_, z) -> z).get(), Integer.class)));
+				a[0] = a[0] + d;
+				i.insert(k, new Object[] { toDatabaseValue(a[0]) });
+			}
+		});
 	}
 }

@@ -29,6 +29,7 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -50,6 +51,7 @@ import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.DollarTypeResolver;
 import com.janilla.java.Java;
+import com.janilla.java.Reflection;
 import com.janilla.java.TypeResolver;
 import com.janilla.web.ApplicationHandlerFactory;
 import com.janilla.web.Invocable;
@@ -164,6 +166,10 @@ public class ConduitBackend {
 					throw new NotFoundException(x.request().getMethod() + " " + x.request().getTarget());
 				return h.handle(x);
 			};
+		}
+
+		{
+			persistence.crud(Article.class).update(1L, x -> Reflection.copy(Map.of("updatedAt", Instant.now()), x));
 		}
 	}
 

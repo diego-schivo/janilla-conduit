@@ -23,8 +23,6 @@
  */
 package com.janilla.conduit.backend;
 
-import java.util.List;
-
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.web.Handle;
 
@@ -39,12 +37,8 @@ public class TagApi {
 
 	@Handle(method = "GET")
 	public Tags tags() {
-		var tt = persistence.database().perform(
-				() -> persistence.database().index("Tag.count").rows().limit(10).map(x -> (String) x[1]).toList(),
-				false);
+		var tt = persistence.database().perform(() -> persistence.database().index("TagCount", "table").rows().limit(10)
+				.map(x -> (String) x.findFirst().get()).toList(), false);
 		return new Tags(tt);
-	}
-
-	public record Tags(List<String> tags) {
 	}
 }

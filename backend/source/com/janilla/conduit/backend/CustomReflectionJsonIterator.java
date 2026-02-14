@@ -74,7 +74,7 @@ public class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 				}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 				var u = ((BackendExchange) HttpServer.HTTP_EXCHANGE.get()).getUser();
 				m.put("favorited", u != null && a.id() != null && persistence.crud(Article.class)
-						.filter("favoriteList", u.id()).stream().anyMatch(x -> x.equals(a.id())));
+						.filter("favoriteList", new Object[] { u.id() }).stream().anyMatch(x -> x.equals(a.id())));
 				m.put("favoritesCount",
 						a.id() != null ? persistence.crud(User.class).count("favoriteList", a.id()) : 0);
 				object = m;
@@ -87,8 +87,8 @@ public class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 							return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
 						}).collect(LinkedHashMap::new, (x, y) -> x.put(y.getKey(), y.getValue()), Map::putAll);
 				var v = ((BackendExchange) HttpServer.HTTP_EXCHANGE.get()).getUser();
-				m.put("following", v != null && persistence.crud(User.class).filter("followList", v.id()).stream()
-						.anyMatch(x -> x.equals(u.id())));
+				m.put("following", v != null && persistence.crud(User.class)
+						.filter("followList", new Object[] { v.id() }).stream().anyMatch(x -> x.equals(u.id())));
 				object = m;
 			}
 				break;

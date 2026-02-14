@@ -29,6 +29,7 @@ import com.janilla.backend.persistence.Crud;
 import com.janilla.backend.persistence.Entity;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.backend.sqlite.SqliteDatabase;
+import com.janilla.backend.sqlite.TableColumn;
 import com.janilla.java.TypeResolver;
 
 public class CustomPersistence extends Persistence {
@@ -65,12 +66,27 @@ public class CustomPersistence extends Persistence {
 //		return x;
 //	}
 
+//	@Override
+//	protected void createStoresAndIndexes() {
+//		database.perform(() -> {
+//			super.createStoresAndIndexes();
+//			for (var x : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
+//				database.createIndex(x, "foo");
+//			return null;
+//		}, true);
+//	}
+
 	@Override
 	protected void createStoresAndIndexes() {
 		database.perform(() -> {
 			super.createStoresAndIndexes();
-			for (var x : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
+
+			for (var x : new String[] { "Article.favoriteList", "User.favoriteList", "User.followList" })
 				database.createIndex(x, "foo");
+
+			database.createTable("TagCount", new TableColumn[] { new TableColumn("tag", "TEXT", false),
+					new TableColumn("count", "NUMERIC", false) }, true);
+
 			return null;
 		}, true);
 	}

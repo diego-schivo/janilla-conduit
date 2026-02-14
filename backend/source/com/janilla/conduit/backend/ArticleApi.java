@@ -118,18 +118,21 @@ public class ArticleApi {
 		var f = Stream.of(favorited).filter(x -> x != null && !x.isBlank())
 				.map(x -> persistence.crud(User.class).find("username", x)).toArray();
 		var c = persistence.crud(Article.class);
-		var p = c.filter(Map.of("tagList", t, "author", a, "favoriteList", f), skip != null ? skip : 0,
-				limit != null ? limit : -1);
-		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
+//		var p = c.filter(Map.of("tagList", t, "author", a, "favoriteList", f), skip != null ? skip : 0,
+//				limit != null ? limit : -1);
+		var p = c.filterAndCount("createdAt", new Object[0], true, skip != null ? skip : 0, limit != null ? limit : -1);
+		return Map.of("articles", c.read(p.elements()), "articlesCount", p.totalSize());
 	}
 
 	@Handle(method = "GET", path = "feed")
 	public Object listFeed(Long skip, Long limit, User user) {
-		var u = persistence.crud(User.class).filter("followList", user.id());
+		var u = persistence.crud(User.class).filter("followList", new Object[] { user.id() });
 		var c = persistence.crud(Article.class);
-		var p = !u.isEmpty() ? c.filter("author", skip != null ? skip : 0, limit != null ? limit : -1, u.toArray())
+		var p = !u.isEmpty()
+				? c.filter("author", u.toArray(), false, skip != null ? skip : 0, limit != null ? limit : -1)
 				: IdPage.<Long>empty();
-		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
+//		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
+		throw new RuntimeException();
 	}
 
 	@Handle(method = "POST", path = "([^/]+)/comments")
@@ -170,7 +173,7 @@ public class ArticleApi {
 	public Object listComments(String slug) {
 		var a = persistence.crud(Article.class).find("slug", slug);
 		var c = persistence.crud(Comment.class);
-		return Map.of("comments", c.read(c.filter("article", a)));
+		return Map.of("comments", c.read(c.filter("article", new Object[] { a })));
 	}
 
 	@Handle(method = "POST", path = "([^/]+)/favorite")
@@ -206,8 +209,8 @@ public class ArticleApi {
 		var c = persistence.crud(Article.class);
 		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
 				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {
-			var a = c.read(c.filter("slug", slug2)).stream().filter(x -> !x.slug().equals(slug1)).findFirst()
-					.orElse(null);
+			var a = c.read(c.filter("slug", new Object[] { slug2 })).stream().filter(x -> !x.slug().equals(slug1))
+					.findFirst().orElse(null);
 			v.isUnique("title", a);
 		}
 		if ((slug2.equals(slug1) && article.description == null) || (v.isNotBlank("description", article.description)
