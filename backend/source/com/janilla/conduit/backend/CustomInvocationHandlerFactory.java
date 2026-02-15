@@ -23,13 +23,16 @@
  */
 package com.janilla.conduit.backend;
 
+import java.lang.reflect.Type;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandlerFactory;
+import com.janilla.java.Converter;
 import com.janilla.web.Invocation;
-import com.janilla.web.InvocationResolver;
 import com.janilla.web.InvocationHandlerFactory;
+import com.janilla.web.InvocationResolver;
 import com.janilla.web.RenderableFactory;
 
 public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
@@ -58,14 +61,10 @@ public class CustomInvocationHandlerFactory extends InvocationHandlerFactory {
 		return super.handle(invocation, exchange);
 	}
 
-//	@Override
-//	protected Object resolveArgument(Type type, HttpExchange exchange, String[] values,
-//			Java.EntryList<String, String> entries, Supplier<String> body, Supplier<TypeResolver> resolver) {
-//		return type == User.class ? ((CustomHttpExchange) exchange).getUser()
-//				: super.resolveArgument(type, exchange, values, entries, body, resolver);
-//	}
-
-//	protected List<String> handleMethods(String path) {
-//		return invocationGroups(path).flatMap(x -> x.methods().keySet().stream()).toList();
-//	}
+	@Override
+	protected Object resolveArgument(Type type, HttpExchange exchange, String[] values, Supplier<String> body,
+			Supplier<Converter> converter) {
+		return type == User.class ? ((BackendExchange) exchange).getUser()
+				: super.resolveArgument(type, exchange, values, body, converter);
+	}
 }

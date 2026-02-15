@@ -31,7 +31,7 @@ import com.janilla.backend.persistence.Index;
 import com.janilla.backend.persistence.Store;
 
 @Store
-public record Article(Long id, @Index String slug, String title, String description, String body,
-		@Index List<String> tagList, @Index Instant createdAt, Instant updatedAt, @Index Long author)
-		implements Entity<Long> {
+public record Article(Long id, @Index String slug, String title, String description, String body, @Index(properties = {
+		"tagList", "createdAt" }) List<String> tagList, @Index Instant createdAt, Instant updatedAt,
+		@Index(properties = { "author", "createdAt" }) Long author) implements Entity<Long>{
 }

@@ -39,53 +39,29 @@ public class CustomPersistence extends Persistence {
 		super(database, storables, typeResolver);
 	}
 
-//	@Override
-//	public <K, V> com.janilla.database.Index<K, V> newIndex(KeyAndData<String> keyAndData) {
-//		@SuppressWarnings("unchecked")
-//		var x = Optional.ofNullable((com.janilla.database.Index<K, V>) super.newIndex(keyAndData))
-//				.orElseGet(() -> (com.janilla.database.Index<K, V>) switch (keyAndData.key()) {
-//				case "User.favoriteList",
-//						"User.followList" ->
-//					new com.janilla.database.Index<Long, Long>(
-//							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-//									KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
-//							ByteConverter.LONG);
-//				case "Tag.count" ->
-//					new com.janilla.database.Index<Object[], String>(
-//							new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-//									KeyAndData.getByteConverter(ByteConverter.of(new ByteConverter.TypeAndOrder(
-//											Long.class, ByteConverter.SortOrder.DESCENDING))),
-//									keyAndData.bTree()),
-//							ByteConverter.STRING);
-//				case "Article.favoriteList" -> new com.janilla.database.Index<Long, Object[]>(
-//						new BTree<>(database.bTreeOrder(), database.channel(), database.memory(),
-//								KeyAndData.getByteConverter(ByteConverter.LONG), keyAndData.bTree()),
-//						ByteConverter.of(Article.class, "-createdAt", "id"));
-//				default -> null;
-//				});
-//		return x;
-//	}
-
-//	@Override
-//	protected void createStoresAndIndexes() {
-//		database.perform(() -> {
-//			super.createStoresAndIndexes();
-//			for (var x : new String[] { "Article.favoriteList", "Tag.count", "User.favoriteList", "User.followList" })
-//				database.createIndex(x, "foo");
-//			return null;
-//		}, true);
-//	}
-
 	@Override
 	protected void createStoresAndIndexes() {
 		database.perform(() -> {
 			super.createStoresAndIndexes();
 
-			for (var x : new String[] { "Article.favoriteList", "User.favoriteList", "User.followList" })
-				database.createIndex(x, "foo");
+			database.createTable("Article.favoriteList",
+					new TableColumn[] { new TableColumn("user", "NUMERIC", false),
+							new TableColumn("createdAt", "TEXT", false), new TableColumn("id", "NUMERIC", false) },
+					true);
+
+			database.createTable("User.favoriteList",
+					new TableColumn[] { new TableColumn("id", "NUMERIC", false),
+							new TableColumn("createdAt", "TEXT", false), new TableColumn("user", "NUMERIC", false) },
+					true);
+
+			database.createTable("User.followList", new TableColumn[] { new TableColumn("user", "NUMERIC", false),
+					new TableColumn("profile", "NUMERIC", false) }, true);
 
 			database.createTable("TagCount", new TableColumn[] { new TableColumn("tag", "TEXT", false),
 					new TableColumn("count", "NUMERIC", false) }, true);
+
+			database.createTable("CountTag", new TableColumn[] { new TableColumn("count", "NUMERIC", false),
+					new TableColumn("tag", "TEXT", false) }, true);
 
 			return null;
 		}, true);

@@ -49,8 +49,6 @@ public class CustomPersistenceBuilder extends PersistenceBuilder {
 
 	@Override
 	public Persistence build(DiFactory diFactory) {
-//		var cb = (ConduitBackend) diFactory.source();
-//		var s = Boolean.parseBoolean(cb.configuration.getProperty("conduit.database.seed"));
 		var e = Files.exists(databaseFile);
 		var x = super.build(diFactory);
 		if (!e) {

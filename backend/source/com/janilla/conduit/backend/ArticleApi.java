@@ -32,9 +32,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import com.janilla.backend.persistence.IdPage;
+import com.janilla.backend.persistence.ListPortion;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Reflection;
@@ -112,15 +111,21 @@ public class ArticleApi {
 
 	@Handle(method = "GET")
 	public Object list(String tag, String author, String favorited, Long skip, Long limit) {
-		var t = Stream.of(tag).filter(x -> x != null && !x.isBlank()).toArray();
-		var a = Stream.of(author).filter(x -> x != null && !x.isBlank())
-				.map(x -> persistence.crud(User.class).find("username", x)).toArray();
-		var f = Stream.of(favorited).filter(x -> x != null && !x.isBlank())
-				.map(x -> persistence.crud(User.class).find("username", x)).toArray();
 		var c = persistence.crud(Article.class);
-//		var p = c.filter(Map.of("tagList", t, "author", a, "favoriteList", f), skip != null ? skip : 0,
-//				limit != null ? limit : -1);
-		var p = c.filterAndCount("createdAt", new Object[0], true, skip != null ? skip : 0, limit != null ? limit : -1);
+		ListPortion<Long> p;
+		if (tag != null && !tag.isBlank())
+			p = c.filterAndCount("tagList", new Object[] { tag }, true, skip != null ? skip : 0,
+					limit != null ? limit : -1);
+		else if (author != null && !author.isBlank()) {
+			var a = persistence.crud(User.class).find("username", author);
+			p = c.filterAndCount("author", new Object[] { a }, true, skip != null ? skip : 0,
+					limit != null ? limit : -1);
+		} else if (favorited != null && !favorited.isBlank()) {
+			var f = persistence.crud(User.class).find("username", favorited);
+			p = c.filterAndCount("favoriteList", new Object[] { f }, true, skip != null ? skip : 0,
+					limit != null ? limit : -1);
+		} else
+			p = c.filterAndCount("createdAt", new Object[0], true, skip != null ? skip : 0, limit != null ? limit : -1);
 		return Map.of("articles", c.read(p.elements()), "articlesCount", p.totalSize());
 	}
 
@@ -129,10 +134,9 @@ public class ArticleApi {
 		var u = persistence.crud(User.class).filter("followList", new Object[] { user.id() });
 		var c = persistence.crud(Article.class);
 		var p = !u.isEmpty()
-				? c.filter("author", u.toArray(), false, skip != null ? skip : 0, limit != null ? limit : -1)
-				: IdPage.<Long>empty();
-//		return Map.of("articles", c.read(p.ids()), "articlesCount", p.total());
-		throw new RuntimeException();
+				? c.filterAndCount("author", u.toArray(), true, skip != null ? skip : 0, limit != null ? limit : -1)
+				: ListPortion.<Long>empty();
+		return Map.of("articles", c.read(p.elements()), "articlesCount", p.totalSize());
 	}
 
 	@Handle(method = "POST", path = "([^/]+)/comments")
