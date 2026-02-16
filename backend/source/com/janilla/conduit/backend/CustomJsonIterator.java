@@ -36,13 +36,13 @@ import com.janilla.java.Reflection;
 import com.janilla.json.JsonToken;
 import com.janilla.json.ReflectionJsonIterator;
 
-public class CustomReflectionJsonIterator extends ReflectionJsonIterator {
+public class CustomJsonIterator extends ReflectionJsonIterator {
 
 	protected final Properties configuration;
 
 	protected final Persistence persistence;
 
-	public CustomReflectionJsonIterator(Object object, Properties configuration, Persistence persistence) {
+	public CustomJsonIterator(Object object, Properties configuration, Persistence persistence) {
 		super(object);
 		this.configuration = configuration;
 		this.persistence = persistence;
@@ -55,12 +55,14 @@ public class CustomReflectionJsonIterator extends ReflectionJsonIterator {
 			var n = (String) x.getKey();
 			switch (n) {
 			case "article":
-				if (object instanceof Long y)
-					object = persistence.crud(Article.class).read(y);
+				var a = (Article) object;
+				if (a.slug() == null)
+					object = persistence.crud(Article.class).read(a.id());
 				break;
 			case "author", "profile":
-				if (object instanceof Long y)
-					object = persistence.crud(User.class).read(y);
+				var u = (User) object;
+				if (u.email() == null)
+					object = persistence.crud(User.class).read(u.id());
 				break;
 			}
 		}

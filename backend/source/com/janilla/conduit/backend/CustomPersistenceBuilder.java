@@ -34,8 +34,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.janilla.backend.persistence.PersistenceBuilder;
 import com.janilla.backend.persistence.Persistence;
+import com.janilla.backend.persistence.PersistenceBuilder;
 import com.janilla.ioc.DiFactory;
 
 public class CustomPersistenceBuilder extends PersistenceBuilder {
@@ -76,7 +76,7 @@ public class CustomPersistenceBuilder extends PersistenceBuilder {
 						OffsetDateTime.now(ZoneOffset.UTC).toInstant());
 				var a = new Article(null, t.toLowerCase().replace(' ', '-'), t,
 						Randomize.sentence(3, 10, () -> Randomize.element(ww)), randomMarkdown(ww),
-						Randomize.elements(1, 5, tags).distinct().toList(), c, c, u.id());
+						Randomize.elements(1, 5, tags).distinct().toList(), c, c, u);
 				persistence.crud(Article.class).create(a);
 			}
 		}
@@ -86,7 +86,7 @@ public class CustomPersistenceBuilder extends PersistenceBuilder {
 			var j = r.nextInt(1, 8);
 			if ((j & 1) != 0) {
 				var d = Randomize.instant(a.createdAt(), OffsetDateTime.now(ZoneOffset.UTC).toInstant());
-				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(ww)), u.id(), a.id());
+				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(ww)), u, a);
 				c = persistence.crud(Comment.class).create(c);
 			}
 			if (a.author().equals(u.id()))
@@ -94,7 +94,7 @@ public class CustomPersistenceBuilder extends PersistenceBuilder {
 			if ((j & 2) != 0)
 				((ArticleCrud) persistence.crud(Article.class)).favorite(a.id(), a.createdAt(), u.id());
 			if ((j & 4) != 0)
-				((UserCrud) persistence.crud(User.class)).follow(a.author(), u.id());
+				((UserCrud) persistence.crud(User.class)).follow(a.author().id(), u.id());
 		}
 	}
 

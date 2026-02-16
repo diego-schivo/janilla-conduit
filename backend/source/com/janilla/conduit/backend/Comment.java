@@ -30,6 +30,6 @@ import com.janilla.backend.persistence.Index;
 import com.janilla.backend.persistence.Store;
 
 @Store
-public record Comment(Long id, Instant createdAt, Instant updatedAt, String body, Long author, @Index Long article)
+public record Comment(Long id, Instant createdAt, Instant updatedAt, String body, User author, @Index Article article)
 		implements Entity<Long> {
 }

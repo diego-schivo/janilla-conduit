@@ -50,7 +50,7 @@ public class ProfileApi {
 		var c = (UserCrud) persistence.crud(User.class);
 		var u = c.read(c.find("username", username));
 		c.follow(u.id(), user.id());
-		return Map.of("profile", u.id());
+		return Map.of("profile", u);
 	}
 
 	@Handle(method = "DELETE", path = "([^/]+)/follow")
@@ -58,6 +58,6 @@ public class ProfileApi {
 		var c = (UserCrud) persistence.crud(User.class);
 		var u = c.read(c.find("username", username));
 		c.unfollow(u.id(), user.id());
-		return Map.of("profile", u.id());
+		return Map.of("profile", u);
 	}
 }

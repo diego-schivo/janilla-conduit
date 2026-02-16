@@ -69,7 +69,7 @@ public class ArticleApi {
 		var n = Instant.now();
 		var a = new Article(null, s, null, null, null,
 //				form.article.tagList() != null ? form.article.tagList().stream().sorted().toList() : List.of(),
-				null, n, n, user.id());
+				null, n, n, user);
 		a = Reflection.copy(form.article, a, x -> !Set.of("id", "slug",
 //						"tagList",
 				"createdAt", "updatedAt", "author").contains(x));
@@ -80,8 +80,10 @@ public class ArticleApi {
 
 	@Handle(method = "GET", path = "([^/]+)")
 	public Object read(String slug) {
+		IO.println("ArticleApi.read, slug=" + slug);
 		var c = persistence.crud(Article.class);
 		var x = c.read(c.find("slug", slug));
+		IO.println("x=" + x);
 		return Collections.singletonMap("article", x);
 	}
 
@@ -157,7 +159,7 @@ public class ArticleApi {
 			throw new RuntimeException();
 
 		var n = Instant.now();
-		var c = new Comment(null, n, n, null, user.id(), a);
+		var c = new Comment(null, n, n, null, user, Article.EMPTY.withId(a));
 		c = Reflection.copy(form.comment, c, x -> x.equals("body"));
 		c = persistence.crud(Comment.class).create(c);
 		return Map.of("comment", c);
