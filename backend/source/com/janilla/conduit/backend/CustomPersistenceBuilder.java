@@ -89,7 +89,7 @@ public class CustomPersistenceBuilder extends PersistenceBuilder {
 				var c = new Comment(null, d, d, Randomize.sentence(3, 10, () -> Randomize.element(ww)), u, a);
 				c = persistence.crud(Comment.class).create(c);
 			}
-			if (a.author().equals(u.id()))
+			if (a.author().id().equals(u.id()))
 				continue;
 			if ((j & 2) != 0)
 				((ArticleCrud) persistence.crud(Article.class)).favorite(a.id(), a.createdAt(), u.id());

@@ -169,7 +169,7 @@ public class ArticleApi {
 	public void deleteComment(String slug, Long id, User user) {
 		var c = persistence.crud(Comment.class);
 		var x = c.read(id);
-		if (x.author().equals(user.id()))
+		if (x.author().id().equals(user.id()))
 			c.delete(id);
 		else
 			throw new ForbiddenException();
