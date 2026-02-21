@@ -33,10 +33,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.janilla.backend.persistence.ListPortion;
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Reflection;
+import com.janilla.persistence.ListPortion;
 import com.janilla.web.ForbiddenException;
 import com.janilla.web.Handle;
 
@@ -83,7 +83,7 @@ public class ArticleApi {
 		IO.println("ArticleApi.read, slug=" + slug);
 		var c = persistence.crud(Article.class);
 		var x = c.read(c.find("slug", slug));
-		IO.println("x=" + x);
+//		IO.println("x=" + x);
 		return Collections.singletonMap("article", x);
 	}
 
@@ -143,7 +143,7 @@ public class ArticleApi {
 
 	@Handle(method = "POST", path = "([^/]+)/comments")
 	public Object createComment(String slug, CommentForm form, User user) {
-		var v = diFactory.create(Validation.class);
+		var v = diFactory.create(diFactory.actualType(Validation.class));
 		if (v.isNotBlank("body", form.comment.body))
 			v.isSafe("body", form.comment.body);
 		v.orThrow();
@@ -211,7 +211,7 @@ public class ArticleApi {
 	}
 
 	protected void validate(String slug1, String slug2, Form.Article article) {
-		var v = diFactory.create(Validation.class);
+		var v = diFactory.create(diFactory.actualType(Validation.class));
 		var c = persistence.crud(Article.class);
 		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
 				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {

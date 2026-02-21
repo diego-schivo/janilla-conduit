@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
+import com.janilla.http.HttpClient;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DiFactory;
@@ -55,17 +56,19 @@ import com.janilla.web.ResourceMap;
 @Render(template = "index.html")
 public class ConduitFrontend {
 
+	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.conduit.frontend" };
+
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
-		var f = new DiFactory(Stream.of("com.janilla.web", ConduitFrontend.class.getPackageName())
-				.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList());
+		var f = new DiFactory(
+				Arrays.stream(DI_PACKAGES).flatMap(x -> Java.getPackageClasses(x, false).stream()).toList());
 		serve(f, args.length > 0 ? args[0] : null);
 	}
 
 	protected static void serve(DiFactory diFactory, String configurationPath) {
 		ConduitFrontend a;
 		{
-			a = diFactory.create(ConduitFrontend.class,
+			a = diFactory.create(diFactory.actualType(ConduitFrontend.class),
 					Java.hashMap("diFactory", diFactory, "configurationFile",
 							configurationPath != null ? Path.of(configurationPath.startsWith("~")
 									? System.getProperty("user.home") + configurationPath.substring(1)
@@ -75,23 +78,26 @@ public class ConduitFrontend {
 		SSLContext c;
 		{
 			var p = a.configuration.getProperty("conduit.server.keystore.path");
-			var w = a.configuration.getProperty("conduit.server.keystore.password");
-			if (p.startsWith("~"))
-				p = System.getProperty("user.home") + p.substring(1);
-			var f = Path.of(p);
-			if (!Files.exists(f))
-				Java.generateKeyPair(f, w);
-			try (var s = Files.newInputStream(f)) {
-				c = Java.sslContext(s, w.toCharArray());
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
+			if (p != null) {
+				var w = a.configuration.getProperty("conduit.server.keystore.password");
+				if (p.startsWith("~"))
+					p = System.getProperty("user.home") + p.substring(1);
+				var f = Path.of(p);
+				if (!Files.exists(f))
+					Java.generateKeyPair(f, w);
+				try (var s = Files.newInputStream(f)) {
+					c = Java.sslContext(s, w.toCharArray());
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			} else
+				c = HttpClient.sslContext("TLSv1.3");
 		}
 
 		HttpServer s;
 		{
 			var p = Integer.parseInt(a.configuration.getProperty("conduit.server.port"));
-			s = a.diFactory.create(HttpServer.class,
+			s = a.diFactory.create(a.diFactory.actualType(HttpServer.class),
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
 		s.serve();
@@ -112,9 +118,10 @@ public class ConduitFrontend {
 	public ConduitFrontend(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		diFactory.context(this);
-		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
+		configuration = diFactory.create(diFactory.actualType(Properties.class),
+				Collections.singletonMap("file", configurationFile));
 
-		invocationResolver = diFactory.create(InvocationResolver.class,
+		invocationResolver = diFactory.create(diFactory.actualType(InvocationResolver.class),
 				Map.of("invocables",
 						diFactory.types().stream()
 								.flatMap(x -> Arrays.stream(x.getMethods())
@@ -124,14 +131,15 @@ public class ConduitFrontend {
 						"instanceResolver", (Function<Class<?>, Object>) x -> {
 							var y = diFactory.context();
 //							IO.println("x=" + x + ", y=" + y);
-							return x.isAssignableFrom(y.getClass()) ? diFactory.context() : diFactory.create(x);
+							return x.isAssignableFrom(y.getClass()) ? diFactory.context()
+									: diFactory.create(diFactory.actualType(x));
 						}));
-		resourceMap = diFactory.create(ResourceMap.class,
+		resourceMap = diFactory.create(diFactory.actualType(ResourceMap.class),
 				Map.of("paths", Map.of("", Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
 						.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList())));
-		renderableFactory = diFactory.create(RenderableFactory.class);
+		renderableFactory = diFactory.create(diFactory.actualType(RenderableFactory.class));
 		{
-			var f = diFactory.create(ApplicationHandlerFactory.class);
+			var f = diFactory.create(diFactory.actualType(ApplicationHandlerFactory.class));
 			handler = x -> {
 				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
 				if (h == null)

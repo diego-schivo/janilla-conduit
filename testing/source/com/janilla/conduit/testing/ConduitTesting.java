@@ -55,7 +55,7 @@ public class ConduitTesting {
 			ConduitTesting a;
 			{
 				var f = new DiFactory(Java.getPackageClasses(ConduitTesting.class.getPackageName(), true));
-				a = f.create(ConduitTesting.class,
+				a = f.create(f.actualType(ConduitTesting.class),
 						Java.hashMap("diFactory", f, "configurationFile",
 								args.length > 0 ? Path.of(
 										args[0].startsWith("~") ? System.getProperty("user.home") + args[0].substring(1)
@@ -70,7 +70,7 @@ public class ConduitTesting {
 					c = Java.sslContext(x, "passphrase".toCharArray());
 				}
 				var p = Integer.parseInt(a.configuration.getProperty("conduit.server.port"));
-				s = a.diFactory.create(HttpServer.class,
+				s = a.diFactory.create(a.diFactory.actualType(HttpServer.class),
 						Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 			}
 			s.serve();
@@ -92,14 +92,14 @@ public class ConduitTesting {
 	public ConduitTesting(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		diFactory.context(this);
-		configuration = diFactory.create(Properties.class, Collections.singletonMap("file", configurationFile));
-		typeResolver = diFactory.create(DollarTypeResolver.class);
+		configuration = diFactory.create(diFactory.actualType(Properties.class), Collections.singletonMap("file", configurationFile));
+		typeResolver = diFactory.create(diFactory.actualType(DollarTypeResolver.class));
 
-		fullstack = diFactory.create(ConduitFullstack.class,
+		fullstack = diFactory.create(diFactory.actualType(ConduitFullstack.class),
 				Map.of("diFactory", new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName(), true))));
 
 		{
-			var f = diFactory.create(ApplicationHandlerFactory.class);
+			var f = diFactory.create(diFactory.actualType(ApplicationHandlerFactory.class));
 			handler = x -> {
 				var hx = (HttpExchange) x;
 //				IO.println(

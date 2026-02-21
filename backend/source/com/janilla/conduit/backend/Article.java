@@ -26,9 +26,9 @@ package com.janilla.conduit.backend;
 import java.time.Instant;
 import java.util.List;
 
-import com.janilla.backend.persistence.Entity;
-import com.janilla.backend.persistence.Index;
-import com.janilla.backend.persistence.Store;
+import com.janilla.persistence.Entity;
+import com.janilla.persistence.Index;
+import com.janilla.persistence.Store;
 
 @Store
 public record Article(Long id, @Index String slug, String title, String description, String body, @Index(properties = {
