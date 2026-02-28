@@ -78,7 +78,8 @@ public class CustomJsonIterator extends ReflectionJsonIterator {
 				m.put("favorited", u != null && a.id() != null && persistence.crud(Article.class)
 						.filter("favoriteList", new Object[] { u.id() }).stream().anyMatch(x -> x.equals(a.id())));
 				m.put("favoritesCount",
-						a.id() != null ? persistence.crud(User.class).count("favoriteList", a.id()) : 0);
+						a.id() != null ? persistence.crud(User.class).count("favoriteList", new Object[] { a.id() })
+								: 0);
 				object = m;
 			}
 				break;

@@ -41,14 +41,14 @@ public class ProfileApi {
 	@Handle(method = "GET", path = "([^/]+)")
 	public Object read(String username) {
 		var c = persistence.crud(User.class);
-		var u = c.read(c.find("username", username));
+		var u = c.read(c.find("username", new Object[] { username }));
 		return Collections.singletonMap("profile", u);
 	}
 
 	@Handle(method = "POST", path = "([^/]+)/follow")
 	public Object follow(String username, User user) {
 		var c = (UserCrud) persistence.crud(User.class);
-		var u = c.read(c.find("username", username));
+		var u = c.read(c.find("username", new Object[] { username }));
 		c.follow(u.id(), user.id());
 		return Map.of("profile", u);
 	}
@@ -56,7 +56,7 @@ public class ProfileApi {
 	@Handle(method = "DELETE", path = "([^/]+)/follow")
 	public Object unfollow(String username, User user) {
 		var c = (UserCrud) persistence.crud(User.class);
-		var u = c.read(c.find("username", username));
+		var u = c.read(c.find("username", new Object[] { username }));
 		c.unfollow(u.id(), user.id());
 		return Map.of("profile", u);
 	}

@@ -74,7 +74,7 @@ public class UserApi {
 		v.orThrow();
 
 		var c = persistence.crud(User.class);
-		var u = c.read(c.find("email", authenticate.user.email));
+		var u = c.read(c.find("email", new Object[] { authenticate.user.email }));
 		{
 			var f = HexFormat.of();
 			var p = authenticate.user.password.toCharArray();
@@ -92,12 +92,12 @@ public class UserApi {
 		var v = diFactory.create(diFactory.actualType(Validation.class));
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
 			var c = persistence.crud(User.class);
-			var x = c.read(c.find("username", u.username));
+			var x = c.read(c.find("username", new Object[] { u.username }));
 			v.hasNotBeenTaken("username", x);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email)) {
 			var c = persistence.crud(User.class);
-			var x = c.read(c.find("email", u.email));
+			var x = c.read(c.find("email", new Object[] { u.email }));
 			v.hasNotBeenTaken("email", x);
 		}
 		if (v.isNotBlank("password", u.password))
@@ -130,11 +130,11 @@ public class UserApi {
 //		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 		if (u.username != null && !u.username.isBlank() && v.isSafe("username", u.username)
 				&& !u.username.equals(user.username())) {
-			var x = c.read(c.find("username", u.username));
+			var x = c.read(c.find("username", new Object[] { u.username }));
 			v.hasNotBeenTaken("username", x);
 		}
 		if (v.isNotBlank("email", u.email) && v.isSafe("email", u.email) && !u.email.equals(user.email())) {
-			var x = c.read(c.find("email", u.email));
+			var x = c.read(c.find("email", new Object[] { u.email }));
 			v.hasNotBeenTaken("email", x);
 		}
 		v.isEmoji("image", u.image);

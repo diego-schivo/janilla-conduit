@@ -23,10 +23,10 @@
  */
 package com.janilla.conduit.backend;
 
-import com.janilla.backend.persistence.Crud;
+import com.janilla.backend.persistence.DefaultCrud;
 import com.janilla.backend.persistence.Persistence;
 
-public class UserCrud extends Crud<Long, User> {
+public class UserCrud extends DefaultCrud<Long, User> {
 
 	public UserCrud(Persistence persistence) {
 		super(User.class, persistence.idConverter(User.class), persistence);

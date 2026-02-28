@@ -82,7 +82,7 @@ public class ArticleApi {
 	public Object read(String slug) {
 		IO.println("ArticleApi.read, slug=" + slug);
 		var c = persistence.crud(Article.class);
-		var x = c.read(c.find("slug", slug));
+		var x = c.read(c.find("slug", new Object[] { slug }));
 //		IO.println("x=" + x);
 		return Collections.singletonMap("article", x);
 	}
@@ -93,7 +93,7 @@ public class ArticleApi {
 		validate(slug, s, form.article);
 
 		var c = persistence.crud(Article.class);
-		var a = c.update(c.find("slug", slug), x -> {
+		var a = c.update(c.find("slug", new Object[] { slug }), x -> {
 			x = new Article(x.id(), s, null, null, null,
 //					form.article.tagList() != null ? form.article.tagList().stream().sorted().toList() : List.of(),
 					null, x.createdAt(), Instant.now(), x.author());
@@ -108,7 +108,7 @@ public class ArticleApi {
 	@Handle(method = "DELETE", path = "([^/]+)")
 	public void delete(String slug) {
 		var c = persistence.crud(Article.class);
-		c.delete(c.find("slug", slug));
+		c.delete(c.find("slug", new Object[] { slug }));
 	}
 
 	@Handle(method = "GET")
@@ -119,11 +119,11 @@ public class ArticleApi {
 			p = c.filterAndCount("tagList", new Object[] { tag }, true, skip != null ? skip : 0,
 					limit != null ? limit : -1);
 		else if (author != null && !author.isBlank()) {
-			var a = persistence.crud(User.class).find("username", author);
+			var a = persistence.crud(User.class).find("username", new Object[] { author });
 			p = c.filterAndCount("author", new Object[] { a }, true, skip != null ? skip : 0,
 					limit != null ? limit : -1);
 		} else if (favorited != null && !favorited.isBlank()) {
-			var f = persistence.crud(User.class).find("username", favorited);
+			var f = persistence.crud(User.class).find("username", new Object[] { favorited });
 			p = c.filterAndCount("favoriteList", new Object[] { f }, true, skip != null ? skip : 0,
 					limit != null ? limit : -1);
 		} else
@@ -154,7 +154,7 @@ public class ArticleApi {
 				throw new ValidationException("existing comments", "are too many (" + c + ")");
 		}
 
-		var a = persistence.crud(Article.class).find("slug", slug);
+		var a = persistence.crud(Article.class).find("slug", new Object[] { slug });
 		if (a == null)
 			throw new RuntimeException();
 
@@ -177,7 +177,7 @@ public class ArticleApi {
 
 	@Handle(method = "GET", path = "([^/]+)/comments")
 	public Object listComments(String slug) {
-		var a = persistence.crud(Article.class).find("slug", slug);
+		var a = persistence.crud(Article.class).find("slug", new Object[] { slug });
 		var c = persistence.crud(Comment.class);
 		return Map.of("comments", c.read(c.filter("article", new Object[] { a })));
 	}
@@ -187,7 +187,7 @@ public class ArticleApi {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
 		var c = (ArticleCrud) persistence.crud(Article.class);
-		var a = c.read(c.find("slug", slug));
+		var a = c.read(c.find("slug", new Object[] { slug }));
 		c.favorite(a.id(), a.createdAt(), user.id());
 		return Map.of("article", a.id());
 	}
@@ -197,7 +197,7 @@ public class ArticleApi {
 		if (user == null)
 			throw new NullPointerException("user=" + user);
 		var c = (ArticleCrud) persistence.crud(Article.class);
-		var a = c.read(c.find("slug", slug));
+		var a = c.read(c.find("slug", new Object[] { slug }));
 		c.unfavorite(a.id(), a.createdAt(), user.id());
 		return Map.of("article", a.id());
 	}

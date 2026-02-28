@@ -29,10 +29,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.janilla.backend.persistence.Crud;
+import com.janilla.backend.persistence.DefaultCrud;
 import com.janilla.backend.persistence.Persistence;
 
-class ArticleCrud extends Crud<Long, Article> {
+class ArticleCrud extends DefaultCrud<Long, Article> {
 
 	public ArticleCrud(Persistence persistence) {
 		super(Article.class, persistence.idConverter(Article.class), persistence);

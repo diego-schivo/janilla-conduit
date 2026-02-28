@@ -57,7 +57,7 @@ public class BackendExchange extends SimpleHttpExchange {
 			User u;
 			if (e != null) {
 				var c = persistence.crud(User.class);
-				u = c.read(c.find("email", e));
+				u = c.read(c.find("email", new Object[] { e }));
 			} else
 				u = null;
 			session.put("user", u);
