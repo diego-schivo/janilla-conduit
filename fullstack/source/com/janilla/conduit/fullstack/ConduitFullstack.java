@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -43,21 +44,26 @@ import com.janilla.conduit.frontend.ConduitFrontend;
 import com.janilla.http.HttpClient;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
+import com.janilla.ioc.DefaultDiFactory;
 import com.janilla.ioc.DiFactory;
 import com.janilla.java.Java;
 
 public class ConduitFullstack {
 
+	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.conduit.fullstack" };
+
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
-		var f = new DiFactory(Java.getPackageClasses(ConduitFullstack.class.getPackageName(), false), "fullstack");
+		var f = new DefaultDiFactory(
+				Arrays.stream(DI_PACKAGES).flatMap(x -> Java.getPackageClasses(x, false).stream()).toList(),
+				"fullstack");
 		serve(f, args.length > 0 ? args[0] : null);
 	}
 
 	protected static void serve(DiFactory diFactory, String configurationPath) {
 		ConduitFullstack a;
 		{
-			a = diFactory.create(diFactory.actualType(ConduitFullstack.class),
+			a = diFactory.newInstance(diFactory.classFor(ConduitFullstack.class),
 					Java.hashMap("diFactory", diFactory, "configurationFile",
 							configurationPath != null ? Path.of(configurationPath.startsWith("~")
 									? System.getProperty("user.home") + configurationPath.substring(1)
@@ -86,7 +92,7 @@ public class ConduitFullstack {
 		HttpServer s;
 		{
 			var p = Integer.parseInt(a.configuration.getProperty("conduit.server.port"));
-			s = a.diFactory.create(a.diFactory.actualType(HttpServer.class),
+			s = a.diFactory.newInstance(a.diFactory.classFor(HttpServer.class),
 					Map.of("sslContext", c, "endpoint", new InetSocketAddress(p), "handler", a.handler));
 		}
 		s.serve();
@@ -105,7 +111,7 @@ public class ConduitFullstack {
 	public ConduitFullstack(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		diFactory.context(this);
-		configuration = diFactory.create(diFactory.actualType(Properties.class),
+		configuration = diFactory.newInstance(diFactory.classFor(Properties.class),
 				Collections.singletonMap("file", configurationFile));
 
 		var cf = Optional.ofNullable(configurationFile).orElseGet(() -> {
@@ -116,9 +122,9 @@ public class ConduitFullstack {
 			}
 		});
 		backend = diFactory
-				.create(ConduitBackend.class,
+				.newInstance(ConduitBackend.class,
 						Java.hashMap("diFactory",
-								new DiFactory(Stream
+								new DefaultDiFactory(Stream
 										.concat(Stream.of("com.janilla.web"),
 												Stream.of("backend", "fullstack")
 														.map(x -> ConduitBackend.class.getPackageName()
@@ -126,9 +132,9 @@ public class ConduitFullstack {
 										.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList(), "backend"),
 								"configurationFile", cf));
 		frontend = diFactory
-				.create(ConduitFrontend.class,
+				.newInstance(ConduitFrontend.class,
 						Java.hashMap("diFactory",
-								new DiFactory(Stream
+								new DefaultDiFactory(Stream
 										.concat(Stream.of("com.janilla.web"),
 												Stream.of("frontend", "fullstack")
 														.map(x -> ConduitFrontend.class.getPackageName()

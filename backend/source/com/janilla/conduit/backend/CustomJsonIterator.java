@@ -32,7 +32,7 @@ import java.util.Set;
 
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.http.HttpServer;
-import com.janilla.java.Reflection;
+import com.janilla.java.JavaReflect;
 import com.janilla.json.JsonToken;
 import com.janilla.json.ReflectionJsonIterator;
 
@@ -69,7 +69,7 @@ public class CustomJsonIterator extends ReflectionJsonIterator {
 		if (object != null)
 			switch (object) {
 			case Article a: {
-				var m = Reflection.properties(Article.class).filter(x -> !x.name().equals("id")).map(x -> {
+				var m = JavaReflect.properties(Article.class).filter(x -> !x.name().equals("id")).map(x -> {
 //						IO.println("k=" + k);
 					var v = x.get(a);
 					return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);
@@ -84,7 +84,7 @@ public class CustomJsonIterator extends ReflectionJsonIterator {
 			}
 				break;
 			case User u: {
-				var m = Reflection.properties(User.class).filter(x -> !Set.of("hash", "id", "salt").contains(x.name()))
+				var m = JavaReflect.properties(User.class).filter(x -> !Set.of("hash", "id", "salt").contains(x.name()))
 						.map(x -> {
 							var v = x.get(u);
 							return new AbstractMap.SimpleImmutableEntry<>(x.name(), v);

@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.ioc.DiFactory;
-import com.janilla.java.Reflection;
+import com.janilla.java.JavaReflect;
 import com.janilla.persistence.ListPortion;
 import com.janilla.web.ForbiddenException;
 import com.janilla.web.Handle;
@@ -70,7 +70,7 @@ public class ArticleApi {
 		var a = new Article(null, s, null, null, null,
 //				form.article.tagList() != null ? form.article.tagList().stream().sorted().toList() : List.of(),
 				null, n, n, user);
-		a = Reflection.copy(form.article, a, x -> !Set.of("id", "slug",
+		a = JavaReflect.copy(form.article, a, x -> !Set.of("id", "slug",
 //						"tagList",
 				"createdAt", "updatedAt", "author").contains(x));
 		a = persistence.crud(Article.class).create(a);
@@ -80,7 +80,7 @@ public class ArticleApi {
 
 	@Handle(method = "GET", path = "([^/]+)")
 	public Object read(String slug) {
-		IO.println("ArticleApi.read, slug=" + slug);
+//		IO.println("ArticleApi.read, slug=" + slug);
 		var c = persistence.crud(Article.class);
 		var x = c.read(c.find("slug", new Object[] { slug }));
 //		IO.println("x=" + x);
@@ -97,7 +97,7 @@ public class ArticleApi {
 			x = new Article(x.id(), s, null, null, null,
 //					form.article.tagList() != null ? form.article.tagList().stream().sorted().toList() : List.of(),
 					null, x.createdAt(), Instant.now(), x.author());
-			return Reflection.copy(form.article, x, y -> !Set.of("slug",
+			return JavaReflect.copy(form.article, x, y -> !Set.of("slug",
 //					"tagList",
 					"createdAt", "updatedAt", "author").contains(y));
 		});
@@ -143,7 +143,7 @@ public class ArticleApi {
 
 	@Handle(method = "POST", path = "([^/]+)/comments")
 	public Object createComment(String slug, CommentForm form, User user) {
-		var v = diFactory.create(diFactory.actualType(Validation.class));
+		var v = diFactory.newInstance(diFactory.classFor(Validation.class));
 		if (v.isNotBlank("body", form.comment.body))
 			v.isSafe("body", form.comment.body);
 		v.orThrow();
@@ -160,7 +160,7 @@ public class ArticleApi {
 
 		var n = Instant.now();
 		var c = new Comment(null, n, n, null, user, Article.EMPTY.withId(a));
-		c = Reflection.copy(form.comment, c, x -> x.equals("body"));
+		c = JavaReflect.copy(form.comment, c, x -> x.equals("body"));
 		c = persistence.crud(Comment.class).create(c);
 		return Map.of("comment", c);
 	}
@@ -189,7 +189,7 @@ public class ArticleApi {
 		var c = (ArticleCrud) persistence.crud(Article.class);
 		var a = c.read(c.find("slug", new Object[] { slug }));
 		c.favorite(a.id(), a.createdAt(), user.id());
-		return Map.of("article", a.id());
+		return Map.of("article", a);
 	}
 
 	@Handle(method = "DELETE", path = "([^/]+)/favorite")
@@ -199,7 +199,7 @@ public class ArticleApi {
 		var c = (ArticleCrud) persistence.crud(Article.class);
 		var a = c.read(c.find("slug", new Object[] { slug }));
 		c.unfavorite(a.id(), a.createdAt(), user.id());
-		return Map.of("article", a.id());
+		return Map.of("article", a);
 	}
 
 	protected static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^\\p{Alnum}]+",
@@ -211,7 +211,7 @@ public class ArticleApi {
 	}
 
 	protected void validate(String slug1, String slug2, Form.Article article) {
-		var v = diFactory.create(diFactory.actualType(Validation.class));
+		var v = diFactory.newInstance(diFactory.classFor(Validation.class));
 		var c = persistence.crud(Article.class);
 		if ((slug2.equals(slug1) && article.title == null) || (v.isNotBlank("title", article.title)
 				&& v.isNotTooLong("title", article.title, 100) && v.isSafe("title", article.title))) {

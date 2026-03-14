@@ -36,7 +36,7 @@ import javax.crypto.spec.PBEKeySpec;
 
 import com.janilla.backend.persistence.Persistence;
 import com.janilla.ioc.DiFactory;
-import com.janilla.java.Reflection;
+import com.janilla.java.JavaReflect;
 import com.janilla.json.Jwt;
 import com.janilla.web.Handle;
 
@@ -68,7 +68,7 @@ public class UserApi {
 
 	@Handle(method = "POST", path = "login")
 	public Object authenticate(Authenticate authenticate) {
-		var v = diFactory.create(diFactory.actualType(Validation.class));
+		var v = diFactory.newInstance(diFactory.classFor(Validation.class));
 		v.isNotBlank("email", authenticate.user.email);
 		v.isNotBlank("password", authenticate.user.password);
 		v.orThrow();
@@ -89,7 +89,7 @@ public class UserApi {
 	@Handle(method = "POST")
 	public Object register(Register register) {
 		var u = register.user;
-		var v = diFactory.create(diFactory.actualType(Validation.class));
+		var v = diFactory.newInstance(diFactory.classFor(Validation.class));
 		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)) {
 			var c = persistence.crud(User.class);
 			var x = c.read(c.find("username", new Object[] { u.username }));
@@ -111,7 +111,7 @@ public class UserApi {
 		}
 
 		var x = new User(null, null, null, null, null, null, null);
-		x = Reflection.copy(u, x);
+		x = JavaReflect.copy(u, x);
 		x = setHashAndSalt(x, u.password);
 		if (x.image() == null || x.image().isBlank())
 			x = new User(x.id(), x.email(), x.hash(), x.salt(), x.username(), x.bio(),
@@ -125,7 +125,7 @@ public class UserApi {
 	public Object update(Update update, User user) {
 //		IO.println("update=" + update);
 		var u = update.user;
-		var v = diFactory.create(diFactory.actualType(Validation.class));
+		var v = diFactory.newInstance(diFactory.classFor(Validation.class));
 		var c = persistence.crud(User.class);
 //		if (v.isNotBlank("username", u.username) && v.isSafe("username", u.username)
 		if (u.username != null && !u.username.isBlank() && v.isSafe("username", u.username)
@@ -143,7 +143,7 @@ public class UserApi {
 		v.orThrow();
 
 		var x = c.update(user.id(), y -> {
-			y = Reflection.copy(u, y);
+			y = JavaReflect.copy(u, y);
 			if (u.password != null && !u.password.isBlank())
 				y = setHashAndSalt(y, u.password);
 			return y;

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.frontend;
+package com.janilla.conduit.test;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -39,7 +39,9 @@ import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
 
+import com.janilla.conduit.fullstack.ConduitFullstack;
 import com.janilla.http.HttpClient;
+import com.janilla.http.HttpExchange;
 import com.janilla.http.HttpHandler;
 import com.janilla.http.HttpServer;
 import com.janilla.ioc.DefaultDiFactory;
@@ -55,9 +57,9 @@ import com.janilla.web.RenderableFactory;
 import com.janilla.web.ResourceMap;
 
 @Render(template = "index", resource = "/index.html")
-public class ConduitFrontend {
+public class ConduitTest {
 
-	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.conduit.frontend" };
+	public static final String[] DI_PACKAGES = { "com.janilla.web", "com.janilla.conduit.test" };
 
 	public static void main(String[] args) {
 		IO.println(ProcessHandle.current().pid());
@@ -67,9 +69,9 @@ public class ConduitFrontend {
 	}
 
 	protected static void serve(DiFactory diFactory, String configurationPath) {
-		ConduitFrontend a;
+		ConduitTest a;
 		{
-			a = diFactory.newInstance(diFactory.classFor(ConduitFrontend.class),
+			a = diFactory.newInstance(diFactory.classFor(ConduitTest.class),
 					Java.hashMap("diFactory", diFactory, "configurationFile",
 							configurationPath != null ? Path.of(configurationPath.startsWith("~")
 									? System.getProperty("user.home") + configurationPath.substring(1)
@@ -108,6 +110,8 @@ public class ConduitFrontend {
 
 	protected final DiFactory diFactory;
 
+	protected final ConduitFullstack fullstack;
+
 	protected final HttpHandler handler;
 
 	protected final InvocationResolver invocationResolver;
@@ -116,11 +120,18 @@ public class ConduitFrontend {
 
 	protected final ResourceMap resourceMap;
 
-	public ConduitFrontend(DiFactory diFactory, Path configurationFile) {
+	public ConduitTest(DiFactory diFactory, Path configurationFile) {
 		this.diFactory = diFactory;
 		diFactory.context(this);
 		configuration = diFactory.newInstance(diFactory.classFor(Properties.class),
 				Collections.singletonMap("file", configurationFile));
+
+		{
+			var f = new DefaultDiFactory(Arrays.stream(ConduitFullstack.DI_PACKAGES)
+					.flatMap(x -> Java.getPackageClasses(x, false).stream()).toList(), "fullstack");
+			fullstack = diFactory.newInstance(diFactory.classFor(ConduitFullstack.class),
+					Java.hashMap("diFactory", f, "configurationFile", configurationFile));
+		}
 
 		invocationResolver = diFactory.newInstance(diFactory.classFor(InvocationResolver.class),
 				Map.of("invocables",
@@ -136,26 +147,29 @@ public class ConduitFrontend {
 									: diFactory.newInstance(diFactory.classFor(x));
 						}));
 		resourceMap = diFactory.newInstance(diFactory.classFor(ResourceMap.class),
-				Map.of("paths", Map.of("", Stream.of("com.janilla.frontend", ConduitFrontend.class.getPackageName())
+				Map.of("paths", Map.of("", Stream.of("com.janilla.frontend", "com.janilla.conduit.test")
 						.flatMap(x -> Java.getPackagePaths(x, false).filter(Files::isRegularFile)).toList())));
 		renderableFactory = diFactory.newInstance(diFactory.classFor(RenderableFactory.class));
 		{
 			var f = diFactory.newInstance(diFactory.classFor(ApplicationHandlerFactory.class));
 			handler = x -> {
-				var h = f.createHandler(Objects.requireNonNullElse(x.exception(), x.request()));
-				if (h == null)
-					throw new NotFoundException(x.request().getMethod() + " " + x.request().getTarget());
-				return h.handle(x);
+				var hx = (HttpExchange) x;
+//				IO.println(
+//						"ConduitTesting, " + hx.request().getPath() + ", Test.ongoing=" + Test.ongoing.get());
+				var h2 = Test.ONGOING.get() && !hx.request().getPath().startsWith("/test/") ? fullstack.handler()
+						: (HttpHandler) y -> {
+							var h = f.createHandler(Objects.requireNonNullElse(y.exception(), y.request()));
+							if (h == null)
+								throw new NotFoundException(y.request().getMethod() + " " + y.request().getTarget());
+							return h.handle(y);
+						};
+				return h2.handle(hx);
 			};
 		}
 	}
 
-	public String apiUrl() {
-		return configuration.getProperty("conduit.api.url");
-	}
-
 	@Handle(method = "GET", path = "/")
-	public ConduitFrontend application() {
+	public ConduitTest application() {
 		return this;
 	}
 
@@ -165,6 +179,10 @@ public class ConduitFrontend {
 
 	public DiFactory diFactory() {
 		return diFactory;
+	}
+
+	public ConduitFullstack fullstack() {
+		return fullstack;
 	}
 
 	public HttpHandler handler() {

@@ -10,7 +10,7 @@
 		<module>backend</module>
 		<module>frontend</module>
 		<module>fullstack</module>
-		<module>testing</module>
+		<module>test</module>
 	</modules>
 	<properties>
 		<maven.compiler.parameters>true</maven.compiler.parameters>

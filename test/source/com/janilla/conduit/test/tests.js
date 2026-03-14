@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { matchNode } from "./dom-utils.js";
+import { matchNode } from "./test-bench.js";
 
 const delay = () => new Promise(x => setTimeout(x, 10));
 
@@ -45,12 +45,12 @@ const login = (email, password) => {
 }
 
 const addComment = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
 	(await untilElement("nav-link", "Global Feed")(b)).shadowRoot.querySelector("a").click();
 	await delay();
-	(await untilElement("a", "Labore minim deserunt")(b)).click();
+	(await untilElement("a", "Tempor ex")(b)).click();
 	await delay();
 	(await untilFormControl("comment")(b)).value = `This is the first line.  
 And this is the second line.`;
@@ -61,7 +61,7 @@ And this is the second line.`;
 }
 
 const createArticle = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
 	(await untilElement("nav-link", "New Article")(b)).shadowRoot.querySelector("a").click();
@@ -88,12 +88,12 @@ And this is the second line.
 }
 
 const deleteArticle = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
-	(await untilElement("nav-link", "Nulla Commodo")(b)).shadowRoot.querySelector("a").click();
+	(await untilElement("nav-link", "Aute Cillum")(b)).shadowRoot.querySelector("a").click();
 	await delay();
-	(await untilElement("a", "Esse labore")(b)).click();
+	(await untilElement("a", "Cillum reprehenderit")(b)).click();
 	await delay();
 	(await untilElement("button", "Delete Article")(b)).click();
 	await delay();
@@ -101,57 +101,57 @@ const deleteArticle = async content => {
 }
 
 const deleteComment = async content => {
-	await login("qui.non@lorem.ipsum", "qui")(content);
+	await login("voluptate.enim@lorem.ipsum", "voluptate")(content);
 	await delay();
 	const b = content.body;
 	(await untilElement("nav-link", "Global Feed")(b)).shadowRoot.querySelector("a").click();
 	await delay();
-	(await untilElement("a", "Labore minim deserunt")(b)).click();
+	(await untilElement("a", "Tempor ex")(b)).click();
 	await delay();
-	(await untilElement("p", "Irure veniam ut dolore.")(b)).closest(".card").querySelector(".ion-trash-a").click();
+	(await untilElement("p", "Ullamco ea sit excepteur reprehenderit dolore commodo aliquip dolore ipsum.")(b)).closest(".card").querySelector(".ion-trash-a").click();
 	await delay();
-	await whileElement("p", "Irure veniam ut dolore.")(b);
+	await whileElement("p", "Ullamco ea sit excepteur reprehenderit dolore commodo aliquip dolore ipsum.")(b);
 }
 
 const favoriteArticle = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
 	(await untilElement("nav-link", "Global Feed")(b)).shadowRoot.querySelector("a").click();
 	await delay();
-	const p = (await untilElement("h1", "Eiusmod deserunt culpa ipsum esse")(b)).closest(".article-preview");
+	const p = (await untilElement("h1", "Tempor ex")(b)).closest(".article-preview");
 	p.querySelector(".ion-heart").click();
 	await delay();
-	await untilElement("button", "2")(p);
+	await untilElement("button", "3")(p);
 }
 
 const followUser = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
 	(await untilElement("nav-link", "Global Feed")(b)).shadowRoot.querySelector("a").click();
 	await delay();
-	(await untilElement("a", "Eiusmod deserunt culpa ipsum esse")(b)).click();
+	(await untilElement("a", "Tempor ex")(b)).click();
 	await delay();
 	(await untilElement("follow-button", "Follow")(b)).querySelector("button").click();
 	await delay();
 	(await untilElement("a", "conduit")(b)).click();
 	await delay();
-	await untilElement("a", "Eiusmod deserunt culpa ipsum esse")(b);
+	await untilElement("a", "Tempor ex")(b);
 }
 
 const loginUser = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
-	(await untilElement("nav-link", "Nulla Commodo")(b)).shadowRoot.querySelector("a").click();
+	(await untilElement("nav-link", "Aute Cillum")(b)).shadowRoot.querySelector("a").click();
 }
 
 const logoutUser = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
-	(await untilElement("nav-link", "Nulla Commodo")(b)).shadowRoot.querySelector("a").click();
+	(await untilElement("nav-link", "Aute Cillum")(b)).shadowRoot.querySelector("a").click();
 	await delay();
 	(await untilElement("a", "Edit Profile Settings")(b)).click();
 	await delay();
@@ -176,26 +176,26 @@ const registerUser = async content => {
 }
 
 const unfavoriteArticle = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
-	(await untilElement("nav-link", "Nulla Commodo")(b)).shadowRoot.querySelector("a").click();
+	(await untilElement("nav-link", "Aute Cillum")(b)).shadowRoot.querySelector("a").click();
 	await delay();
 	(await untilElement("nav-link", "Favorited Articles")(b)).shadowRoot.querySelector("a").click();
 	await delay();
-	(await untilElement("h1", "Est veniam ullamco velit")(b)).click();
+	(await untilElement("h1", "Sit voluptate")(b)).click();
 	await delay();
 	const e = (await untilElement("button", "Unfavorite Article")(b));
 	e.click();
 	await delay();
-	await untilElement("span", "2")(e);
+	await untilElement("span", "1")(e);
 }
 
 const unfollowUser = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
-	(await untilElement("a", "Qui Non")(b)).click();
+	(await untilElement("a", "Nulla Officia")(b)).click();
 	await delay();
 	(await untilElement("follow-button", "Unfollow")(b)).querySelector("button").click();
 	await delay();
@@ -203,12 +203,12 @@ const unfollowUser = async content => {
 }
 
 const updateArticle = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
-	(await untilElement("nav-link", "Nulla Commodo")(b)).shadowRoot.querySelector("a").click();
+	(await untilElement("nav-link", "Aute Cillum")(b)).shadowRoot.querySelector("a").click();
 	await delay();
-	(await untilElement("a", "Esse labore")(b)).click();
+	(await untilElement("a", "Cillum reprehenderit")(b)).click();
 	await delay();
 	(await untilElement("a", "Edit Article")(b)).click();
 	await delay();
@@ -234,7 +234,7 @@ And this is the second line.
 }
 
 const updateUser = async content => {
-	await login("nulla.commodo@lorem.ipsum", "nulla")(content);
+	await login("aute.cillum@lorem.ipsum", "aute")(content);
 	await delay();
 	const b = content.body;
 	(await untilElement("nav-link", "Settings")(b)).shadowRoot.querySelector("a").click();

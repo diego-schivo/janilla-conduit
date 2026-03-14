@@ -21,32 +21,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.testing;
+package com.janilla.conduit.test;
 
-import java.net.SocketAddress;
-import java.util.Map;
-
-import javax.net.ssl.SSLContext;
+import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.janilla.conduit.fullstack.ConduitFullstack;
-import com.janilla.http.HttpExchange;
-import com.janilla.http.HttpHandler;
-import com.janilla.http.HttpRequest;
-import com.janilla.http.HttpResponse;
-import com.janilla.http.HttpServer;
+import com.janilla.web.Handle;
 
-public class CustomHttpServer extends HttpServer {
+@Handle(path = "/test")
+public class Test {
 
-	public ConduitFullstack fullstack;
+	protected static final AtomicBoolean ONGOING = new AtomicBoolean();
 
-	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler) {
-		super(sslContext, endpoint, handler);
+	protected final ConduitFullstack fullstack;
+
+	public Test(ConduitFullstack fullstack) {
+		this.fullstack = fullstack;
 	}
 
-	@Override
-	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
-		return Test.ongoing.get() && request.getPath().startsWith("/api/") ? fullstack.backend().diFactory()
-				.create(HttpExchange.class, Map.of("request", request, "response", response))
-				: super.createExchange(request, response);
+	@Handle(method = "POST", path = "start")
+	public void start() throws IOException {
+//		IO.println("Test.start, this=" + this);
+		if (ONGOING.getAndSet(true))
+			throw new IllegalStateException();
+
+		var d = fullstack.backend().persistence().database();
+		var ch1 = (FileChannel) d.channel().channel();
+		try (var ch2 = Channels.newChannel(getClass().getResourceAsStream("conduit-test.db"))) {
+			var s = ch1.transferFrom(ch2, 0, Long.MAX_VALUE);
+			ch1.truncate(s);
+		}
+		d.pageCache().clear();
+	}
+
+	@Handle(method = "POST", path = "stop")
+	public void stop() {
+//		IO.println("Test.stop, this=" + this);
+		if (!ONGOING.getAndSet(false))
+			throw new IllegalStateException();
 	}
 }

@@ -21,11 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-module com.janilla.conduit.testing {
+package com.janilla.conduit.test;
 
-	exports com.janilla.conduit.testing;
+import java.net.SocketAddress;
+import java.util.Map;
 
-	opens com.janilla.conduit.testing;
+import javax.net.ssl.SSLContext;
 
-	requires transitive com.janilla.conduit.fullstack;
+import com.janilla.conduit.fullstack.ConduitFullstack;
+import com.janilla.http.HttpExchange;
+import com.janilla.http.HttpHandler;
+import com.janilla.http.HttpRequest;
+import com.janilla.http.HttpResponse;
+import com.janilla.http.HttpServer;
+
+public class CustomHttpServer extends HttpServer {
+
+	protected final ConduitFullstack fullstack;
+
+	public CustomHttpServer(SSLContext sslContext, SocketAddress endpoint, HttpHandler handler,
+			ConduitFullstack fullstack) {
+		super(sslContext, endpoint, handler);
+		this.fullstack = fullstack;
+	}
+
+	@Override
+	protected HttpExchange createExchange(HttpRequest request, HttpResponse response) {
+		if (Test.ONGOING.get()) {
+			var f = request.getPath().startsWith("/api/") ? fullstack.backend().diFactory()
+					: fullstack.frontend().diFactory();
+			var c = f.classFor(HttpExchange.class);
+			if (c != null)
+				return f.newInstance(c, Map.of("request", request, "response", response));
+		}
+		return super.createExchange(request, response);
+	}
 }

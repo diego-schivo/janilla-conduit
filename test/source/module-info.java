@@ -21,29 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.janilla.conduit.testing;
+module com.janilla.conduit.test {
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
+	exports com.janilla.conduit.test;
 
-public class CustomProperties extends Properties {
+	opens com.janilla.conduit.test;
 
-	private static final long serialVersionUID = 3677764844746499993L;
-
-	public CustomProperties(Path file) {
-		try {
-			try (var x = ConduitTesting.class.getResourceAsStream("configuration.properties")) {
-				load(x);
-			}
-			if (file != null)
-				try (var x = Files.newInputStream(file)) {
-					load(x);
-				}
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
+	requires transitive com.janilla.conduit.fullstack;
 }

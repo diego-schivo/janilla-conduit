@@ -21,26 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-//package com.janilla.conduit.backend;
-//
-//import com.janilla.http.HttpHandlerFactory;
-//import com.janilla.ioc.DiFactory;
-//import com.janilla.web.ApplicationHandlerFactory;
-//import com.janilla.web.InvocationHandlerFactory;
-//
-//public class CustomHandlerFactory extends ApplicationHandlerFactory {
-//
-//	protected final ConduitBackend application;
-//
-//	public CustomHandlerFactory(DiFactory diFactory, ConduitBackend application) {
-//		this.application = application;
-//		super(diFactory);
-//	}
-//
-//	@Override
-//	protected HttpHandlerFactory buildInvocationHandlerFactory() {
-//		var x = (InvocationHandlerFactory) super.buildInvocationHandlerFactory();
-//		application.invocationHandlerFactory = x;
-//		return x;
-//	}
-//}
+package com.janilla.conduit.test;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Properties;
+
+public class CustomProperties extends Properties {
+
+	private static final long serialVersionUID = 3677764844746499993L;
+
+	public CustomProperties(Path file) {
+		try {
+			try (var x = ConduitTest.class.getResourceAsStream("configuration.properties")) {
+				load(x);
+			}
+			if (file != null)
+				try (var x = Files.newInputStream(file)) {
+					load(x);
+				}
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
+}

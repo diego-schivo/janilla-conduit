@@ -29,6 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import com.janilla.ioc.Context;
+
+@Context("fullstack")
 public class CustomProperties extends Properties {
 
 	private static final long serialVersionUID = 3097294114823670340L;

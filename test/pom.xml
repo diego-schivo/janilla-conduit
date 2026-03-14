@@ -2,7 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>janilla-conduit-testing</artifactId>
+	<artifactId>janilla-conduit-test</artifactId>
 	<dependencies>
 		<dependency>
 			<groupId>com.janilla</groupId>
@@ -26,7 +26,7 @@
 						<argument>--module-path</argument>
 						<modulepath/>
 						<argument>--module</argument>
-						<argument>com.janilla.conduit.testing/com.janilla.conduit.testing.ConduitTesting</argument>
+						<argument>com.janilla.conduit.test/com.janilla.conduit.test.ConduitTesting</argument>
 					</arguments>
 				</configuration>
 			</plugin>
